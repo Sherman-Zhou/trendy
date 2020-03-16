@@ -114,8 +114,6 @@ jhipster:
       queue-size: 512
   audit-events:
     retention-period: 30 # Number of days before audit events are deleted.
-  ribbon:
-    aaa:1
 
 # ===================================================================
 # Application specific properties
