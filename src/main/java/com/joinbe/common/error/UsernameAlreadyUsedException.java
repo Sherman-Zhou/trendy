@@ -1,4 +1,4 @@
-package com.joinbe.service;
+package com.joinbe.common.error;
 
 public class UsernameAlreadyUsedException extends RuntimeException {
 

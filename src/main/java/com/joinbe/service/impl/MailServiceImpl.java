@@ -1,6 +1,7 @@
-package com.joinbe.service;
+package com.joinbe.service.impl;
 
 import com.joinbe.domain.User;
+import com.joinbe.service.MailService;
 import io.github.jhipster.config.JHipsterProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

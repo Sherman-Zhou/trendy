@@ -1,4 +1,4 @@
-package com.joinbe.service;
+package com.joinbe.service.impl;
 
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Role;
@@ -7,6 +7,10 @@ import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.repository.UserRepository;
 import com.joinbe.security.SecurityUtils;
+import com.joinbe.common.error.EmailAlreadyUsedException;
+import com.joinbe.common.error.InvalidPasswordException;
+import com.joinbe.service.UserService;
+import com.joinbe.common.error.UsernameAlreadyUsedException;
 import com.joinbe.service.dto.UserDTO;
 import io.github.jhipster.security.RandomUtil;
 import org.slf4j.Logger;
@@ -28,9 +32,9 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional
-public class UserService {
+public class UserServiceImpl implements UserService {
 
-    private final Logger log = LoggerFactory.getLogger(UserService.class);
+    private final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private final UserRepository userRepository;
 
@@ -40,13 +44,14 @@ public class UserService {
 
     private final CacheManager cacheManager;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.cacheManager = cacheManager;
     }
 
+    @Override
     public Optional<User> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
         return userRepository.findOneByActivationKey(key)
@@ -60,6 +65,7 @@ public class UserService {
             });
     }
 
+    @Override
     public Optional<User> completePasswordReset(String newPassword, String key) {
         log.debug("Reset user password for reset key {}", key);
         return userRepository.findOneByResetKey(key)
@@ -73,6 +79,7 @@ public class UserService {
             });
     }
 
+    @Override
     public Optional<User> requestPasswordReset(String mail) {
         return userRepository.findOneByEmailIgnoreCase(mail)
             .filter(User::getActivated)
@@ -84,6 +91,7 @@ public class UserService {
             });
     }
 
+    @Override
     public User registerUser(UserDTO userDTO, String password) {
         userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).ifPresent(existingUser -> {
             boolean removed = removeNonActivatedUser(existingUser);
@@ -132,6 +140,7 @@ public class UserService {
         return true;
     }
 
+    @Override
     public User createUser(UserDTO userDTO) {
         User user = new User();
         user.setLogin(userDTO.getLogin().toLowerCase());
@@ -174,6 +183,7 @@ public class UserService {
      * @param langKey   language key.
      * @param imageUrl  image URL of user.
      */
+    @Override
     public void updateUser(String firstName, String lastName, String email, String langKey, String imageUrl) {
         SecurityUtils.getCurrentUserLogin()
             .flatMap(userRepository::findOneByLogin)
@@ -196,6 +206,7 @@ public class UserService {
      * @param userDTO user to update.
      * @return updated user.
      */
+    @Override
     public Optional<UserDTO> updateUser(UserDTO userDTO) {
         return Optional.of(userRepository
             .findById(userDTO.getId()))
@@ -226,6 +237,7 @@ public class UserService {
             .map(UserDTO::new);
     }
 
+    @Override
     public void deleteUser(String login) {
         userRepository.findOneByLogin(login).ifPresent(user -> {
             userRepository.delete(user);
@@ -234,6 +246,7 @@ public class UserService {
         });
     }
 
+    @Override
     public void changePassword(String currentClearTextPassword, String newPassword) {
         SecurityUtils.getCurrentUserLogin()
             .flatMap(userRepository::findOneByLogin)
@@ -249,21 +262,25 @@ public class UserService {
             });
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Page<UserDTO> getAllManagedUsers(Pageable pageable) {
         return userRepository.findAllByLoginNot(pageable, Constants.ANONYMOUS_USER).map(UserDTO::new);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
         return userRepository.findOneWithAuthoritiesByLogin(login);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthorities(Long id) {
         return userRepository.findOneWithAuthoritiesById(id);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthorities() {
         return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByLogin);
@@ -274,6 +291,7 @@ public class UserService {
      * <p>
      * This is scheduled to get fired everyday, at 01:00 (am).
      */
+    @Override
     @Scheduled(cron = "0 0 1 * * ?")
     public void removeNotActivatedUsers() {
 //        userRepository
@@ -290,6 +308,7 @@ public class UserService {
      *
      * @return a list of all the authorities.
      */
+    @Override
     public List<String> getAuthorities() {
         return roleRepository.findAll().stream().map(Role::getName).collect(Collectors.toList());
     }
