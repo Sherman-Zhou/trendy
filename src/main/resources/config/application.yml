@@ -158,6 +158,7 @@ jhipster:
     license-url:
 mybatis-plus:
   mapper-locations: classpath:/mapper/*Mapper.xml
+  type-enums-package: com.joinbe.domain.enumeration
 # ===================================================================
 # Application specific properties
 # Add your own application properties here, see the ApplicationProperties class

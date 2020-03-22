@@ -1,16 +1,17 @@
-package com.joinbe.service.impl;
+package com.joinbe.service.impl.jpa;
 
+import com.joinbe.common.error.EmailAlreadyUsedException;
+import com.joinbe.common.error.InvalidPasswordException;
+import com.joinbe.common.error.UsernameAlreadyUsedException;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.mapper.UserMapper;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.repository.UserRepository;
 import com.joinbe.security.SecurityUtils;
-import com.joinbe.common.error.EmailAlreadyUsedException;
-import com.joinbe.common.error.InvalidPasswordException;
 import com.joinbe.service.UserService;
-import com.joinbe.common.error.UsernameAlreadyUsedException;
 import com.joinbe.service.dto.UserDTO;
 import io.github.jhipster.security.RandomUtil;
 import org.slf4j.Logger;
@@ -44,11 +45,14 @@ public class UserServiceImpl implements UserService {
 
     private final CacheManager cacheManager;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager) {
+    private final UserMapper userMapper;
+
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.cacheManager = cacheManager;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -291,7 +295,6 @@ public class UserServiceImpl implements UserService {
      * <p>
      * This is scheduled to get fired everyday, at 01:00 (am).
      */
-    @Override
     @Scheduled(cron = "0 0 1 * * ?")
     public void removeNotActivatedUsers() {
 //        userRepository

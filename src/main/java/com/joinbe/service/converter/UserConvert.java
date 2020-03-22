@@ -1,4 +1,4 @@
-package com.joinbe.service.mapper;
+package com.joinbe.service.converter;
 
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * support is still in beta, and requires a manual step with an IDE.
  */
 @Service
-public class UserMapper {
+public class UserConvert {
 
     public List<UserDTO> usersToUserDTOs(List<User> users) {
         return users.stream()

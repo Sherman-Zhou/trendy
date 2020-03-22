@@ -1,5 +1,6 @@
 package com.joinbe.domain;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.config.Constants;
@@ -44,6 +45,7 @@ public class User extends AbstractAuditingEntity implements Serializable {
     @NotNull
     @Size(min = 60, max = 60)
     @Column(name = "password_hash", length = 60, nullable = false)
+    @TableField("password_hash")
     private String password;
 
     @Size(max = 50)
@@ -93,6 +95,7 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     @ManyToOne
     @JsonIgnoreProperties("")
+    @TableField(exist = false)
     private Division division;
 
     @JsonIgnore
@@ -102,6 +105,7 @@ public class User extends AbstractAuditingEntity implements Serializable {
         joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
         inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     @BatchSize(size = 20)
+    @TableField(exist = false)
     private Set<Role> authorities = new HashSet<>();
 
     public Boolean getActivated() {

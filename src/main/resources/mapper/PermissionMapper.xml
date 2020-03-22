@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.joinbe.mapper.PermissionMapper">
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.joinbe.domain.Permission">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="lvl" property="lvl"/>
+        <result column="permission_type" property="permissionType"/>
+        <result column="title" property="title"/>
+        <result column="frontend_path" property="frontendPath"/>
+        <result column="icon" property="icon"/>
+        <result column="operation_type" property="operationType"/>
+        <result column="description" property="description"/>
+        <result column="sort_order" property="sortOrder"/>
+        <result column="backend_url" property="backendUrl"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_date" property="createdDate"/>
+        <result column="last_modified_by" property="lastModifiedBy"/>
+        <result column="last_modified_date" property="lastModifiedDate"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="version" property="version"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, lvl, permission_type, title, frontend_path, icon, operation_type, description, sort_order, backend_url, status, created_by, created_date, last_modified_by, last_modified_date, parent_id, version
+    </sql>
 
 </mapper>

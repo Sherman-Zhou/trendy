@@ -29,7 +29,8 @@ public abstract class AbstractAuditingEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Version
-    private Long version;
+    @com.baomidou.mybatisplus.annotation.Version
+    private Integer version;
 
     @CreatedBy
     @Column(name = "created_by", nullable = false, length = 50, updatable = false)
@@ -51,43 +52,4 @@ public abstract class AbstractAuditingEntity implements Serializable {
     @JsonIgnore
     private Instant lastModifiedDate = Instant.now();
 
-//    public Long getVersion() {
-//        return version;
-//    }
-//
-//    public void setVersion(Long version) {
-//        this.version = version;
-//    }
-//
-//    public String getCreatedBy() {
-//        return createdBy;
-//    }
-//
-//    public void setCreatedBy(String createdBy) {
-//        this.createdBy = createdBy;
-//    }
-//
-//    public Instant getCreatedDate() {
-//        return createdDate;
-//    }
-//
-//    public void setCreatedDate(Instant createdDate) {
-//        this.createdDate = createdDate;
-//    }
-//
-//    public String getLastModifiedBy() {
-//        return lastModifiedBy;
-//    }
-//
-//    public void setLastModifiedBy(String lastModifiedBy) {
-//        this.lastModifiedBy = lastModifiedBy;
-//    }
-//
-//    public Instant getLastModifiedDate() {
-//        return lastModifiedDate;
-//    }
-//
-//    public void setLastModifiedDate(Instant lastModifiedDate) {
-//        this.lastModifiedDate = lastModifiedDate;
-//    }
 }
