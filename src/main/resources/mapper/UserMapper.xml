@@ -6,8 +6,8 @@
         <id column="id" property="id"/>
         <result column="login" property="login"/>
         <result column="password_hash" property="password"/>
-        <result column="first_name" property="firstName"/>
-        <result column="last_name" property="lastName"/>
+        <result column="name" property="name"/>
+<!--        <result column="last_name" property="lastName"/>-->
         <result column="sex" property="sex"/>
         <result column="status" property="status"/>
         <result column="email" property="email"/>

@@ -1,5 +1,7 @@
 package com.joinbe.security.jwt;
 
+import com.joinbe.security.RedissonTokenStore;
+import com.joinbe.security.SecurityUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -22,17 +24,24 @@ public class JWTFilter extends GenericFilterBean {
 
     private final TokenProvider tokenProvider;
 
-    public JWTFilter(TokenProvider tokenProvider) {
+    private final RedissonTokenStore tokenStore;
+
+    public JWTFilter(TokenProvider tokenProvider, RedissonTokenStore tokenStore) {
         this.tokenProvider = tokenProvider;
+        this.tokenStore = tokenStore;
     }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
         throws IOException, ServletException {
+        Authentication authentication = null;
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String jwt = resolveToken(httpServletRequest);
-        if (StringUtils.hasText(jwt) && this.tokenProvider.validateToken(jwt)) {
-            Authentication authentication = this.tokenProvider.getAuthentication(jwt);
+        if (StringUtils.hasText(jwt)) {
+            authentication = this.tokenProvider.getAuthentication(jwt);
+        }
+        if (authentication != null && this.tokenProvider.validateToken(jwt)
+            && this.tokenStore.isTokenExisted(SecurityUtils.extractPrincipal(authentication))) {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
         filterChain.doFilter(servletRequest, servletResponse);

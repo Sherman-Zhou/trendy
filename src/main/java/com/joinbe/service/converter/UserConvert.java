@@ -45,14 +45,14 @@ public class UserConvert {
             User user = new User();
             user.setId(userDTO.getId());
             user.setLogin(userDTO.getLogin());
-            user.setFirstName(userDTO.getFirstName());
-            user.setLastName(userDTO.getLastName());
+            user.setName(userDTO.getName());
+
             user.setEmail(userDTO.getEmail());
             user.setAvatar(userDTO.getAvatar());
             user.setStatus(userDTO.getStatus());
             user.setLangKey(userDTO.getLangKey());
-            Set<Role> authorities = this.authoritiesFromStrings(userDTO.getAuthorities());
-            user.setAuthorities(authorities);
+            // Set<Role> authorities = this.authoritiesFromStrings(userDTO.getAuthorities());
+            //user.setAuthorities(authorities);
             return user;
         }
     }

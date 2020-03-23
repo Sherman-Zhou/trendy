@@ -30,16 +30,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findOneByLogin(String login);
 
 
-    @EntityGraph(attributePaths = "authorities")
-    Optional<User> findOneWithAuthoritiesById(Long id);
+    @EntityGraph(attributePaths = "roles")
+    Optional<User> findOneWithRolesById(Long id);
 
-    @EntityGraph(attributePaths = "authorities")
+    @EntityGraph(attributePaths = "roles")
         //@Cacheable(cacheNames = USERS_BY_LOGIN_CACHE)
-    Optional<User> findOneWithAuthoritiesByLogin(String login);
+    Optional<User> findOneWithRolesByLogin(String login);
 
-    @EntityGraph(attributePaths = "authorities")
+    @EntityGraph(attributePaths = "roles")
         //@Cacheable(cacheNames = USERS_BY_EMAIL_CACHE)
-    Optional<User> findOneWithAuthoritiesByEmailIgnoreCase(String email);
+    Optional<User> findOneWithRolesByEmailIgnoreCase(String email);
 
     Page<User> findAllByLoginNot(Pageable pageable, String login);
 }

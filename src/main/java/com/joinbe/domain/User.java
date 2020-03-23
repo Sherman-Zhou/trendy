@@ -49,12 +49,8 @@ public class User extends AbstractAuditingEntity implements Serializable {
     private String password;
 
     @Size(max = 50)
-    @Column(name = "first_name", length = 50)
-    private String firstName;
-
-    @Size(max = 50)
-    @Column(name = "last_name", length = 50)
-    private String lastName;
+    @Column(name = "name", length = 50)
+    private String name;
 
     @Email
     @Size(min = 5, max = 254)
@@ -106,7 +102,7 @@ public class User extends AbstractAuditingEntity implements Serializable {
         inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"))
     @BatchSize(size = 20)
     @TableField(exist = false)
-    private Set<Role> authorities = new HashSet<>();
+    private Set<Role> roles = new HashSet<>();
 
     public Boolean getActivated() {
         return RecordStatus.ACTIVE.equals(status);

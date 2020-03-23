@@ -1,7 +1,5 @@
 package com.joinbe.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,7 +23,6 @@ public class UserRole implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "role_id", type = IdType.ASSIGN_ID)
     private Long roleId;
 
     private Long userId;

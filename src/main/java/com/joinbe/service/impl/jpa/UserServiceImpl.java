@@ -7,12 +7,12 @@ import com.joinbe.config.Constants;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
-import com.joinbe.mapper.UserMapper;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.repository.UserRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.web.rest.vm.ManagedUserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 /**
  * Service class for managing users.
  */
-@Service
+@Service("JpaUserService")
 @Transactional
 public class UserServiceImpl implements UserService {
 
@@ -45,14 +45,11 @@ public class UserServiceImpl implements UserService {
 
     private final CacheManager cacheManager;
 
-    private final UserMapper userMapper;
-
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.cacheManager = cacheManager;
-        this.userMapper = userMapper;
     }
 
     @Override
@@ -114,8 +111,8 @@ public class UserServiceImpl implements UserService {
         newUser.setLogin(userDTO.getLogin().toLowerCase());
         // new user gets initially a generated password
         newUser.setPassword(encryptedPassword);
-        newUser.setFirstName(userDTO.getFirstName());
-        newUser.setLastName(userDTO.getLastName());
+        newUser.setName(userDTO.getName());
+
         if (userDTO.getEmail() != null) {
             newUser.setEmail(userDTO.getEmail().toLowerCase());
         }
@@ -127,7 +124,7 @@ public class UserServiceImpl implements UserService {
         newUser.setActivationKey(RandomUtil.generateActivationKey());
         Set<Role> authorities = new HashSet<>();
         //authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add); //FIXME: toool...
-        newUser.setAuthorities(authorities);
+        newUser.setRoles(authorities);
         userRepository.save(newUser);
         this.clearUserCaches(newUser);
         log.debug("Created Information for User: {}", newUser);
@@ -148,8 +145,8 @@ public class UserServiceImpl implements UserService {
     public User createUser(UserDTO userDTO) {
         User user = new User();
         user.setLogin(userDTO.getLogin().toLowerCase());
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
+        user.setName(userDTO.getName());
+
         if (userDTO.getEmail() != null) {
             user.setEmail(userDTO.getEmail().toLowerCase());
         }
@@ -164,7 +161,7 @@ public class UserServiceImpl implements UserService {
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
         user.setStatus(RecordStatus.ACTIVE);
-        if (userDTO.getAuthorities() != null) { //FIXME:
+        if (userDTO.getRoles() != null) { //FIXME:
 //            Set<Role> authorities = userDTO.getAuthorities().stream()
 //                .map(authorityRepository::findById)
 //                .filter(Optional::isPresent)
@@ -181,19 +178,18 @@ public class UserServiceImpl implements UserService {
     /**
      * Update basic information (first name, last name, email, language) for the current user.
      *
-     * @param firstName first name of user.
-     * @param lastName  last name of user.
-     * @param email     email id of user.
-     * @param langKey   language key.
-     * @param imageUrl  image URL of user.
+     * @param name     name of user.
+     * @param email    email id of user.
+     * @param langKey  language key.
+     * @param imageUrl image URL of user.
      */
     @Override
-    public void updateUser(String firstName, String lastName, String email, String langKey, String imageUrl) {
+    public void updateUser(String name, String email, String langKey, String imageUrl) {
         SecurityUtils.getCurrentUserLogin()
             .flatMap(userRepository::findOneByLogin)
             .ifPresent(user -> {
-                user.setFirstName(firstName);
-                user.setLastName(lastName);
+                user.setName(name);
+
                 if (email != null) {
                     user.setEmail(email.toLowerCase());
                 }
@@ -219,15 +215,15 @@ public class UserServiceImpl implements UserService {
             .map(user -> {
                 this.clearUserCaches(user);
                 user.setLogin(userDTO.getLogin().toLowerCase());
-                user.setFirstName(userDTO.getFirstName());
-                user.setLastName(userDTO.getLastName());
+                user.setName(userDTO.getName());
+
                 if (userDTO.getEmail() != null) {
                     user.setEmail(userDTO.getEmail().toLowerCase());
                 }
                 user.setAvatar(userDTO.getAvatar());
                 user.setStatus(userDTO.getStatus());
                 user.setLangKey(userDTO.getLangKey());
-                Set<Role> managedAuthorities = user.getAuthorities();
+                Set<Role> managedAuthorities = user.getRoles();
                 managedAuthorities.clear();
 //                userDTO.getAuthorities().stream()
 //                    .map(authorityRepository::findById)
@@ -268,26 +264,26 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDTO> getAllManagedUsers(Pageable pageable) {
+    public Page<UserDTO> getAllManagedUsers(Pageable pageable, ManagedUserVM userVM) {
         return userRepository.findAllByLoginNot(pageable, Constants.ANONYMOUS_USER).map(UserDTO::new);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
-        return userRepository.findOneWithAuthoritiesByLogin(login);
+        return userRepository.findOneWithRolesByLogin(login);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthorities(Long id) {
-        return userRepository.findOneWithAuthoritiesById(id);
+        return userRepository.findOneWithRolesById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthorities() {
-        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithAuthoritiesByLogin);
+        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithRolesByLogin);
     }
 
     /**
@@ -314,6 +310,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<String> getAuthorities() {
         return roleRepository.findAll().stream().map(Role::getName).collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<User> findOneByEmailIgnoreCase(String email) {
+        return userRepository.findOneByEmailIgnoreCase(email);
+    }
+
+    @Override
+    public Optional<User> findOneByLogin(String login) {
+        return userRepository.findOneByLogin(login);
     }
 
 

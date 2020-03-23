@@ -3,27 +3,23 @@ package com.joinbe.web.rest;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
 import com.joinbe.repository.UserRepository;
-import com.joinbe.security.AuthoritiesConstants;
 import com.joinbe.service.MailService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.LoginAlreadyUsedException;
-import io.github.jhipster.web.util.HeaderUtil;
-import io.github.jhipster.web.util.PaginationUtil;
+import com.joinbe.web.rest.vm.ManagedUserVM;
 import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -66,13 +62,10 @@ public class UserResource {
 
     private final UserService userService;
 
-    private final UserRepository userRepository;
-
     private final MailService mailService;
 
-    public UserResource(UserService userService, UserRepository userRepository, MailService mailService) {
+    public UserResource(@Qualifier("JpaUserService") UserService userService, UserRepository userRepository, MailService mailService) {
         this.userService = userService;
-        this.userRepository = userRepository;
         this.mailService = mailService;
     }
 
@@ -89,22 +82,21 @@ public class UserResource {
      * @throws BadRequestAlertException {@code 400 (Bad Request)} if the login or email is already in use.
      */
     @PostMapping("/users")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+//    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<User> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
         log.debug("REST request to save User : {}", userDTO);
 
         if (userDTO.getId() != null) {
             throw new BadRequestAlertException("A new user cannot already have an ID", "userManagement", "idexists");
             // Lowercase the user login before comparing with database
-        } else if (userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
+        } else if (userService.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
             throw new LoginAlreadyUsedException();
-        } else if (userRepository.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
+        } else if (userService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
         } else {
             User newUser = userService.createUser(userDTO);
             mailService.sendCreationEmail(newUser);
             return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
-                .headers(HeaderUtil.createAlert(applicationName, "userManagement.created", newUser.getLogin()))
                 .body(newUser);
         }
     }
@@ -118,21 +110,20 @@ public class UserResource {
      * @throws LoginAlreadyUsedException {@code 400 (Bad Request)} if the login is already in use.
      */
     @PutMapping("/users")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+//    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
-        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
+        Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new EmailAlreadyUsedException();
         }
-        existingUser = userRepository.findOneByLogin(userDTO.getLogin().toLowerCase());
+        existingUser = userService.findOneByLogin(userDTO.getLogin().toLowerCase());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new LoginAlreadyUsedException();
         }
         Optional<UserDTO> updatedUser = userService.updateUser(userDTO);
 
-        return ResponseUtil.wrapOrNotFound(updatedUser,
-            HeaderUtil.createAlert(applicationName, "userManagement.updated", userDTO.getLogin()));
+        return ResponseUtil.wrapOrNotFound(updatedUser);
     }
 
     /**
@@ -142,10 +133,9 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body all users.
      */
     @GetMapping("/users")
-    public ResponseEntity<List<UserDTO>> getAllUsers(Pageable pageable) {
-        final Page<UserDTO> page = userService.getAllManagedUsers(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
+    public ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable, ManagedUserVM userVM) {
+        final Page<UserDTO> page = userService.getAllManagedUsers(pageable, userVM);
+        return new ResponseEntity<>(page, HttpStatus.OK);
     }
 
     /**
@@ -153,8 +143,8 @@ public class UserResource {
      *
      * @return a string list of all roles.
      */
-    @GetMapping("/users/authorities")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @GetMapping("/users/roles")
+//    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public List<String> getAuthorities() {
         return userService.getAuthorities();
     }
@@ -180,10 +170,10 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
-    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+//    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteUser(@PathVariable String login) {
         log.debug("REST request to delete User: {}", login);
         userService.deleteUser(login);
-        return ResponseEntity.noContent().headers(HeaderUtil.createAlert(applicationName, "userManagement.deleted", login)).build();
+        return ResponseEntity.noContent().build();
     }
 }

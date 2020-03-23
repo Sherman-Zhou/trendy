@@ -1,7 +1,6 @@
 package com.joinbe.web.rest;
 
 import com.joinbe.domain.User;
-import com.joinbe.repository.UserRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.MailService;
 import com.joinbe.service.UserService;
@@ -15,6 +14,7 @@ import com.joinbe.web.rest.vm.ManagedUserVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,15 +37,13 @@ public class AccountResource {
 
     private final Logger log = LoggerFactory.getLogger(AccountResource.class);
 
-    private final UserRepository userRepository;
 
     private final UserService userService;
 
     private final MailService mailService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    public AccountResource(@Qualifier("JpaUserService") UserService userService, MailService mailService) {
 
-        this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
     }
@@ -118,15 +116,15 @@ public class AccountResource {
     @PostMapping("/account")
     public void saveAccount(@Valid @RequestBody UserDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
-        Optional<User> existingUser = userRepository.findOneByEmailIgnoreCase(userDTO.getEmail());
+        Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
             throw new EmailAlreadyUsedException();
         }
-        Optional<User> user = userRepository.findOneByLogin(userLogin);
+        Optional<User> user = userService.findOneByLogin(userLogin);
         if (!user.isPresent()) {
             throw new AccountResourceException("User could not be found");
         }
-        userService.updateUser(userDTO.getFirstName(), userDTO.getLastName(), userDTO.getEmail(),
+        userService.updateUser(userDTO.getName(), userDTO.getEmail(),
             userDTO.getLangKey(), userDTO.getAvatar());
     }
 

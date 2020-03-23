@@ -1,6 +1,7 @@
 package com.joinbe.config;
 
 import com.joinbe.security.AuthoritiesConstants;
+import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.jwt.JWTConfigurer;
 import com.joinbe.security.jwt.TokenProvider;
 import org.springframework.context.annotation.Bean;
@@ -26,13 +27,16 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final TokenProvider tokenProvider;
 
+    private RedissonTokenStore tokenStore;
+
     private final CorsFilter corsFilter;
     private final SecurityProblemSupport problemSupport;
 
-    public SecurityConfiguration(TokenProvider tokenProvider, CorsFilter corsFilter, SecurityProblemSupport problemSupport) {
+    public SecurityConfiguration(TokenProvider tokenProvider, RedissonTokenStore tokenStore, CorsFilter corsFilter, SecurityProblemSupport problemSupport) {
         this.tokenProvider = tokenProvider;
         this.corsFilter = corsFilter;
         this.problemSupport = problemSupport;
+        this.tokenStore = tokenStore;
     }
 
     @Bean
@@ -94,6 +98,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 
     private JWTConfigurer securityConfigurerAdapter() {
-        return new JWTConfigurer(tokenProvider);
+        return new JWTConfigurer(tokenProvider, tokenStore);
     }
 }

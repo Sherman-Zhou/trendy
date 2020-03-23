@@ -2,6 +2,7 @@ package com.joinbe.service;
 
 import com.joinbe.domain.User;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.web.rest.vm.ManagedUserVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -19,7 +20,7 @@ public interface UserService {
 
     User createUser(UserDTO userDTO);
 
-    void updateUser(String firstName, String lastName, String email, String langKey, String imageUrl);
+    void updateUser(String name, String email, String langKey, String imageUrl);
 
     Optional<UserDTO> updateUser(UserDTO userDTO);
 
@@ -27,7 +28,7 @@ public interface UserService {
 
     void changePassword(String currentClearTextPassword, String newPassword);
 
-    Page<UserDTO> getAllManagedUsers(Pageable pageable);
+    Page<UserDTO> getAllManagedUsers(Pageable pageable, ManagedUserVM userVM);
 
     Optional<User> getUserWithAuthoritiesByLogin(String login);
 
@@ -36,4 +37,9 @@ public interface UserService {
     Optional<User> getUserWithAuthorities();
 
     List<String> getAuthorities();
+
+    Optional<User> findOneByEmailIgnoreCase(String email);
+
+    Optional<User> findOneByLogin(String login);
+
 }
