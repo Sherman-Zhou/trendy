@@ -1,5 +1,6 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.common.util.PageUtil;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
 import com.joinbe.repository.UserRepository;
@@ -10,7 +11,9 @@ import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.LoginAlreadyUsedException;
 import com.joinbe.web.rest.vm.ManagedUserVM;
-import io.github.jhipster.web.util.ResponseUtil;
+
+import com.joinbe.web.rest.vm.PageData;
+import com.joinbe.web.rest.vm.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -133,9 +136,9 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body all users.
      */
     @GetMapping("/users")
-    public ResponseEntity<Page<UserDTO>> getAllUsers(Pageable pageable, ManagedUserVM userVM) {
+    public ResponseEntity<PageData<UserDTO>> getAllUsers(Pageable pageable, ManagedUserVM userVM) {
         final Page<UserDTO> page = userService.getAllManagedUsers(pageable, userVM);
-        return new ResponseEntity<>(page, HttpStatus.OK);
+        return ResponseUtil.toPageData(page);
     }
 
     /**

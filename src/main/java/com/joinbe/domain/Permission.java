@@ -1,5 +1,7 @@
 package com.joinbe.domain;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.OperationType;
 import com.joinbe.domain.enumeration.PermissionType;
@@ -26,6 +28,7 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     @NotNull

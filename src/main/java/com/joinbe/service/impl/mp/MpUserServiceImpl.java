@@ -2,7 +2,7 @@ package com.joinbe.service.impl.mp;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.joinbe.common.util.PaginationUtil;
+import com.joinbe.common.util.PageUtil;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
 import com.joinbe.domain.UserRole;
@@ -59,7 +59,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
                 queryWrapper.orderByDesc(order.getProperty());
             }
         }
-        Page<User> userPage = PaginationUtil.toSpringDataPage(page(PaginationUtil.toMpPage(pageable), queryWrapper), pageable);
+        Page<User> userPage = PageUtil.toSpringDataPage(page(PageUtil.toMpPage(pageable), queryWrapper), pageable);
         return userPage.map(UserDTO::new);
     }
 
