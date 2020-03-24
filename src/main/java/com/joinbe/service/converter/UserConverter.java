@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * support is still in beta, and requires a manual step with an IDE.
  */
 @Service
-public class UserConvert {
+public class UserConverter {
 
     public List<UserDTO> usersToUserDTOs(List<User> users) {
         return users.stream()

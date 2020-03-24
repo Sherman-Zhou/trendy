@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.RecordStatus;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -17,6 +19,8 @@ import java.util.List;
 @Entity
 @Table(name = "division")
 //@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@Data
+@EqualsAndHashCode(callSuper = false)
 public class Division extends AbstractAuditingEntity {
 
     private static final long serialVersionUID = 1L;

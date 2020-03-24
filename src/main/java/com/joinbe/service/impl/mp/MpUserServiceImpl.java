@@ -7,7 +7,7 @@ import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
 import com.joinbe.domain.UserRole;
 import com.joinbe.domain.enumeration.RecordStatus;
-import com.joinbe.mapper.UserMapper;
+import com.joinbe.mp.mapper.UserMapper;
 import com.joinbe.service.UserRoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.UserDTO;

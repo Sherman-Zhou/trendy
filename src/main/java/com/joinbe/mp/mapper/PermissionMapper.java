@@ -1,7 +1,7 @@
-package com.joinbe.mapper;
+package com.joinbe.mp.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.joinbe.domain.Role;
+import com.joinbe.domain.Permission;
 
 /**
  * <p>
@@ -11,6 +11,6 @@ import com.joinbe.domain.Role;
  * @author
  * @since 2020-03-21
  */
-public interface RoleMapper extends BaseMapper<Role> {
+public interface PermissionMapper extends BaseMapper<Permission> {
 
 }

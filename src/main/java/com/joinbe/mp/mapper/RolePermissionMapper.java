@@ -1,4 +1,4 @@
-package com.joinbe.mapper;
+package com.joinbe.mp.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.joinbe.domain.RolePermission;

@@ -1,7 +1,7 @@
-package com.joinbe.mapper;
+package com.joinbe.mp.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.joinbe.domain.Permission;
+import com.joinbe.domain.Division;
 
 /**
  * <p>
@@ -11,6 +11,6 @@ import com.joinbe.domain.Permission;
  * @author
  * @since 2020-03-21
  */
-public interface PermissionMapper extends BaseMapper<Permission> {
+public interface DivisionMapper extends BaseMapper<Division> {
 
 }

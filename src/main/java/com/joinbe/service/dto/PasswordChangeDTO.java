@@ -1,8 +1,10 @@
 package com.joinbe.service.dto;
 
-/**
- * A DTO representing a password change required data - current and new password.
- */
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = false)
 public class PasswordChangeDTO {
     private String currentPassword;
     private String newPassword;
@@ -13,23 +15,6 @@ public class PasswordChangeDTO {
 
     public PasswordChangeDTO(String currentPassword, String newPassword) {
         this.currentPassword = currentPassword;
-        this.newPassword = newPassword;
-    }
-
-    public String getCurrentPassword() {
-
-        return currentPassword;
-    }
-
-    public void setCurrentPassword(String currentPassword) {
-        this.currentPassword = currentPassword;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
     }
 }
