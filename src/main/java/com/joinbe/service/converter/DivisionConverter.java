@@ -48,10 +48,7 @@ import java.util.List;
         divisionDTO.setDescription( division.getDescription() );
         divisionDTO.setCode( division.getCode() );
         divisionDTO.setStatus( division.getStatus());
-        divisionDTO.setCreatedBy( division.getCreatedBy() );
-        divisionDTO.setCreatedDate( division.getCreatedDate() );
-        divisionDTO.setLastModifiedBy( division.getLastModifiedBy() );
-        divisionDTO.setLastModifiedDate( division.getLastModifiedDate() );
+
 
         return divisionDTO;
     }
@@ -63,19 +60,24 @@ import java.util.List;
         }
 
         Division division = new Division();
-
-       // division.setParent( fromId( divisionDTO.getParentId() ) );
         division.setId( divisionDTO.getId() );
         division.setName( divisionDTO.getName() );
         division.setDescription( divisionDTO.getDescription() );
         division.setCode( divisionDTO.getCode() );
         division.setStatus( divisionDTO.getStatus() );
-        division.setCreatedBy( divisionDTO.getCreatedBy() );
-        division.setCreatedDate( divisionDTO.getCreatedDate() );
-        division.setLastModifiedBy( divisionDTO.getLastModifiedBy() );
-        division.setLastModifiedDate( divisionDTO.getLastModifiedDate() );
+        division.setParent(fromId(divisionDTO.getParentId()));
 
         return division;
+    }
+
+    private static Division fromId(Long id) {
+        if(id != null) {
+            Division division = new Division();
+            division.setId(id);
+
+            return division;
+        }
+        return null;
     }
 
     private static Long divisionParentId(Division division) {

@@ -16,7 +16,6 @@ public class DivisionDTO implements Serializable {
 
     private Long id;
 
-    @NotNull
     @Size(max = 80)
     private String name;
 
@@ -27,19 +26,6 @@ public class DivisionDTO implements Serializable {
     private String code;
 
     private RecordStatus status;
-
-    @NotNull
-    @Size(max = 20)
-    private String createdBy;
-
-    @NotNull
-    private Instant createdDate;
-
-    @Size(max = 20)
-    private String lastModifiedBy;
-
-    private Instant lastModifiedDate;
-
 
     private Long parentId;
 

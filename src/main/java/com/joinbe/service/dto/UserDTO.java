@@ -50,14 +50,6 @@ public class UserDTO {
 
     private RecordStatus status;
 
-    private String createdBy;
-
-    private Instant createdDate;
-
-    private String lastModifiedBy;
-
-    private Instant lastModifiedDate;
-
     private Set<String> roles;
 
     public UserDTO() {
@@ -72,10 +64,6 @@ public class UserDTO {
         this.status = user.getStatus();
         this.avatar = user.getAvatar();
         this.langKey = user.getLangKey();
-        this.createdBy = user.getCreatedBy();
-        this.createdDate = user.getCreatedDate();
-        this.lastModifiedBy = user.getLastModifiedBy();
-        this.lastModifiedDate = user.getLastModifiedDate();
         this.roles = user.getRoles().stream()
             .map(Role::getName)
             .collect(Collectors.toSet());

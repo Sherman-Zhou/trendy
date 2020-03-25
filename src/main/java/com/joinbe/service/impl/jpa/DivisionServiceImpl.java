@@ -1,11 +1,15 @@
 package com.joinbe.service.impl.jpa;
 
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Division;
 import com.joinbe.repository.DivisionRepository;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.converter.DivisionConverter;
 import com.joinbe.service.dto.DivisionDTO;
 
+import com.joinbe.web.rest.vm.DivisionVM;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -13,7 +17,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing {@link Division}.
@@ -42,6 +48,9 @@ public class DivisionServiceImpl implements DivisionService {
     public DivisionDTO save(DivisionDTO divisionDTO) {
         log.debug("Request to save Division : {}", divisionDTO);
         Division division = DivisionConverter.toEntity(divisionDTO);
+        if(divisionDTO.getParentId()!=null) {
+           // division.setParent(divisionRepository.getOne(divisionDTO.getParentId()));
+        }
         division = divisionRepository.save(division);
         return DivisionConverter.toDto(division);
     }
@@ -54,9 +63,20 @@ public class DivisionServiceImpl implements DivisionService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<DivisionDTO> findAll(Pageable pageable) {
+    public Page<DivisionDTO> findAll(Pageable pageable, DivisionVM vm) {
         log.debug("Request to get all Divisions");
-        return divisionRepository.findAll(pageable)
+        QueryParams<Division> queryParams = new QueryParams<>();
+
+        if(StringUtils.isNotEmpty(vm.getCode())) {
+            queryParams.and("code", Filter.Operator.eq, vm.getCode());
+        }
+        if(StringUtils.isNotEmpty(vm.getName())) {
+            queryParams.and("name", Filter.Operator.like, vm.getName());
+        }
+        if(StringUtils.isNotEmpty(vm.getDescription())) {
+            queryParams.and("description", Filter.Operator.like, vm.getDescription());
+        }
+        return divisionRepository.findAll(queryParams, pageable)
             .map(DivisionConverter::toDto);
     }
 
@@ -83,5 +103,17 @@ public class DivisionServiceImpl implements DivisionService {
     public void delete(Long id) {
         log.debug("Request to delete Division : {}", id);
         divisionRepository.deleteById(id);
+    }
+
+    @Override
+    public List<DivisionDTO> findAllByParentId(Long parentId) {
+        List<Division> divisions = null;
+        if (parentId == null || parentId == 0) {
+            divisions = divisionRepository.findAllRootDeptByParentIsNull();
+        } else {
+            divisions = divisionRepository.findAllByParentId(parentId);
+        }
+        return divisions.stream()
+            .map(DivisionConverter::toDto).collect(Collectors.toList());
     }
 }

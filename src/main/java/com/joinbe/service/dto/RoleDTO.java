@@ -30,17 +30,6 @@ public class RoleDTO implements Serializable {
 
     private RecordStatus status;
 
-    @NotNull
-    @Size(max = 20)
-    private String createdBy;
-
-    @NotNull
-    private Instant createdDate;
-
-    @Size(max = 20)
-    private String lastModifiedBy;
-
-    private Instant lastModifiedDate;
 
     private Set<PermissionDTO> permissions = new HashSet<>();
 

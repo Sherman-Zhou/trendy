@@ -27,10 +27,7 @@ import java.util.Set;
         roleDTO.setDescription( entity.getDescription() );
         roleDTO.setCode( entity.getCode() );
         roleDTO.setStatus( entity.getStatus() );
-        roleDTO.setCreatedBy( entity.getCreatedBy() );
-        roleDTO.setCreatedDate( entity.getCreatedDate() );
-        roleDTO.setLastModifiedBy( entity.getLastModifiedBy() );
-        roleDTO.setLastModifiedDate( entity.getLastModifiedDate() );
+
         roleDTO.setPermissions( permissionSetToPermissionDTOSet( entity.getPermissions() ) );
 
         return roleDTO;
@@ -75,10 +72,7 @@ import java.util.Set;
         role.setDescription( roleDTO.getDescription() );
         role.setCode( roleDTO.getCode() );
         role.setStatus( roleDTO.getStatus() );
-        role.setCreatedBy( roleDTO.getCreatedBy() );
-        role.setCreatedDate( roleDTO.getCreatedDate() );
-        role.setLastModifiedBy( roleDTO.getLastModifiedBy() );
-        role.setLastModifiedDate( roleDTO.getLastModifiedDate() );
+
         role.setPermissions( permissionDTOSetToPermissionSet( roleDTO.getPermissions() ) );
 
         return role;

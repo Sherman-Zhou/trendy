@@ -1,6 +1,7 @@
 package com.joinbe.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.RecordStatus;
@@ -45,12 +46,17 @@ public class Division extends AbstractAuditingEntity {
 
     @Column(name = "status")
     private RecordStatus status;
+//
+//    @Column(name = "parent_id", updatable = false, insertable = false )
+//    private  Long parentId;
 
     @ManyToOne
     @JsonIgnoreProperties("divisions")
+    @TableField(exist = false)
     private Division parent;
-
-    @OneToMany(mappedBy = "parent")
-    private List<Division> children = new ArrayList<>();
+//
+//    @OneToMany(mappedBy = "parent")
+//    @TableField(exist = false)
+//    private List<Division> children = new ArrayList<>();
 
 }

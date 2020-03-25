@@ -59,10 +59,6 @@ public class PermissionConverter {
         permissionDTO.setSortOrder( permission.getSortOrder() );
         permissionDTO.setBackendUrl( permission.getBackendUrl() );
         permissionDTO.setStatus( permission.getStatus() );
-        permissionDTO.setCreatedBy( permission.getCreatedBy() );
-        permissionDTO.setCreatedDate( permission.getCreatedDate() );
-        permissionDTO.setLastModifiedBy( permission.getLastModifiedBy() );
-        permissionDTO.setLastModifiedDate( permission.getLastModifiedDate() );
 
         return permissionDTO;
     }
@@ -88,10 +84,6 @@ public class PermissionConverter {
         permission.setSortOrder( permissionDTO.getSortOrder() );
         permission.setBackendUrl( permissionDTO.getBackendUrl() );
         permission.setStatus( permissionDTO.getStatus() );
-        permission.setCreatedBy( permissionDTO.getCreatedBy() );
-        permission.setCreatedDate( permissionDTO.getCreatedDate() );
-        permission.setLastModifiedBy( permissionDTO.getLastModifiedBy() );
-        permission.setLastModifiedDate( permissionDTO.getLastModifiedDate() );
 
         return permission;
     }

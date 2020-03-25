@@ -1,9 +1,11 @@
 package com.joinbe.service;
 
 import com.joinbe.service.dto.DivisionDTO;
+import com.joinbe.web.rest.vm.DivisionVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -25,7 +27,7 @@ public interface DivisionService {
      * @param pageable the pagination information.
      * @return the list of entities.
      */
-    Page<DivisionDTO> findAll(Pageable pageable);
+    Page<DivisionDTO> findAll(Pageable pageable, DivisionVM vm);
 
     /**
      * Get the "id" division.
@@ -41,4 +43,6 @@ public interface DivisionService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    List<DivisionDTO> findAllByParentId(Long parentId);
 }

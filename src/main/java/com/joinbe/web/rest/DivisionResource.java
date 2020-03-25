@@ -3,6 +3,7 @@ package com.joinbe.web.rest;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
+import com.joinbe.web.rest.vm.DivisionVM;
 import io.github.jhipster.web.util.HeaderUtil;
 import io.github.jhipster.web.util.PaginationUtil;
 import io.github.jhipster.web.util.ResponseUtil;
@@ -89,11 +90,23 @@ public class DivisionResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of divisions in body.
      */
     @GetMapping("/divisions")
-    public ResponseEntity<List<DivisionDTO>> getAllDivisions(Pageable pageable) {
+    public ResponseEntity<List<DivisionDTO>> getAllDivisions(Pageable pageable, DivisionVM vm) {
         log.debug("REST request to get a page of Divisions");
-        Page<DivisionDTO> page = divisionService.findAll(pageable);
+        Page<DivisionDTO> page = divisionService.findAll(pageable, vm);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
         return ResponseEntity.ok().headers(headers).body(page.getContent());
+    }
+
+    /**
+     * GET  /divisions/:parentId/children : get all the child divisions.
+     *
+     * @param parentId the parentId
+     * @return the ResponseEntity with status 200 (OK) and the list of divisions in body
+     */
+    @GetMapping("/divisions/{parentId}/children")
+    public List<DivisionDTO> getAllSubDepartments(@PathVariable Long parentId) {
+        log.debug("REST request to get a List of child DivisionDTO for parent:{}", parentId);
+        return divisionService.findAllByParentId(parentId);
     }
 
     /**

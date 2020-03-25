@@ -47,6 +47,7 @@
                     SwaggerUIBundle.plugins.DownloadUrl
                 ],
                 requestInterceptor: function(req) {
+                    // 'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhZG1pbiIsImF1dGgiOiJhZG1pbiIsImV4cCI6MTU4NTEyMTY1NH0.JsPHnKrnqWl2uuKE37fts_cpRmxi6da99RYMCslpL2MlahPvSK597KOjFaR-hTPGGQDuoOCwjlyz7H9asvEqFA'
                     var authToken =  sessionStorage.getItem("Admin-Token");
                     if (authToken) {
                         req.headers['Authorization'] = "Bearer " + authToken;
