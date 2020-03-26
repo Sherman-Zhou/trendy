@@ -39,6 +39,8 @@ spring:
     type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:mysql://localhost:3306/trendy?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
     username: root
+    # Jasypt加密 可用JasyptUtil加解密工具类生成加密结果 格式为ENC(加密结果) 以下解密结果为123456
+    # password: ENC(uOtmALFgsfxgYzEg1uLXl3O/tg6X1Dy25I3SdAeqqETOyZbDwmaW0/EZEusIh6hK)
     password:
     hikari:
       poolName: Hikari
@@ -114,6 +116,12 @@ jhipster:
       queue-size: 512
   audit-events:
     retention-period: 30 # Number of days before audit events are deleted.
+
+# 配置文件加密key 生产环境中可通过环境变量、命令行等形式进行设置
+# -Djasypt.encryptor.password="the password"
+jasypt:
+  encryptor:
+    password: 123456
 
 # ===================================================================
 # Application specific properties

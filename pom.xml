@@ -85,6 +85,7 @@
         <mybatisplus.version>3.3.1</mybatisplus.version>
         <!-- jhipster-needle-maven-property -->
         <lombok.version>1.18.12</lombok.version>
+        <jasypt-spring-boot-starter.version>3.0.2</jasypt-spring-boot-starter.version>
     </properties>
 
     <dependencyManagement>
@@ -317,6 +318,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ulisesbocchio</groupId>
+            <artifactId>jasypt-spring-boot-starter</artifactId>
+            <version>${jasypt-spring-boot-starter.version}</version>
         </dependency>
         <!-- jhipster-needle-maven-add-dependency -->
     </dependencies>
