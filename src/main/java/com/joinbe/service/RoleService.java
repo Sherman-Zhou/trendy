@@ -51,7 +51,7 @@ public interface RoleService {
      */
     void delete(Long id);
 
-    default RoleDTO toDto(Role role) {
+    default  RoleDTO toDto(Role role) {
         RoleDTO dto = BeanConverter.toDto(role, RoleDTO.class);
 
         return dto;

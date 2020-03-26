@@ -1,5 +1,6 @@
 package com.joinbe.security;
 
+import com.joinbe.common.error.UserNotActivatedException;
 import com.joinbe.domain.User;
 import com.joinbe.repository.UserRepository;
 import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
@@ -54,7 +55,7 @@ public class DomainUserDetailsService implements UserDetailsService {
             throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
         }
         List<GrantedAuthority> grantedAuthorities = user.getRoles().stream()
-            .map(authority -> new SimpleGrantedAuthority(authority.getName()))
+            .map(authority -> new SimpleGrantedAuthority(authority.getCode()))
             .collect(Collectors.toList());
         return new org.springframework.security.core.userdetails.User(user.getLogin(),
             user.getPassword(),

@@ -9,13 +9,17 @@ import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.repository.UserRepository;
+import com.joinbe.security.AuthoritiesConstants;
 import com.joinbe.security.SecurityUtils;
+import com.joinbe.service.RoleService;
 import com.joinbe.service.UserService;
+import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.vm.ManagedUserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,13 +47,17 @@ public class UserServiceImpl implements UserService {
 
     private final RoleRepository roleRepository;
 
+    private final RoleService roleService;
+
     private final CacheManager cacheManager;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository, CacheManager cacheManager) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository,
+                           CacheManager cacheManager, RoleService roleService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.cacheManager = cacheManager;
+        this.roleService = roleService;
     }
 
     @Override
@@ -122,9 +130,9 @@ public class UserServiceImpl implements UserService {
         newUser.setStatus(RecordStatus.INACTIVE);
         // new user gets registration key
         newUser.setActivationKey(RandomUtil.generateActivationKey());
-        Set<Role> authorities = new HashSet<>();
-        //authorityRepository.findById(AuthoritiesConstants.USER).ifPresent(authorities::add); //FIXME: toool...
-        newUser.setRoles(authorities);
+        Set<Role> roles = new HashSet<>();
+        roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.USER, RecordStatus.ACTIVE).ifPresent(roles::add);
+        newUser.setRoles(roles);
         userRepository.save(newUser);
         this.clearUserCaches(newUser);
         log.debug("Created Information for User: {}", newUser);
@@ -161,13 +169,18 @@ public class UserServiceImpl implements UserService {
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
         user.setStatus(RecordStatus.ACTIVE);
-        if (userDTO.getRoles() != null) { //FIXME:
-//            Set<Role> authorities = userDTO.getAuthorities().stream()
-//                .map(authorityRepository::findById)
-//                .filter(Optional::isPresent)
-//                .map(Optional::get)
-//                .collect(Collectors.toSet());
-//            user.setAuthorities(authorities);
+        if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
+            Set<Role> roles = userDTO.getRoles().stream().map(RoleDTO::getId)
+                .map(roleRepository::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
+            user.setRoles(roles);
+        }else {
+            //if not selected any roles, set to user by default.
+            Set<Role> roles = new HashSet<>();
+            roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.USER, RecordStatus.ACTIVE).ifPresent(roles::add);
+            user.setRoles(roles);
         }
         userRepository.save(user);
         this.clearUserCaches(user);
@@ -189,7 +202,6 @@ public class UserServiceImpl implements UserService {
             .flatMap(userRepository::findOneByLogin)
             .ifPresent(user -> {
                 user.setName(name);
-
                 if (email != null) {
                     user.setEmail(email.toLowerCase());
                 }
@@ -225,11 +237,11 @@ public class UserServiceImpl implements UserService {
                 user.setLangKey(userDTO.getLangKey());
                 Set<Role> managedAuthorities = user.getRoles();
                 managedAuthorities.clear();
-//                userDTO.getAuthorities().stream()
-//                    .map(authorityRepository::findById)
-//                    .filter(Optional::isPresent)
-//                    .map(Optional::get)
-//                    .forEach(managedAuthorities::add); //FIXME:
+                userDTO.getRoles().stream().map(RoleDTO::getId)
+                    .map(roleRepository::findById)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .forEach(managedAuthorities::add);
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
                 return user;
@@ -308,8 +320,8 @@ public class UserServiceImpl implements UserService {
      * @return a list of all the authorities.
      */
     @Override
-    public List<String> getAuthorities() {
-        return roleRepository.findAll().stream().map(Role::getName).collect(Collectors.toList());
+    public List<RoleDTO> getRoles() {
+        return roleRepository.findAllByStatus(RecordStatus.ACTIVE).stream().map(roleService::toDto).collect(Collectors.toList());
     }
 
     @Override

@@ -2,9 +2,9 @@ package com.joinbe.web.rest;
 
 import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
-import com.joinbe.repository.UserRepository;
 import com.joinbe.service.MailService;
 import com.joinbe.service.UserService;
+import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
@@ -15,7 +15,6 @@ import com.joinbe.web.rest.vm.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -57,14 +56,12 @@ public class UserResource {
 
     private final Logger log = LoggerFactory.getLogger(UserResource.class);
 
-    @Value("${jhipster.clientApp.name}")
-    private String applicationName;
 
     private final UserService userService;
 
     private final MailService mailService;
 
-    public UserResource(@Qualifier("JpaUserService") UserService userService, UserRepository userRepository, MailService mailService) {
+    public UserResource(@Qualifier("JpaUserService") UserService userService, MailService mailService) {
         this.userService = userService;
         this.mailService = mailService;
     }
@@ -145,8 +142,8 @@ public class UserResource {
      */
     @GetMapping("/users/roles")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public List<String> getAuthorities() {
-        return userService.getAuthorities();
+    public List<RoleDTO> getRoles() {
+        return userService.getRoles();
     }
 
     /**

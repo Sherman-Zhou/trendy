@@ -34,8 +34,8 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
 
     @NotNull
     @Size(max = 80)
-    @Column(name = "name", length = 80, nullable = false)
-    private String name;
+    @Column(name = "key", length = 80, nullable = false)
+    private String key;
 
     @Column(name = "lvl")
     private Integer lvl;

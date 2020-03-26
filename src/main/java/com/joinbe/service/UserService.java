@@ -1,6 +1,7 @@
 package com.joinbe.service;
 
 import com.joinbe.domain.User;
+import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.vm.ManagedUserVM;
 import org.springframework.data.domain.Page;
@@ -36,7 +37,7 @@ public interface UserService {
 
     Optional<User> getUserWithAuthorities();
 
-    List<String> getAuthorities();
+    List<RoleDTO> getRoles();
 
     Optional<User> findOneByEmailIgnoreCase(String email);
 

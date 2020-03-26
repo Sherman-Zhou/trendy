@@ -6,6 +6,7 @@ import com.joinbe.service.dto.PermissionDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -43,6 +44,8 @@ public interface PermissionService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    List<Permission> loadUserPermissions();
 
 
     default PermissionDTO toDto(Permission permission) {

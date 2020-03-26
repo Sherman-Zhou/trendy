@@ -49,7 +49,9 @@ public class UserDTO {
 
     private RecordStatus status;
 
-    private Set<String> roles;
+    private Set<String> authorities;
+
+    private Set<RoleDTO> roles;
 
     public UserDTO() {
         // Empty constructor needed for Jackson.
@@ -63,7 +65,7 @@ public class UserDTO {
         this.status = user.getStatus();
         this.avatar = user.getAvatar();
         this.langKey = user.getLangKey();
-        this.roles = user.getRoles().stream()
+        this.authorities = user.getRoles().stream()
             .map(Role::getName)
             .collect(Collectors.toSet());
     }

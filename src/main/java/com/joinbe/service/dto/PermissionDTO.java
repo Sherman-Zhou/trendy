@@ -19,7 +19,7 @@ public class PermissionDTO implements Serializable {
 
     @NotNull
     @Size(max = 80)
-    private String name;
+    private String key;
 
     private Integer lvl;
 

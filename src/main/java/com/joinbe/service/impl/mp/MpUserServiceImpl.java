@@ -10,6 +10,7 @@ import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.mp.mapper.UserMapper;
 import com.joinbe.service.UserRoleService;
 import com.joinbe.service.UserService;
+import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.vm.ManagedUserVM;
 import io.github.jhipster.security.RandomUtil;
@@ -86,8 +87,8 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
 
         this.save(user);
 
-        if (userDTO.getRoles() != null) {
-            List<UserRole> userRoles = new ArrayList<>(userDTO.getRoles().size());
+        if (userDTO.getAuthorities() != null) {
+            List<UserRole> userRoles = new ArrayList<>(userDTO.getAuthorities().size());
 //            for(Long roleId : userDTO.getAuthorities()){
 //                UserRole userRole = new UserRole( );
 //                userRole.setRoleId(roleId);
@@ -157,7 +158,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public List<String> getAuthorities() {
+    public List<RoleDTO> getRoles() {
         return null;
     }
 

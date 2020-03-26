@@ -1,4 +1,4 @@
-package com.joinbe.security;
+package com.joinbe.common.error;
 
 import org.springframework.security.core.AuthenticationException;
 
