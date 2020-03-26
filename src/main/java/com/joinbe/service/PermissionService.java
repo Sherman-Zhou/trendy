@@ -1,5 +1,7 @@
 package com.joinbe.service;
 
+import com.joinbe.common.util.BeanConverter;
+import com.joinbe.domain.Permission;
 import com.joinbe.service.dto.PermissionDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -41,4 +43,16 @@ public interface PermissionService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+
+    default PermissionDTO toDto(Permission permission) {
+        PermissionDTO dto = BeanConverter.toDto(permission, PermissionDTO.class);
+
+        return dto;
+    }
+
+    default Permission toEntity(PermissionDTO dto) {
+        Permission entity = BeanConverter.toEntity(dto, Permission.class);
+        return entity;
+    }
 }

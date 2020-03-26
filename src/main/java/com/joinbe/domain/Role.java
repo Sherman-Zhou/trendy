@@ -1,6 +1,7 @@
 package com.joinbe.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.joinbe.domain.enumeration.RecordStatus;
 import lombok.Data;
@@ -48,6 +49,7 @@ public class Role extends AbstractAuditingEntity implements Serializable {
 
     @ManyToMany
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @TableField(exist = false)
     @JoinTable(name = "role_permission",
         joinColumns = @JoinColumn(name = "role_id", referencedColumnName = "id"),
         inverseJoinColumns = @JoinColumn(name = "permission_id", referencedColumnName = "id"))

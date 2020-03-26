@@ -46,17 +46,17 @@ public class Division extends AbstractAuditingEntity {
 
     @Column(name = "status")
     private RecordStatus status;
-//
-//    @Column(name = "parent_id", updatable = false, insertable = false )
-//    private  Long parentId;
+    @Column(name = "parent_id", updatable = false, insertable = false)
+    private Long parentId;
+
 
     @ManyToOne
     @JsonIgnoreProperties("divisions")
     @TableField(exist = false)
     private Division parent;
-//
-//    @OneToMany(mappedBy = "parent")
-//    @TableField(exist = false)
-//    private List<Division> children = new ArrayList<>();
+
+    @OneToMany(mappedBy = "parent")
+    @TableField(exist = false)
+    private List<Division> children = new ArrayList<>();
 
 }

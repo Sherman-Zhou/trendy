@@ -93,6 +93,7 @@ public class Filter implements Serializable {
         daterange,
         year
     }
+
     private static final boolean DEFAULT_IGNORE_CASE = false;
 
 
@@ -132,6 +133,7 @@ public class Filter implements Serializable {
         this.operator = Operator.valueOf(operator);
         this.value = value;
     }
+
     public Filter(String path, Operator operator, Object value, boolean ignoreCase) {
         this.path = path;
         this.operator = operator;
@@ -268,11 +270,11 @@ public class Filter implements Serializable {
     @Override
     public String toString() {
         return "Filter{" +
-                "path='" + path + '\'' +
-                ", operator=" + operator +
-                ", type=" + type +
-                ", value=" + value +
-                ", ignoreCase=" + ignoreCase +
-                '}';
+            "path='" + path + '\'' +
+            ", operator=" + operator +
+            ", type=" + type +
+            ", value=" + value +
+            ", ignoreCase=" + ignoreCase +
+            '}';
     }
 }

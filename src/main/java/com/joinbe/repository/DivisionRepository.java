@@ -15,7 +15,7 @@ import java.util.List;
 @Repository
 public interface DivisionRepository extends JpaRepository<Division, Long>, JpaSpecificationExecutor<Division> {
 
-    @EntityGraph(attributePaths = {"parent","children"})
+    @EntityGraph(attributePaths = {"parent", "children"})
     List<Division> findAllByParentId(Long parentId);
 
     @EntityGraph(attributePaths = {"children"})

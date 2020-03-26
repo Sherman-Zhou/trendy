@@ -4,18 +4,15 @@ import com.joinbe.service.DivisionService;
 import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.DivisionVM;
-import io.github.jhipster.web.util.HeaderUtil;
-import io.github.jhipster.web.util.PaginationUtil;
-import io.github.jhipster.web.util.ResponseUtil;
+import com.joinbe.web.rest.vm.PageData;
+import com.joinbe.web.rest.vm.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -58,7 +55,6 @@ public class DivisionResource {
         }
         DivisionDTO result = divisionService.save(divisionDTO);
         return ResponseEntity.created(new URI("/api/divisions/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
 
@@ -74,12 +70,11 @@ public class DivisionResource {
     @PutMapping("/divisions")
     public ResponseEntity<DivisionDTO> updateDivision(@Valid @RequestBody DivisionDTO divisionDTO) throws URISyntaxException {
         log.debug("REST request to update Division : {}", divisionDTO);
-        if (divisionDTO.getId() == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        if (divisionDTO.getId() == null || divisionDTO.getVersion() == null) {
+            throw new BadRequestAlertException("Invalid id or version", ENTITY_NAME, "idnull");
         }
         DivisionDTO result = divisionService.save(divisionDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, divisionDTO.getId().toString()))
             .body(result);
     }
 
@@ -90,11 +85,10 @@ public class DivisionResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of divisions in body.
      */
     @GetMapping("/divisions")
-    public ResponseEntity<List<DivisionDTO>> getAllDivisions(Pageable pageable, DivisionVM vm) {
+    public ResponseEntity<PageData<DivisionDTO>> getAllDivisions(Pageable pageable, DivisionVM vm) {
         log.debug("REST request to get a page of Divisions");
         Page<DivisionDTO> page = divisionService.findAll(pageable, vm);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        return ResponseUtil.toPageData(page);
     }
 
     /**
@@ -132,6 +126,6 @@ public class DivisionResource {
     public ResponseEntity<Void> deleteDivision(@PathVariable Long id) {
         log.debug("REST request to delete Division : {}", id);
         divisionService.delete(id);
-        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
+        return ResponseEntity.noContent().build();
     }
 }

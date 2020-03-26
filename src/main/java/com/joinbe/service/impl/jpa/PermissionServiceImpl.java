@@ -3,9 +3,7 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.domain.Permission;
 import com.joinbe.repository.PermissionRepository;
 import com.joinbe.service.PermissionService;
-import com.joinbe.service.converter.PermissionConverter;
 import com.joinbe.service.dto.PermissionDTO;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -27,8 +25,7 @@ public class PermissionServiceImpl implements PermissionService {
     private final PermissionRepository permissionRepository;
 
 
-
-    public PermissionServiceImpl(PermissionRepository permissionRepository ) {
+    public PermissionServiceImpl(PermissionRepository permissionRepository) {
         this.permissionRepository = permissionRepository;
     }
 
@@ -41,9 +38,9 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public PermissionDTO save(PermissionDTO permissionDTO) {
         log.debug("Request to save Permission : {}", permissionDTO);
-        Permission permission = PermissionConverter.toEntity(permissionDTO);
+        Permission permission = this.toEntity(permissionDTO);
         permission = permissionRepository.save(permission);
-        return PermissionConverter.toDto(permission);
+        return this.toDto(permission);
     }
 
     /**
@@ -57,7 +54,7 @@ public class PermissionServiceImpl implements PermissionService {
     public Page<PermissionDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Permissions");
         return permissionRepository.findAll(pageable)
-            .map(PermissionConverter::toDto);
+            .map(this::toDto);
     }
 
     /**
@@ -71,7 +68,7 @@ public class PermissionServiceImpl implements PermissionService {
     public Optional<PermissionDTO> findOne(Long id) {
         log.debug("Request to get Permission : {}", id);
         return permissionRepository.findById(id)
-            .map(PermissionConverter::toDto);
+            .map(this::toDto);
     }
 
     /**
@@ -84,4 +81,5 @@ public class PermissionServiceImpl implements PermissionService {
         log.debug("Request to delete Permission : {}", id);
         permissionRepository.deleteById(id);
     }
+
 }

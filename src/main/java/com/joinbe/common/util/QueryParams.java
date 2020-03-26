@@ -3,7 +3,6 @@ package com.joinbe.common.util;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joinbe.service.util.SpringContextUtils;
-
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -43,11 +42,11 @@ public class QueryParams<T> implements Specification<T> {
 
     }
 
-    public QueryParams(String params, List<Filter> additionalFilters  ) {
+    public QueryParams(String params, List<Filter> additionalFilters) {
         if (StringUtils.isNotEmpty(params)) {
             toFilters(params);
         }
-        if(!CollectionUtils.isEmpty(additionalFilters)){
+        if (!CollectionUtils.isEmpty(additionalFilters)) {
             this.andFilters.addAll(additionalFilters);
         }
 
@@ -61,10 +60,10 @@ public class QueryParams<T> implements Specification<T> {
         ObjectMapper mapper = new ObjectMapper();
         try {
             String decodedParams = URLDecoder.decode(new String(Base64.getDecoder().decode(params), ENCODING_UTF8), ENCODING_UTF8);
-            log.debug("filter params: {}" , decodedParams);
+            log.debug("filter params: {}", decodedParams);
             List<Filter> filters = (mapper.readValue(decodedParams, new TypeReference<List<Filter>>() {
             }));
-            andFilters.addAll( filters.stream().filter(filter-> isNotEmpty(filter.getValue())).collect(Collectors.toList()));
+            andFilters.addAll(filters.stream().filter(filter -> isNotEmpty(filter.getValue())).collect(Collectors.toList()));
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
@@ -98,13 +97,13 @@ public class QueryParams<T> implements Specification<T> {
                 continue;
             }
             log.debug("JPA model (properties->java type : {}->{})", key, path.getJavaType());
-            Object value = convertToJPAType( filter.getValue(), path.getJavaType());
+            Object value = convertToJPAType(filter.getValue(), path.getJavaType());
             switch (operator) {
                 case eq:
-                    if ( isNotEmpty(value)) {
+                    if (isNotEmpty(value)) {
                         if (BooleanUtils.isTrue(ignoreCase) && String.class.isAssignableFrom(path.getJavaType()) && value instanceof String) {
                             restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.equal(criteriaBuilder.lower((Path<String>) path),
-                                    ((String) value).toLowerCase()));
+                                ((String) value).toLowerCase()));
                         } else {
                             restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.equal(path, value));
                         }
@@ -116,7 +115,7 @@ public class QueryParams<T> implements Specification<T> {
                     if (value != null) {
                         if (BooleanUtils.isTrue(ignoreCase) && String.class.isAssignableFrom(path.getJavaType()) && value instanceof String) {
                             restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.notEqual(criteriaBuilder.lower((Path<String>) path),
-                                    ((String) value).toLowerCase()));
+                                ((String) value).toLowerCase()));
                         } else {
                             restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.notEqual(path, value));
                         }
@@ -149,7 +148,7 @@ public class QueryParams<T> implements Specification<T> {
                         String likeValue = String.format(SQL_LIKE_PATTERN, value);
                         if (BooleanUtils.isTrue(ignoreCase)) {
                             restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.like(criteriaBuilder.lower((Path<String>) path),
-                                    (likeValue).toLowerCase()));
+                                (likeValue).toLowerCase()));
                         } else {
                             restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.like((Path<String>) path, likeValue));
                         }
@@ -165,14 +164,14 @@ public class QueryParams<T> implements Specification<T> {
                     restrictions = criteriaBuilder.and(restrictions, path.isNotNull());
                     break;
                 case between:
-                    if (Instant.class.isAssignableFrom(path.getJavaType()) && value instanceof List && ((List)value).size() >= 2) {
-                        List <Instant> values = (List)value;
-                        restrictions =  criteriaBuilder.and(restrictions, criteriaBuilder.between((Expression)path,  criteriaBuilder.literal(values.get(0)),
+                    if (Instant.class.isAssignableFrom(path.getJavaType()) && value instanceof List && ((List) value).size() >= 2) {
+                        List<Instant> values = (List) value;
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.between((Expression) path, criteriaBuilder.literal(values.get(0)),
                             criteriaBuilder.literal(values.get(1))));
-                    }else if (Date.class.isAssignableFrom(path.getJavaType()) && value instanceof List && ((List)value).size() >= 2) {
+                    } else if (Date.class.isAssignableFrom(path.getJavaType()) && value instanceof List && ((List) value).size() >= 2) {
                         List<Date> values = (List) value;
                         restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.between((Expression) path, criteriaBuilder.literal(values.get(0)),
-                                criteriaBuilder.literal(values.get(1))));
+                            criteriaBuilder.literal(values.get(1))));
                     }
 
                     break;
@@ -191,16 +190,16 @@ public class QueryParams<T> implements Specification<T> {
     }
 
     public QueryParams and(String path, Filter.Operator operator, Object value) {
-        if(value instanceof  String) {
-            value =  ((String) value).trim();
+        if (value instanceof String) {
+            value = ((String) value).trim();
         }
         this.andFilters.add(new Filter(path, operator, value));
         return this;
     }
 
     public QueryParams and(String path, Filter.Operator operator, Object value, boolean ignoreCase) {
-        if(value instanceof  String) {
-            value =  ((String) value).trim();
+        if (value instanceof String) {
+            value = ((String) value).trim();
         }
         this.andFilters.add(new Filter(path, operator, value, ignoreCase));
         return this;
@@ -217,7 +216,7 @@ public class QueryParams<T> implements Specification<T> {
     }
 
     private boolean isNotEmpty(Object value) {
-        if(value == null){
+        if (value == null) {
             return false;
         }
         if (value instanceof String) {
@@ -244,12 +243,12 @@ public class QueryParams<T> implements Specification<T> {
         FormattingConversionService conversionService = SpringContextUtils.getBean(FormattingConversionService.class);
         if (value instanceof Collection) {
             Collection values = (Collection) value;
-            List <Object> newValues = new ArrayList<>(values.size());
+            List<Object> newValues = new ArrayList<>(values.size());
             for (Object item : values) {
-                 newValues.add(conversionService.convert(item, type));
+                newValues.add(conversionService.convert(item, type));
             }
             return newValues;
-        }else {
+        } else {
             return conversionService.convert(value, type);
         }
     }
@@ -258,9 +257,9 @@ public class QueryParams<T> implements Specification<T> {
     @Override
     public String toString() {
         return "QueryParams{" +
-                "andFilters=" + andFilters +
-                ", isDistinct=" + isDistinct +
-                '}';
+            "andFilters=" + andFilters +
+            ", isDistinct=" + isDistinct +
+            '}';
     }
 }
 

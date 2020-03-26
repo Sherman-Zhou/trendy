@@ -1,6 +1,7 @@
 package com.joinbe.domain;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.OperationType;
@@ -76,9 +77,11 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
 
     @ManyToOne
     @JsonIgnoreProperties("")
+    @TableField(exist = false)
     private Permission parent;
 
     @OneToMany(mappedBy = "parent")
+    @TableField(exist = false)
     private List<Permission> children;
 
 

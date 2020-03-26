@@ -3,9 +3,8 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.domain.Role;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.service.RoleService;
-import com.joinbe.service.converter.RoleConverter;
 import com.joinbe.service.dto.RoleDTO;
- import org.slf4j.Logger;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -39,9 +38,9 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleDTO save(RoleDTO roleDTO) {
         log.debug("Request to save Role : {}", roleDTO);
-        Role role = RoleConverter.toEntity(roleDTO);
+        Role role = toEntity(roleDTO);
         role = roleRepository.save(role);
-        return RoleConverter.toDto(role);
+        return toDto(role);
     }
 
     /**
@@ -55,7 +54,7 @@ public class RoleServiceImpl implements RoleService {
     public Page<RoleDTO> findAll(Pageable pageable) {
         log.debug("Request to get all Roles");
         return roleRepository.findAll(pageable)
-            .map(RoleConverter::toDto);
+            .map(this::toDto);
     }
 
     /**
@@ -64,7 +63,7 @@ public class RoleServiceImpl implements RoleService {
      * @return the list of entities.
      */
     public Page<RoleDTO> findAllWithEagerRelationships(Pageable pageable) {
-        return roleRepository.findAllWithEagerRelationships(pageable).map(RoleConverter::toDto);
+        return roleRepository.findAllWithEagerRelationships(pageable).map(this::toDto);
     }
 
     /**
@@ -78,7 +77,7 @@ public class RoleServiceImpl implements RoleService {
     public Optional<RoleDTO> findOne(Long id) {
         log.debug("Request to get Role : {}", id);
         return roleRepository.findOneWithEagerRelationships(id)
-            .map(role -> RoleConverter.toDto(role));
+            .map(this::toDto);
     }
 
     /**

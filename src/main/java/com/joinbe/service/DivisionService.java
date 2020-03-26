@@ -1,5 +1,7 @@
 package com.joinbe.service;
 
+import com.joinbe.common.util.BeanConverter;
+import com.joinbe.domain.Division;
 import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.web.rest.vm.DivisionVM;
 import org.springframework.data.domain.Page;
@@ -45,4 +47,22 @@ public interface DivisionService {
     void delete(Long id);
 
     List<DivisionDTO> findAllByParentId(Long parentId);
+
+    default DivisionDTO toDto(Division division) {
+        DivisionDTO dto = BeanConverter.toDto(division, DivisionDTO.class);
+        // dto.setParentId(division.getParentId());
+        return dto;
+    }
+
+    default Division toEntity(DivisionDTO divisionDTO) {
+
+        Division division = BeanConverter.toEntity(divisionDTO, Division.class);
+        if (divisionDTO.getParentId() != null) {
+            Division parent = new Division();
+            parent.setId(divisionDTO.getParentId());
+            parent.setVersion(0);
+            division.setParent(parent);
+        }
+        return division;
+    }
 }

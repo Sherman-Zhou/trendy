@@ -5,9 +5,7 @@ import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Division;
 import com.joinbe.repository.DivisionRepository;
 import com.joinbe.service.DivisionService;
-import com.joinbe.service.converter.DivisionConverter;
 import com.joinbe.service.dto.DivisionDTO;
-
 import com.joinbe.web.rest.vm.DivisionVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -33,7 +31,6 @@ public class DivisionServiceImpl implements DivisionService {
     private final DivisionRepository divisionRepository;
 
 
-
     public DivisionServiceImpl(DivisionRepository divisionRepository) {
         this.divisionRepository = divisionRepository;
     }
@@ -47,12 +44,10 @@ public class DivisionServiceImpl implements DivisionService {
     @Override
     public DivisionDTO save(DivisionDTO divisionDTO) {
         log.debug("Request to save Division : {}", divisionDTO);
-        Division division = DivisionConverter.toEntity(divisionDTO);
-        if(divisionDTO.getParentId()!=null) {
-           // division.setParent(divisionRepository.getOne(divisionDTO.getParentId()));
-        }
+        Division division = toEntity(divisionDTO);
         division = divisionRepository.save(division);
-        return DivisionConverter.toDto(division);
+        divisionRepository.flush();
+        return this.toDto(division);
     }
 
     /**
@@ -67,17 +62,17 @@ public class DivisionServiceImpl implements DivisionService {
         log.debug("Request to get all Divisions");
         QueryParams<Division> queryParams = new QueryParams<>();
 
-        if(StringUtils.isNotEmpty(vm.getCode())) {
+        if (StringUtils.isNotEmpty(vm.getCode())) {
             queryParams.and("code", Filter.Operator.eq, vm.getCode());
         }
-        if(StringUtils.isNotEmpty(vm.getName())) {
+        if (StringUtils.isNotEmpty(vm.getName())) {
             queryParams.and("name", Filter.Operator.like, vm.getName());
         }
-        if(StringUtils.isNotEmpty(vm.getDescription())) {
+        if (StringUtils.isNotEmpty(vm.getDescription())) {
             queryParams.and("description", Filter.Operator.like, vm.getDescription());
         }
         return divisionRepository.findAll(queryParams, pageable)
-            .map(DivisionConverter::toDto);
+            .map(this::toDto);
     }
 
     /**
@@ -91,7 +86,7 @@ public class DivisionServiceImpl implements DivisionService {
     public Optional<DivisionDTO> findOne(Long id) {
         log.debug("Request to get Division : {}", id);
         return divisionRepository.findById(id)
-            .map(DivisionConverter::toDto);
+            .map(this::toDto);
     }
 
     /**
@@ -113,7 +108,8 @@ public class DivisionServiceImpl implements DivisionService {
         } else {
             divisions = divisionRepository.findAllByParentId(parentId);
         }
+
         return divisions.stream()
-            .map(DivisionConverter::toDto).collect(Collectors.toList());
+            .map(this::toDto).collect(Collectors.toList());
     }
 }

@@ -4,11 +4,9 @@ import com.joinbe.domain.enumeration.RecordStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.Objects;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -28,5 +26,15 @@ public class DivisionDTO implements Serializable {
     private RecordStatus status;
 
     private Long parentId;
+
+    private Integer version;
+
+    private String createdBy;
+
+    private Instant createdDate;
+
+    private String lastModifiedBy;
+
+    private Instant lastModifiedDate;
 
 }

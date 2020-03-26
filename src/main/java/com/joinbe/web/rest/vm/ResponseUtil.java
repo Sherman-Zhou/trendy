@@ -12,7 +12,7 @@ public class ResponseUtil {
 
     private static final Integer RESPONSE_CODE_SUCCESS = 20000;
 
-    private static <T> PageData<T> pageToResult(Page <T> page) {
+    private static <T> PageData<T> pageToResult(Page<T> page) {
         PageData<T> result = new PageData<>();
         result.setItems(page.getContent());
         result.setTotal(page.getTotalElements());
@@ -20,7 +20,7 @@ public class ResponseUtil {
     }
 
     public static <X> ResponseEntity<PageData<X>> toPageData(Page<X> page) {
-        return new ResponseEntity (pageToResult(page), HttpStatus.OK);
+        return new ResponseEntity(pageToResult(page), HttpStatus.OK);
     }
 
     public static <X> ResponseEntity<X> wrapOrNotFound(Optional<X> maybeResponse) {

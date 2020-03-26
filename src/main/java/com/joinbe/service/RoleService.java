@@ -1,5 +1,7 @@
 package com.joinbe.service;
 
+import com.joinbe.common.util.BeanConverter;
+import com.joinbe.domain.Role;
 import com.joinbe.service.dto.RoleDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,4 +50,17 @@ public interface RoleService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    default RoleDTO toDto(Role role) {
+        RoleDTO dto = BeanConverter.toDto(role, RoleDTO.class);
+
+        return dto;
+    }
+
+    default Role toEntity(RoleDTO roleDTO) {
+
+        Role role = BeanConverter.toEntity(roleDTO, Role.class);
+
+        return role;
+    }
 }
