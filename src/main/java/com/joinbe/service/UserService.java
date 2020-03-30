@@ -1,5 +1,6 @@
 package com.joinbe.service;
 
+import com.joinbe.domain.Permission;
 import com.joinbe.domain.User;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
@@ -42,5 +43,7 @@ public interface UserService {
     Optional<User> findOneByEmailIgnoreCase(String email);
 
     Optional<User> findOneByLogin(String login);
+
+    List<Permission> findAllUserPermissionsByLogin(String login);
 
 }

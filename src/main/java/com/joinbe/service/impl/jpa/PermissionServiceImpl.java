@@ -1,6 +1,8 @@
 package com.joinbe.service.impl.jpa;
 
 import com.joinbe.domain.Permission;
+import com.joinbe.domain.enumeration.PermissionType;
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.PermissionRepository;
 import com.joinbe.service.PermissionService;
 import com.joinbe.service.dto.PermissionDTO;
@@ -13,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing {@link Permission}.
@@ -84,8 +87,11 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    public List<Permission> loadUserPermissions() {
-        return null; //FIXME: to implement....
+    public List<Permission> loadAllPermissions() {
+        List<Permission> permissions = permissionRepository.findAllByStatus(RecordStatus.ACTIVE);
+
+        return permissions.stream().filter(permission -> !PermissionType.FOLDER.equals(permission.getPermissionType()))
+            .collect(Collectors.toList());
     }
 
 }

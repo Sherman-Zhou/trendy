@@ -1,7 +1,9 @@
 package com.joinbe.security.permission;
 
 
+import com.joinbe.common.util.RequestKey;
 import com.joinbe.domain.Permission;
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.PermissionService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -11,8 +13,11 @@ import org.springframework.security.access.SecurityConfig;
 import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.PathMatcher;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 
@@ -25,46 +30,72 @@ public class CustomSecurityMetadataSource implements FilterInvocationSecurityMet
 
     private final PathMatcher pathMatcher;
 
-    private Map<String, Collection<ConfigAttribute>> map = null;
+    private Map<RequestKey, Collection<ConfigAttribute>> map = null;
 
     public CustomSecurityMetadataSource(PermissionService permissionService, PathMatcher pathMatcher) {
         this.permissionService = permissionService;
         this.pathMatcher = pathMatcher;
     }
 
-    public void loadResourceDefine(){
+
+    @PostConstruct
+    private void init() {
+        this.loadResourceDefine();
+    }
+
+    public synchronized void loadResourceDefine() {
 
         map = new HashMap<>(16);
         Collection<ConfigAttribute> configAttributes;
         ConfigAttribute cfg;
         // 获取启用的权限操作请求
-        List<Permission> permissions = permissionService.loadUserPermissions();
-        for(Permission permission : permissions) {
-            if(StringUtils.isNotEmpty(permission.getTitle())&&StringUtils.isNotEmpty(permission.getBackendUrl())){
-                configAttributes = new ArrayList<>();
-                cfg = new SecurityConfig(permission.getTitle());
+        List<Permission> permissions = permissionService.loadAllPermissions();
+        for (Permission permission : permissions) {
 
-                configAttributes.add(cfg);
+            if (StringUtils.isNotEmpty(permission.getBackendUrl())) {
 
-                map.put(permission.getBackendUrl(), configAttributes);
+                if (CollectionUtils.isEmpty(permission.getChildren())
+                    || permission.getChildren().stream().allMatch(child -> !RecordStatus.ACTIVE.equals(child.getStatus()))) {
+                    configAttributes = new ArrayList<>();
+                    cfg = new SecurityConfig(permission.getKey());
+
+                    configAttributes.add(cfg);
+                    String method = permission.getOperationType() != null ? permission.getOperationType().getMethod().toString() : null;
+                    map.put(new RequestKey(permission.getBackendUrl(), method), configAttributes);
+                }
+
             }
+
         }
     }
 
     @Override
     public Collection<ConfigAttribute> getAttributes(Object o) throws IllegalArgumentException {
 
-        if(map == null){
+        if (map == null) {
             loadResourceDefine();
         }
-        log.info("Http Method:{}", (((FilterInvocation) o).getHttpRequest().getMethod()));
-        String url = ((FilterInvocation) o).getRequestUrl();
-        Iterator<String> iterator = map.keySet().iterator();
+        HttpServletRequest request = ((FilterInvocation) o).getHttpRequest();
+        String method = request.getMethod();
+        String url = request.getRequestURI();
+        Iterator<RequestKey> iterator = map.keySet().iterator();
+        log.debug("url:method={}:{} ", url, method);
         while (iterator.hasNext()) {
-            String resURL = iterator.next();
-            if (StringUtils.isNotEmpty(resURL)&& pathMatcher.match(resURL,url)) {
-                log.info("getAttributes:{}-{}",resURL, map.get(resURL));
-                return map.get(resURL);
+            RequestKey requestKey = iterator.next();
+
+            if (pathMatcher.match(requestKey.getUrl(), url)) {
+                log.debug("url matched: {}", requestKey);
+                if (requestKey.getMethod() != null) {
+                    //at btn level
+                    if (method.equals(requestKey.getMethod())) {
+                        log.debug("matched attr: {}", map.get(requestKey));
+                        return map.get(requestKey);
+                    }
+                } else {
+                    //at menu level
+                    log.debug("matched attr: {}", map.get(requestKey));
+                    return map.get(requestKey);
+                }
             }
         }
         return null;

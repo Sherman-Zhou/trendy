@@ -1,6 +1,7 @@
 package com.joinbe.repository;
 
 import com.joinbe.domain.User;
+import com.joinbe.domain.enumeration.RecordStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -43,4 +44,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findOneWithRolesByEmailIgnoreCase(String email);
 
     Page<User> findAllByLoginNot(Pageable pageable, String login);
+
+    @EntityGraph(attributePaths = "roles")
+    Optional<User> findOneWithRolesByLoginAndStatus(String login, RecordStatus recordStatus);
 }

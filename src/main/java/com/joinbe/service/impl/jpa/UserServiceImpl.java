@@ -4,9 +4,11 @@ import com.joinbe.common.error.EmailAlreadyUsedException;
 import com.joinbe.common.error.InvalidPasswordException;
 import com.joinbe.common.error.UsernameAlreadyUsedException;
 import com.joinbe.config.Constants;
+import com.joinbe.domain.Permission;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.repository.PermissionRepository;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.repository.UserRepository;
 import com.joinbe.security.AuthoritiesConstants;
@@ -19,7 +21,6 @@ import com.joinbe.web.rest.vm.ManagedUserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,13 +52,16 @@ public class UserServiceImpl implements UserService {
 
     private final CacheManager cacheManager;
 
+    private final PermissionRepository permissionRepository;
+
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository,
-                           CacheManager cacheManager, RoleService roleService) {
+                           CacheManager cacheManager, RoleService roleService, PermissionRepository permissionRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.cacheManager = cacheManager;
         this.roleService = roleService;
+        this.permissionRepository = permissionRepository;
     }
 
     @Override
@@ -176,7 +180,7 @@ public class UserServiceImpl implements UserService {
                 .map(Optional::get)
                 .collect(Collectors.toSet());
             user.setRoles(roles);
-        }else {
+        } else {
             //if not selected any roles, set to user by default.
             Set<Role> roles = new HashSet<>();
             roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.USER, RecordStatus.ACTIVE).ifPresent(roles::add);
@@ -332,6 +336,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> findOneByLogin(String login) {
         return userRepository.findOneByLogin(login);
+    }
+
+    @Override
+    public List<Permission> findAllUserPermissionsByLogin(String login) {
+        List<Permission> permissions = permissionRepository.findAllByUserLogin(login);
+        log.debug("user permissions:{}", permissions.size());
+        return permissions;
     }
 
 

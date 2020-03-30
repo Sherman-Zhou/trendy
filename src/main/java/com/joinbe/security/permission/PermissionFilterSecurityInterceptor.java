@@ -1,28 +1,21 @@
 package com.joinbe.security.permission;
 
- import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.SecurityMetadataSource;
 import org.springframework.security.access.intercept.AbstractSecurityInterceptor;
 import org.springframework.security.access.intercept.InterceptorStatusToken;
 import org.springframework.security.web.FilterInvocation;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
-import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
 import java.io.IOException;
 
-
-@Component
 public class PermissionFilterSecurityInterceptor extends AbstractSecurityInterceptor implements Filter {
 
     private final FilterInvocationSecurityMetadataSource securityMetadataSource;
 
-    public PermissionFilterSecurityInterceptor(FilterInvocationSecurityMetadataSource securityMetadataSource) {
+    public PermissionFilterSecurityInterceptor(FilterInvocationSecurityMetadataSource securityMetadataSource,
+                                               CustomAccessDecisionManager myAccessDecisionManager) {
         this.securityMetadataSource = securityMetadataSource;
-    }
-
-    @Autowired
-    public void setMyAccessDecisionManager(CustomAccessDecisionManager myAccessDecisionManager) {
         super.setAccessDecisionManager(myAccessDecisionManager);
     }
 

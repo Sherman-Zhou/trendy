@@ -4,6 +4,9 @@ import com.joinbe.security.AuthoritiesConstants;
 import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.jwt.JWTConfigurer;
 import com.joinbe.security.jwt.TokenProvider;
+import com.joinbe.security.permission.CustomAccessDecisionManager;
+import com.joinbe.security.permission.CustomSecurityMetadataSource;
+import com.joinbe.security.permission.PermissionFilterSecurityInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
@@ -15,6 +18,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.filter.CorsFilter;
@@ -30,13 +34,19 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     private RedissonTokenStore tokenStore;
 
     private final CorsFilter corsFilter;
+
+    private final CustomSecurityMetadataSource securityMetadataSource;
+
     private final SecurityProblemSupport problemSupport;
 
-    public SecurityConfiguration(TokenProvider tokenProvider, RedissonTokenStore tokenStore, CorsFilter corsFilter, SecurityProblemSupport problemSupport) {
+    public SecurityConfiguration(TokenProvider tokenProvider, RedissonTokenStore tokenStore, CorsFilter corsFilter,
+                                 SecurityProblemSupport problemSupport, CustomSecurityMetadataSource securityMetadataSource) {
         this.tokenProvider = tokenProvider;
         this.corsFilter = corsFilter;
         this.problemSupport = problemSupport;
         this.tokenStore = tokenStore;
+        this.securityMetadataSource = securityMetadataSource;
+
     }
 
     @Bean
@@ -93,6 +103,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
             .and()
             .httpBasic()
             .and()
+            .addFilterBefore(new PermissionFilterSecurityInterceptor(securityMetadataSource, new CustomAccessDecisionManager()),
+                FilterSecurityInterceptor.class)
             .apply(securityConfigurerAdapter());
         // @formatter:on
     }

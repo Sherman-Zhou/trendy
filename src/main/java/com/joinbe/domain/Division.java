@@ -5,8 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.RecordStatus;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -20,8 +18,7 @@ import java.util.List;
 @Entity
 @Table(name = "division")
 //@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-@Data
-@EqualsAndHashCode(callSuper = false)
+
 public class Division extends AbstractAuditingEntity {
 
     private static final long serialVersionUID = 1L;
@@ -59,4 +56,67 @@ public class Division extends AbstractAuditingEntity {
     @TableField(exist = false)
     private List<Division> children = new ArrayList<>();
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public RecordStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(RecordStatus status) {
+        this.status = status;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+
+    public Division getParent() {
+        return parent;
+    }
+
+    public void setParent(Division parent) {
+        this.parent = parent;
+    }
+
+    public List<Division> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<Division> children) {
+        this.children = children;
+    }
 }

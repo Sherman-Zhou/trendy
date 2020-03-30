@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.joinbe.common.util.PageUtil;
 import com.joinbe.config.Constants;
+import com.joinbe.domain.Permission;
 import com.joinbe.domain.User;
 import com.joinbe.domain.UserRole;
 import com.joinbe.domain.enumeration.RecordStatus;
@@ -170,5 +171,10 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     @Override
     public Optional<User> findOneByLogin(String login) {
         return Optional.empty();
+    }
+
+    @Override
+    public List<Permission> findAllUserPermissionsByLogin(String login) {
+        return null;
     }
 }

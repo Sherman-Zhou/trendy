@@ -3,8 +3,10 @@ package com.joinbe.web.rest;
 import com.joinbe.domain.User;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.MailService;
+import com.joinbe.service.PermissionService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.PasswordChangeDTO;
+import com.joinbe.service.dto.PermissionDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
@@ -20,7 +22,11 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing the current user's account.
@@ -42,10 +48,13 @@ public class AccountResource {
 
     private final MailService mailService;
 
-    public AccountResource(@Qualifier("JpaUserService") UserService userService, MailService mailService) {
+    private final PermissionService permissionService;
+
+    public AccountResource(@Qualifier("JpaUserService") UserService userService, MailService mailService, PermissionService permissionService) {
 
         this.userService = userService;
         this.mailService = mailService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -102,7 +111,24 @@ public class AccountResource {
     public UserDTO getAccount() {
 
         return userService.getUserWithAuthorities()
-            .map(UserDTO::new)
+            .map(user -> {
+                UserDTO userDTO = new UserDTO(user);
+                List<PermissionDTO> permissions = userService.findAllUserPermissionsByLogin(userDTO.getLogin()).stream()
+                    .map(permissionService::toDto).collect(Collectors.toList());
+                Map<Long, List<PermissionDTO>> children = permissions.stream().filter(menu -> menu.getParentId() != null).
+                    collect(Collectors.groupingBy(PermissionDTO::getParentId));
+
+                for (PermissionDTO menu : permissions) {
+                    if (children.get(menu.getId()) != null) {
+                        menu.setChildren(children.get(menu.getId()).stream().sorted(Comparator.comparing(PermissionDTO::getSortOrder)).collect(Collectors.toList()));
+                    }
+                }
+                List<PermissionDTO> parents = permissions.stream().filter(menu -> menu.getParentId() == null)
+                    .sorted(Comparator.comparing(PermissionDTO::getSortOrder)).collect(Collectors.toList());
+
+                userDTO.setPermissions(parents);
+                return userDTO;
+            })
             .orElseThrow(() -> new AccountResourceException("User could not be found"));
     }
 

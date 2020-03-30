@@ -1,7 +1,10 @@
 package com.joinbe.security;
 
 import com.joinbe.common.error.UserNotActivatedException;
+import com.joinbe.domain.Permission;
 import com.joinbe.domain.User;
+import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.repository.PermissionRepository;
 import com.joinbe.repository.UserRepository;
 import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
 import org.slf4j.Logger;
@@ -13,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Locale;
@@ -28,8 +32,11 @@ public class DomainUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    public DomainUserDetailsService(UserRepository userRepository) {
+    private final PermissionRepository permissionRepository;
+
+    public DomainUserDetailsService(UserRepository userRepository, PermissionRepository permissionRepository) {
         this.userRepository = userRepository;
+        this.permissionRepository = permissionRepository;
     }
 
     @Override
@@ -54,9 +61,15 @@ public class DomainUserDetailsService implements UserDetailsService {
         if (!user.getActivated()) {
             throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
         }
-        List<GrantedAuthority> grantedAuthorities = user.getRoles().stream()
-            .map(authority -> new SimpleGrantedAuthority(authority.getCode()))
-            .collect(Collectors.toList());
+        List<Permission> permissions = permissionRepository.findAllByUserLogin(user.getLogin());
+        List<GrantedAuthority> grantedAuthorities = permissions.stream()
+            .filter(permission -> CollectionUtils.isEmpty(permission.getChildren())
+                || permission.getChildren().stream().allMatch(child -> !RecordStatus.ACTIVE.equals(child.getStatus())))
+            .map(permission -> new SimpleGrantedAuthority(permission.getKey())).collect(Collectors.toList());
+
+//        List<GrantedAuthority> grantedAuthorities = user.getRoles().stream()
+//            .map(authority -> new SimpleGrantedAuthority(authority.getCode()))
+//            .collect(Collectors.toList());
         return new org.springframework.security.core.userdetails.User(user.getLogin(),
             user.getPassword(),
             grantedAuthorities);

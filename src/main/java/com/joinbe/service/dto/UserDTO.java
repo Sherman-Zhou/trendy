@@ -11,6 +11,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,8 @@ public class UserDTO {
     private Set<String> authorities;
 
     private Set<RoleDTO> roles;
+
+    private List<PermissionDTO> permissions;
 
     public UserDTO() {
         // Empty constructor needed for Jackson.

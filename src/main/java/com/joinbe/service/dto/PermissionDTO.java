@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -47,6 +48,8 @@ public class PermissionDTO implements Serializable {
     private RecordStatus status;
 
     private Long parentId;
+
+    private List<PermissionDTO> children;
 
 
 }

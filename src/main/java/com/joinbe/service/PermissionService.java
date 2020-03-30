@@ -45,12 +45,12 @@ public interface PermissionService {
      */
     void delete(Long id);
 
-    List<Permission> loadUserPermissions();
+    List<Permission> loadAllPermissions();
 
 
     default PermissionDTO toDto(Permission permission) {
         PermissionDTO dto = BeanConverter.toDto(permission, PermissionDTO.class);
-
+        dto.setParentId(permission.getParent() != null ? permission.getParent().getId() : null);
         return dto;
     }
 

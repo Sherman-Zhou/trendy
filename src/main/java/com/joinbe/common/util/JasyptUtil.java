@@ -47,21 +47,21 @@ public class JasyptUtil {
     }
 
     public static void main(String[] args) {
-         if(args == null || args.length < 3) {
-             System.out.println("Usage: ");
-             System.out.println("Encrypt: JasyptUtil -e password value");
-             System.out.println("Decrypt: JasyptUtil -d password value");
-             System.exit(1);
-         }
+        if (args == null || args.length < 3) {
+            System.out.println("Usage: ");
+            System.out.println("Encrypt: JasyptUtil -e password value");
+            System.out.println("Decrypt: JasyptUtil -d password value");
+            System.exit(1);
+        }
         //加密
-        if("-e".equalsIgnoreCase(args[0])){
+        if ("-e".equalsIgnoreCase(args[0])) {
             System.out.println("encrypted result: ");
             System.out.println(encyptPwd(args[1], args[2]));
-        }else  if("-d".equalsIgnoreCase(args[0])){
+        } else if ("-d".equalsIgnoreCase(args[0])) {
             System.out.println("decrypted result: ");
             System.out.println(decyptPwd(args[1], args[2]));
-        }else {
-            System.err.println("Unknown Option:"+ args[0]);
+        } else {
+            System.err.println("Unknown Option:" + args[0]);
         }
     }
 }
