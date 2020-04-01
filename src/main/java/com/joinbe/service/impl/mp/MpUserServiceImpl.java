@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.joinbe.common.util.PageUtil;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Permission;
+import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.UserRole;
 import com.joinbe.domain.enumeration.RecordStatus;
@@ -13,7 +14,7 @@ import com.joinbe.service.UserRoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
-import com.joinbe.web.rest.vm.ManagedUserVM;
+import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -24,11 +25,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service class for managing users.
@@ -49,7 +53,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public Page<UserDTO> getAllManagedUsers(Pageable pageable, ManagedUserVM userVM) {
+    public Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM userVM) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.like(StringUtils.isNotEmpty(userVM.getName()), "first_name", userVM.getName());
 
@@ -85,17 +89,20 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
         user.setStatus(RecordStatus.ACTIVE);
+        user.setVersion(0);
 
         this.save(user);
 
-        if (userDTO.getAuthorities() != null) {
-            List<UserRole> userRoles = new ArrayList<>(userDTO.getAuthorities().size());
-//            for(Long roleId : userDTO.getAuthorities()){
-//                UserRole userRole = new UserRole( );
-//                userRole.setRoleId(roleId);
-//                userRole.setUserId(user.getId());
-//                userRoles.add(userRole);
-//            }
+        if (!CollectionUtils.isEmpty(userDTO.getRoles())) {
+            List<UserRole> userRoles = new ArrayList<>(userDTO.getRoles().size());
+            Set<Long> roleIds = userDTO.getRoles().stream().map(RoleDTO::getId)
+                .collect(Collectors.toSet());
+            for(Long roleId: roleIds){
+                UserRole userRole = new UserRole();
+                userRole.setUserId(user.getId());
+                userRole.setRoleId(roleId);
+                userRoles.add(userRole);
+            }
             userRoleService.saveBatch(userRoles);
         }
         log.debug("Created Information for User: {}", user);
@@ -114,6 +121,11 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
 
     @Override
     public void deleteUser(String login) {
+
+    }
+
+    @Override
+    public void deleteUser(Long id, Integer version) {
 
     }
 

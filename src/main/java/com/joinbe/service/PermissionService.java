@@ -3,6 +3,7 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Permission;
 import com.joinbe.service.dto.PermissionDTO;
+import com.joinbe.web.rest.vm.PermissionVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -28,7 +29,7 @@ public interface PermissionService {
      * @param pageable the pagination information.
      * @return the list of entities.
      */
-    Page<PermissionDTO> findAll(Pageable pageable);
+    Page<PermissionDTO> findAll(Pageable pageable, PermissionVM vm);
 
     /**
      * Get the "id" permission.

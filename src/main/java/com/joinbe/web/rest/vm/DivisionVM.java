@@ -1,7 +1,25 @@
 package com.joinbe.web.rest.vm;
 
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.dto.DivisionDTO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-public class DivisionVM extends DivisionDTO {
+import javax.validation.constraints.Size;
+import java.io.Serializable;
 
+@Data
+@EqualsAndHashCode(callSuper = false)
+public class DivisionVM implements Serializable {
+
+    @Size(max = 80)
+    private String name;
+
+    @Size(max = 200)
+    private String description;
+
+    @Size(max = 20)
+    private String code;
+
+    private RecordStatus status;
 }

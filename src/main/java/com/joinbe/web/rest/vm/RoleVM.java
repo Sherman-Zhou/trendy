@@ -1,4 +1,4 @@
-package com.joinbe.service.dto;
+package com.joinbe.web.rest.vm;
 
 import com.joinbe.domain.enumeration.RecordStatus;
 import lombok.Data;
@@ -7,16 +7,10 @@ import lombok.EqualsAndHashCode;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class RoleDTO implements Serializable {
-
-    private Long id;
-
+public class RoleVM implements Serializable {
     @NotNull
     @Size(max = 80)
     private String name;
@@ -28,18 +22,5 @@ public class RoleDTO implements Serializable {
     private String code;
 
     private RecordStatus status;
-
-    private Integer version;
-
-    private String createdBy;
-
-    private Instant createdDate;
-
-    private String lastModifiedBy;
-
-    private Instant lastModifiedDate;
-
-
-    private Set<PermissionDTO> permissions = new HashSet<>();
 
 }

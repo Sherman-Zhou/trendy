@@ -17,7 +17,7 @@ import com.joinbe.service.RoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
-import com.joinbe.web.rest.vm.ManagedUserVM;
+import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,6 +239,7 @@ public class UserServiceImpl implements UserService {
                 user.setAvatar(userDTO.getAvatar());
                 user.setStatus(userDTO.getStatus());
                 user.setLangKey(userDTO.getLangKey());
+                user.setVersion(userDTO.getVersion());
                 Set<Role> managedAuthorities = user.getRoles();
                 managedAuthorities.clear();
                 userDTO.getRoles().stream().map(RoleDTO::getId)
@@ -263,6 +264,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void deleteUser(Long id, Integer version) {
+        userRepository.findById(id).ifPresent(user -> {
+            user.setVersion(version);
+            userRepository.delete(user);
+            this.clearUserCaches(user);
+            log.debug("Deleted User: {}", user);
+        });
+    }
+
+    @Override
     public void changePassword(String currentClearTextPassword, String newPassword) {
         SecurityUtils.getCurrentUserLogin()
             .flatMap(userRepository::findOneByLogin)
@@ -280,7 +291,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDTO> getAllManagedUsers(Pageable pageable, ManagedUserVM userVM) {
+    public Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM userVM) {
         return userRepository.findAllByLoginNot(pageable, Constants.ANONYMOUS_USER).map(UserDTO::new);
     }
 
@@ -347,9 +358,9 @@ public class UserServiceImpl implements UserService {
 
 
     private void clearUserCaches(User user) {
-        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(user.getLogin());
-        if (user.getEmail() != null) {
-            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
-        }
+//        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(user.getLogin());
+//        if (user.getEmail() != null) {
+//            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());
+//        }
     }
 }

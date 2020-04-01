@@ -3,23 +3,19 @@ package com.joinbe.web.rest;
 import com.joinbe.service.RoleService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
-import io.github.jhipster.web.util.HeaderUtil;
-import io.github.jhipster.web.util.PaginationUtil;
-import io.github.jhipster.web.util.ResponseUtil;
+import com.joinbe.web.rest.vm.PageData;
+import com.joinbe.web.rest.vm.ResponseUtil;
+import com.joinbe.web.rest.vm.RoleVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,8 +29,6 @@ public class RoleResource {
 
     private static final String ENTITY_NAME = "role";
 
-    @Value("${jhipster.clientApp.name}")
-    private String applicationName;
 
     private final RoleService roleService;
 
@@ -57,7 +51,6 @@ public class RoleResource {
         }
         RoleDTO result = roleService.save(roleDTO);
         return ResponseEntity.created(new URI("/api/roles/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
 
@@ -78,7 +71,6 @@ public class RoleResource {
         }
         RoleDTO result = roleService.save(roleDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, roleDTO.getId().toString()))
             .body(result);
     }
 
@@ -90,16 +82,12 @@ public class RoleResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of roles in body.
      */
     @GetMapping("/roles")
-    public ResponseEntity<List<RoleDTO>> getAllRoles(Pageable pageable, @RequestParam(required = false, defaultValue = "false") boolean eagerload) {
+    public ResponseEntity<PageData<RoleDTO>> getAllRoles(Pageable pageable, RoleVM roleVM) {
         log.debug("REST request to get a page of Roles");
         Page<RoleDTO> page;
-        if (eagerload) {
-            page = roleService.findAllWithEagerRelationships(pageable);
-        } else {
-            page = roleService.findAll(pageable);
-        }
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        page = roleService.findAll(pageable, roleVM);
+
+        return ResponseUtil.toPageData(page);
     }
 
     /**
@@ -125,6 +113,6 @@ public class RoleResource {
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
         log.debug("REST request to delete Role : {}", id);
         roleService.delete(id);
-        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
+        return ResponseEntity.noContent().build();
     }
 }

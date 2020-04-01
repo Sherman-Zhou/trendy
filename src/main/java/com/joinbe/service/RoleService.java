@@ -3,6 +3,7 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Role;
 import com.joinbe.service.dto.RoleDTO;
+import com.joinbe.web.rest.vm.RoleVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -27,14 +28,7 @@ public interface RoleService {
      * @param pageable the pagination information.
      * @return the list of entities.
      */
-    Page<RoleDTO> findAll(Pageable pageable);
-
-    /**
-     * Get all the roles with eager load of many-to-many relationships.
-     *
-     * @return the list of entities.
-     */
-    Page<RoleDTO> findAllWithEagerRelationships(Pageable pageable);
+    Page<RoleDTO> findAll(Pageable pageable, RoleVM roleVm);
 
     /**
      * Get the "id" role.

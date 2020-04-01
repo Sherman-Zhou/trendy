@@ -4,7 +4,7 @@ import com.joinbe.domain.Permission;
 import com.joinbe.domain.User;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
-import com.joinbe.web.rest.vm.ManagedUserVM;
+import com.joinbe.web.rest.vm.UserVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -28,9 +28,11 @@ public interface UserService {
 
     void deleteUser(String login);
 
+    void deleteUser(Long id, Integer version);
+
     void changePassword(String currentClearTextPassword, String newPassword);
 
-    Page<UserDTO> getAllManagedUsers(Pageable pageable, ManagedUserVM userVM);
+    Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM userVM);
 
     Optional<User> getUserWithAuthoritiesByLogin(String login);
 

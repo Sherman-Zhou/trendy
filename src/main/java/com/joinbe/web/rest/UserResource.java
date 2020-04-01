@@ -9,7 +9,7 @@ import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.LoginAlreadyUsedException;
-import com.joinbe.web.rest.vm.ManagedUserVM;
+import com.joinbe.web.rest.vm.UserVM;
 import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
 import org.slf4j.Logger;
@@ -130,7 +130,7 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body all users.
      */
     @GetMapping("/users")
-    public ResponseEntity<PageData<UserDTO>> getAllUsers(Pageable pageable, ManagedUserVM userVM) {
+    public ResponseEntity<PageData<UserDTO>> getAllUsers(Pageable pageable, UserVM userVM) {
         final Page<UserDTO> page = userService.getAllManagedUsers(pageable, userVM);
         return ResponseUtil.toPageData(page);
     }
@@ -171,6 +171,20 @@ public class UserResource {
     public ResponseEntity<Void> deleteUser(@PathVariable String login) {
         log.debug("REST request to delete User: {}", login);
         userService.deleteUser(login);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * {@code DELETE /users/:id/:version} : delete the  User by Id.
+     *
+     * @param id the id of the user to delete.
+     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+     */
+    @DeleteMapping("/users/{id}/{version}")
+//    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @PathVariable Integer version) {
+        log.debug("REST request to delete User: {}", id);
+        userService.deleteUser(id, version);
         return ResponseEntity.noContent().build();
     }
 }

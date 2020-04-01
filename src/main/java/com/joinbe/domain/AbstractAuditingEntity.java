@@ -1,5 +1,7 @@
 package com.joinbe.domain;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,28 +30,28 @@ public abstract class AbstractAuditingEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @Version
-    @com.baomidou.mybatisplus.annotation.Version
-    private Integer version;
-
     @CreatedBy
     @Column(name = "created_by", nullable = false, length = 50, updatable = false)
     @JsonIgnore
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private String createdBy;
 
     @CreatedDate
     @Column(name = "created_date", updatable = false)
     @JsonIgnore
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Instant createdDate = Instant.now();
 
     @LastModifiedBy
     @Column(name = "last_modified_by", length = 50)
     @JsonIgnore
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private String lastModifiedBy;
 
     @LastModifiedDate
     @Column(name = "last_modified_date")
     @JsonIgnore
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Instant lastModifiedDate = Instant.now();
 
 }

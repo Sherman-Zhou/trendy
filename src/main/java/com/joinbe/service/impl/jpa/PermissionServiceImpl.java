@@ -6,6 +6,7 @@ import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.PermissionRepository;
 import com.joinbe.service.PermissionService;
 import com.joinbe.service.dto.PermissionDTO;
+import com.joinbe.web.rest.vm.PermissionVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -55,7 +56,7 @@ public class PermissionServiceImpl implements PermissionService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<PermissionDTO> findAll(Pageable pageable) {
+    public Page<PermissionDTO> findAll(Pageable pageable, PermissionVM vm) {
         log.debug("Request to get all Permissions");
         return permissionRepository.findAll(pageable)
             .map(this::toDto);

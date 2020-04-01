@@ -1,5 +1,6 @@
 package com.joinbe.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
@@ -11,6 +12,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -50,9 +52,27 @@ public class UserDTO {
 
     private RecordStatus status;
 
+    public static final int PASSWORD_MIN_LENGTH = 4;
+
+    public static final int PASSWORD_MAX_LENGTH = 100;
+
+    @JsonIgnore
+    @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
+    private String password;
+
     private Set<String> authorities;
 
     private Set<RoleDTO> roles;
+
+    private Integer version;
+
+    private String createdBy;
+
+    private Instant createdDate;
+
+    private String lastModifiedBy;
+
+    private Instant lastModifiedDate;
 
     private List<PermissionDTO> permissions;
 

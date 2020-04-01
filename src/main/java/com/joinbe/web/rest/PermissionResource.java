@@ -1,25 +1,22 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.domain.Permission;
 import com.joinbe.service.PermissionService;
 import com.joinbe.service.dto.PermissionDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
-import io.github.jhipster.web.util.HeaderUtil;
-import io.github.jhipster.web.util.PaginationUtil;
-import io.github.jhipster.web.util.ResponseUtil;
+import com.joinbe.web.rest.vm.PageData;
+import com.joinbe.web.rest.vm.PermissionVM;
+import com.joinbe.web.rest.vm.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,8 +30,6 @@ public class PermissionResource {
 
     private static final String ENTITY_NAME = "permission";
 
-    @Value("${jhipster.clientApp.name}")
-    private String applicationName;
 
     private final PermissionService permissionService;
 
@@ -57,7 +52,6 @@ public class PermissionResource {
         }
         PermissionDTO result = permissionService.save(permissionDTO);
         return ResponseEntity.created(new URI("/api/permissions/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
 
@@ -78,7 +72,6 @@ public class PermissionResource {
         }
         PermissionDTO result = permissionService.save(permissionDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, permissionDTO.getId().toString()))
             .body(result);
     }
 
@@ -89,11 +82,10 @@ public class PermissionResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of permissions in body.
      */
     @GetMapping("/permissions")
-    public ResponseEntity<List<PermissionDTO>> getAllPermissions(Pageable pageable) {
+    public ResponseEntity<PageData<PermissionDTO>> getAllPermissions(Pageable pageable, PermissionVM vm) {
         log.debug("REST request to get a page of Permissions");
-        Page<PermissionDTO> page = permissionService.findAll(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        Page<PermissionDTO> page = permissionService.findAll(pageable, vm);
+        return ResponseUtil.toPageData(page);
     }
 
     /**
@@ -119,6 +111,6 @@ public class PermissionResource {
     public ResponseEntity<Void> deletePermission(@PathVariable Long id) {
         log.debug("REST request to delete Permission : {}", id);
         permissionService.delete(id);
-        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
+        return ResponseEntity.noContent().build();
     }
 }

@@ -1,4 +1,4 @@
-package com.joinbe.config.audit;
+package com.joinbe.config.mybatis.plugin;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.joinbe.security.SpringSecurityAuditorAware;
@@ -18,8 +18,11 @@ public class MybatisPlusSpringSecurityAuditor implements MetaObjectHandler {
 
     @Override
     public void insertFill(MetaObject metaObject) {
+        Instant now = Instant.now();
         this.setFieldValByName("createdBy", springSecurityAuditorAware.getCurrentAuditor().get(), metaObject);
-        this.setFieldValByName("createdDate", Instant.now(), metaObject);
+        this.setFieldValByName("createdDate", now, metaObject);
+        this.setFieldValByName("lastModifiedBy", springSecurityAuditorAware.getCurrentAuditor().get(), metaObject);
+        this.setFieldValByName("lastModifiedDate", now, metaObject);
     }
 
     @Override

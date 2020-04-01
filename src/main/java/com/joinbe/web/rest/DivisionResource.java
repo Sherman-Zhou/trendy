@@ -31,9 +31,6 @@ public class DivisionResource {
 
     private static final String ENTITY_NAME = "division";
 
-    @Value("${jhipster.clientApp.name}")
-    private String applicationName;
-
     private final DivisionService divisionService;
 
     public DivisionResource(DivisionService divisionService) {

@@ -4,6 +4,7 @@ import com.joinbe.domain.Role;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.service.RoleService;
 import com.joinbe.service.dto.RoleDTO;
+import com.joinbe.web.rest.vm.RoleVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -51,20 +52,12 @@ public class RoleServiceImpl implements RoleService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<RoleDTO> findAll(Pageable pageable) {
+    public Page<RoleDTO> findAll(Pageable pageable, RoleVM roleVm) {
         log.debug("Request to get all Roles");
         return roleRepository.findAll(pageable)
             .map(this::toDto);
     }
 
-    /**
-     * Get all the roles with eager load of many-to-many relationships.
-     *
-     * @return the list of entities.
-     */
-    public Page<RoleDTO> findAllWithEagerRelationships(Pageable pageable) {
-        return roleRepository.findAllWithEagerRelationships(pageable).map(this::toDto);
-    }
 
     /**
      * Get one role by id.

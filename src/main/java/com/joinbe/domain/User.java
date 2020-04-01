@@ -88,6 +88,10 @@ public class User extends AbstractAuditingEntity implements Serializable {
     @Column(name = "status")
     private RecordStatus status;
 
+    @Version
+    @com.baomidou.mybatisplus.annotation.Version
+    private Integer version;
+
     @ManyToOne
     @JsonIgnoreProperties("")
     @TableField(exist = false)
@@ -225,5 +229,13 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public Integer getVersion() {
+        return version;
+    }
+
+    public void setVersion(Integer version) {
+        this.version = version;
     }
 }

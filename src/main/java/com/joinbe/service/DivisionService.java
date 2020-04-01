@@ -60,7 +60,7 @@ public interface DivisionService {
         if (divisionDTO.getParentId() != null) {
             Division parent = new Division();
             parent.setId(divisionDTO.getParentId());
-            parent.setVersion(0);
+
             division.setParent(parent);
         }
         return division;
