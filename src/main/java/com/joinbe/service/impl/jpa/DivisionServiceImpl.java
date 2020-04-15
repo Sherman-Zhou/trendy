@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 /**
  * Service Implementation for managing {@link Division}.
  */
-@Service
+@Service("JpaDivisionService")
 @Transactional
 public class DivisionServiceImpl implements DivisionService {
 

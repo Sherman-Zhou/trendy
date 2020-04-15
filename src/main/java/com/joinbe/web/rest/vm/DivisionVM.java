@@ -1,7 +1,6 @@
 package com.joinbe.web.rest.vm;
 
 import com.joinbe.domain.enumeration.RecordStatus;
-import com.joinbe.service.dto.DivisionDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

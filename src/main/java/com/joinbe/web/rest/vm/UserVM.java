@@ -2,7 +2,6 @@ package com.joinbe.web.rest.vm;
 
 import com.joinbe.config.Constants;
 import com.joinbe.domain.enumeration.RecordStatus;
-import com.joinbe.service.dto.UserDTO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -22,6 +21,7 @@ public class UserVM implements Serializable {
     public UserVM() {
         // Empty constructor needed for Jackson.
     }
+
     @NotBlank
     @Pattern(regexp = Constants.LOGIN_REGEX)
     @Size(min = 1, max = 50)

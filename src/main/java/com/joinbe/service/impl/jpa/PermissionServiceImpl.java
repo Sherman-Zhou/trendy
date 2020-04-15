@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 /**
  * Service Implementation for managing {@link Permission}.
  */
-@Service
+@Service("JpaPermissionService")
 @Transactional
 public class PermissionServiceImpl implements PermissionService {
 

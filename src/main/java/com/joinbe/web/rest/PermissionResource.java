@@ -1,6 +1,5 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.domain.Permission;
 import com.joinbe.service.PermissionService;
 import com.joinbe.service.dto.PermissionDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;

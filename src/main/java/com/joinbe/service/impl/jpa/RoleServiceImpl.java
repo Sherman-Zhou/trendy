@@ -17,7 +17,7 @@ import java.util.Optional;
 /**
  * Service Implementation for managing {@link Role}.
  */
-@Service
+@Service("JpaRoleService")
 @Transactional
 public class RoleServiceImpl implements RoleService {
 

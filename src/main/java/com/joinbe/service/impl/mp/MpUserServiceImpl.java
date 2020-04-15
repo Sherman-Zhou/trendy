@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.joinbe.common.util.PageUtil;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Permission;
-import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.UserRole;
 import com.joinbe.domain.enumeration.RecordStatus;
@@ -97,7 +96,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
             List<UserRole> userRoles = new ArrayList<>(userDTO.getRoles().size());
             Set<Long> roleIds = userDTO.getRoles().stream().map(RoleDTO::getId)
                 .collect(Collectors.toSet());
-            for(Long roleId: roleIds){
+            for (Long roleId : roleIds) {
                 UserRole userRole = new UserRole();
                 userRole.setUserId(user.getId());
                 userRole.setRoleId(roleId);

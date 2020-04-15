@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class PermissionVM  implements Serializable {
+public class PermissionVM implements Serializable {
 
     private String key;
 
