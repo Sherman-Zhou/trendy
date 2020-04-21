@@ -52,16 +52,16 @@ public class User extends AbstractAuditingEntity implements Serializable {
     private String name;
 
     @Email
-    @Size(min = 5, max = 254)
-    @Column(length = 254, unique = true)
+    @Size(min = 5, max = 200)
+    @Column(length = 200, unique = true)
     private String email;
 
-    @Size(max = 2000)
-    @Column(name = "remark", length = 2000)
+    @Size(max = 200)
+    @Column(name = "remark", length = 200)
     private String remark;
 
-    @Size(max = 500)
-    @Column(name = "address", length = 500)
+    @Size(max = 200)
+    @Column(name = "address", length = 200)
     private String address;
 
     @Size(min = 2, max = 10)
@@ -89,7 +89,7 @@ public class User extends AbstractAuditingEntity implements Serializable {
     private RecordStatus status;
 
     @Version
-    @com.baomidou.mybatisplus.annotation.Version
+    //@com.baomidou.mybatisplus.annotation.Version
     private Integer version;
 
     @ManyToOne

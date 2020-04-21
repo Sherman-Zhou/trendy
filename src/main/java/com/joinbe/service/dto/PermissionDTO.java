@@ -20,32 +20,33 @@ public class PermissionDTO implements Serializable {
 
     @NotNull
     @Size(max = 80)
-    private String key;
+    private String permissionKey;
 
     private Integer lvl;
 
     private PermissionType permissionType;
 
-    @Size(max = 20)
-    private String title;
+    private String titleKey;
 
-    @Size(max = 20)
+
     private String frontendPath;
+
+    private String component;
 
     @Size(max = 20)
     private String icon;
 
     private OperationType operationType;
 
-    @Size(max = 200)
-    private String description;
+   // @Size(max = 200)
+   // private String description;
 
     private BigDecimal sortOrder;
 
-    @Size(max = 20)
-    private String backendUrl;
+   // @Size(max = 20)
+   // private String backendUrl;
 
-    private RecordStatus status;
+   // private RecordStatus status;
 
     private Long parentId;
 

@@ -1,6 +1,8 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.domain.Permission;
 import com.joinbe.domain.User;
+import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.MailService;
 import com.joinbe.service.PermissionService;
@@ -88,24 +90,26 @@ public class AccountResource {
      */
     @GetMapping("/account")
     public UserDTO getAccount() {
-
         return userService.getUserWithAuthorities()
             .map(user -> {
                 UserDTO userDTO = new UserDTO(user);
-                List<PermissionDTO> permissions = userService.findAllUserPermissionsByLogin(userDTO.getLogin()).stream()
+                List<PermissionDTO> permissionAndMenu = userService.findAllUserPermissionsByLogin(userDTO.getLogin()).stream()
                     .map(permissionService::toDto).collect(Collectors.toList());
-                Map<Long, List<PermissionDTO>> children = permissions.stream().filter(menu -> menu.getParentId() != null).
+                Map<Long, List<PermissionDTO>> children = permissionAndMenu.stream()
+                    .filter(menu ->(menu.getParentId() != null && !PermissionType.OPERATION.equals( menu.getPermissionType()))).
                     collect(Collectors.groupingBy(PermissionDTO::getParentId));
-
-                for (PermissionDTO menu : permissions) {
+                for (PermissionDTO menu : permissionAndMenu) {
                     if (children.get(menu.getId()) != null) {
                         menu.setChildren(children.get(menu.getId()).stream().sorted(Comparator.comparing(PermissionDTO::getSortOrder)).collect(Collectors.toList()));
                     }
                 }
-                List<PermissionDTO> parents = permissions.stream().filter(menu -> menu.getParentId() == null)
+                List<PermissionDTO> parents = permissionAndMenu.stream().filter(menu -> menu.getParentId() == null)
                     .sorted(Comparator.comparing(PermissionDTO::getSortOrder)).collect(Collectors.toList());
 
-                userDTO.setPermissions(parents);
+                userDTO.setMenus(parents);
+                List<PermissionDTO> permissions = permissionAndMenu.stream()
+                           .filter(permission -> PermissionType.OPERATION.equals( permission.getPermissionType())).collect(Collectors.toList());
+                userDTO.setPermissions(permissions);
                 return userDTO;
             })
             .orElseThrow(() -> new AccountResourceException("User could not be found"));

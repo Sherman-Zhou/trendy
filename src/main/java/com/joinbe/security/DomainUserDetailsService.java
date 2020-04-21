@@ -65,7 +65,7 @@ public class DomainUserDetailsService implements UserDetailsService {
         List<GrantedAuthority> grantedAuthorities = permissions.stream()
             .filter(permission -> CollectionUtils.isEmpty(permission.getChildren())
                 || permission.getChildren().stream().allMatch(child -> !RecordStatus.ACTIVE.equals(child.getStatus())))
-            .map(permission -> new SimpleGrantedAuthority(permission.getKey())).collect(Collectors.toList());
+            .map(permission -> new SimpleGrantedAuthority(permission.getPermissionKey())).collect(Collectors.toList());
 
 //        List<GrantedAuthority> grantedAuthorities = user.getRoles().stream()
 //            .map(authority -> new SimpleGrantedAuthority(authority.getCode()))

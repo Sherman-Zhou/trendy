@@ -57,7 +57,7 @@ public class CustomSecurityMetadataSource implements FilterInvocationSecurityMet
                 if (CollectionUtils.isEmpty(permission.getChildren())
                     || permission.getChildren().stream().allMatch(child -> !RecordStatus.ACTIVE.equals(child.getStatus()))) {
                     configAttributes = new ArrayList<>();
-                    cfg = new SecurityConfig(permission.getKey());
+                    cfg = new SecurityConfig(permission.getPermissionKey());
 
                     configAttributes.add(cfg);
                     String method = permission.getOperationType() != null ? permission.getOperationType().getMethod().toString() : null;

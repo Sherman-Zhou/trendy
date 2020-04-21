@@ -19,13 +19,13 @@ import java.util.Collection;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ApplicationProperties.class})
-public class CarMngApp {
+public class TrendyApp {
 
-    private static final Logger log = LoggerFactory.getLogger(CarMngApp.class);
+    private static final Logger log = LoggerFactory.getLogger(TrendyApp.class);
 
     private final Environment env;
 
-    public CarMngApp(Environment env) {
+    public TrendyApp(Environment env) {
         this.env = env;
     }
 
@@ -55,7 +55,7 @@ public class CarMngApp {
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
-        SpringApplication app = new SpringApplication(CarMngApp.class);
+        SpringApplication app = new SpringApplication(TrendyApp.class);
         DefaultProfileUtil.addDefaultProfile(app);
         Environment env = app.run(args).getEnvironment();
         logApplicationStartup(env);

@@ -29,8 +29,8 @@ public class Role extends AbstractAuditingEntity implements Serializable {
     private Long id;
 
     @NotNull
-    @Size(max = 80)
-    @Column(name = "name", length = 80, nullable = false)
+    @Size(max = 100)
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
 
     @Size(max = 200)

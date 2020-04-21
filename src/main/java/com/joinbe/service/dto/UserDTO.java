@@ -74,6 +74,8 @@ public class UserDTO {
 
     private Instant lastModifiedDate;
 
+    private List<PermissionDTO> menus;
+
     private List<PermissionDTO> permissions;
 
     public UserDTO() {
@@ -88,6 +90,7 @@ public class UserDTO {
         this.status = user.getStatus();
         this.avatar = user.getAvatar();
         this.langKey = user.getLangKey();
+        this.version = user.getVersion();
         this.authorities = user.getRoles().stream()
             .map(Role::getName)
             .collect(Collectors.toSet());

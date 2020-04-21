@@ -29,14 +29,14 @@ public class DictType extends AbstractAuditingEntity {
      * 字典名称
      */
     @Size(max = 100)
-    @Column(name = "name", length = 100)
+    @Column(name = "dic_name", length = 100)
     private String name;
 
     /**
      * 字典类型
      */
     @Size(max = 100)
-    @Column(name = "type", length = 100)
+    @Column(name = "dic_type", length = 100)
     private String type;
 
     /**

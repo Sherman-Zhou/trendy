@@ -32,8 +32,8 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
 
     @NotNull
     @Size(max = 80)
-    @Column(name = "key", length = 80, nullable = false)
-    private String key;
+    @Column(name = "permission_key", length = 80, nullable = false)
+    private String permissionKey;
 
     @Column(name = "lvl")
     private Integer lvl;
@@ -41,13 +41,17 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
     @Column(name = "permission_type")
     private PermissionType permissionType;
 
-    @Size(max = 20)
-    @Column(name = "title", length = 20)
-    private String title;
+    @Size(max = 50)
+    @Column(name = "title_key", length = 50)
+    private String titleKey;
 
-    @Size(max = 20)
-    @Column(name = "frontend_path", length = 20)
+    @Size(max = 50)
+    @Column(name = "frontend_path", length = 50)
     private String frontendPath;
+
+    @Size(max = 200)
+    @Column(name = "component", length = 200)
+    private String component;
 
     @Size(max = 20)
     @Column(name = "icon", length = 20)
@@ -64,8 +68,8 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
     @Column(name = "sort_order", precision = 21, scale = 2)
     private BigDecimal sortOrder;
 
-    @Size(max = 20)
-    @Column(name = "backend_url", length = 20)
+    @Size(max = 50)
+    @Column(name = "backend_url", length = 50)
     private String backendUrl;
 
     @Column(name = "status")
@@ -99,12 +103,12 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
         this.id = id;
     }
 
-    public String getKey() {
-        return key;
+    public String getPermissionKey() {
+        return permissionKey;
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public void setPermissionKey(String key) {
+        this.permissionKey = key;
     }
 
     public Integer getLvl() {
@@ -123,12 +127,12 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
         this.permissionType = permissionType;
     }
 
-    public String getTitle() {
-        return title;
+    public String getTitleKey() {
+        return titleKey;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setTitleKey(String title) {
+        this.titleKey = title;
     }
 
     public String getFrontendPath() {
@@ -173,6 +177,14 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
 
     public String getBackendUrl() {
         return backendUrl;
+    }
+
+    public String getComponent() {
+        return component;
+    }
+
+    public void setComponent(String component) {
+        this.component = component;
     }
 
     public void setBackendUrl(String backendUrl) {

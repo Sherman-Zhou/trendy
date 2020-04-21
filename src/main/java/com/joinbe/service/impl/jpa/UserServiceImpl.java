@@ -233,6 +233,7 @@ public class UserServiceImpl implements UserService {
             .map(Optional::get)
             .map(user -> {
                 this.clearUserCaches(user);
+
                 user.setLogin(userDTO.getLogin().toLowerCase());
                 user.setName(userDTO.getName());
 
@@ -250,6 +251,8 @@ public class UserServiceImpl implements UserService {
                     .filter(Optional::isPresent)
                     .map(Optional::get)
                     .forEach(managedAuthorities::add);
+
+                userRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
                 return user;
