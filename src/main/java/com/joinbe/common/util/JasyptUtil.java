@@ -49,8 +49,8 @@ public class JasyptUtil {
     public static void main(String[] args) {
         if (args == null || args.length < 3) {
             System.out.println("Usage: ");
-            System.out.println("Encrypt: JasyptUtil -e password value");
-            System.out.println("Decrypt: JasyptUtil -d password value");
+            System.out.println("Encrypt: JasyptUtil -e secureKey valueToEncrypt");
+            System.out.println("Decrypt: JasyptUtil -d secureKey valueToDecrypt");
             System.exit(1);
         }
         //加密
