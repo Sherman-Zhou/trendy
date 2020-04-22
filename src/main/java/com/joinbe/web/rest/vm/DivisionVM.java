@@ -11,14 +11,11 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 public class DivisionVM implements Serializable {
 
-    @Size(max = 80)
     private String name;
 
-    @Size(max = 200)
     private String description;
 
-    @Size(max = 20)
     private String code;
 
-    private RecordStatus status;
+    private String status;
 }

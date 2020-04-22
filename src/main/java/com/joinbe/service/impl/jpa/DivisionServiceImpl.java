@@ -3,6 +3,7 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Division;
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.DivisionRepository;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.dto.DivisionDTO;
@@ -70,6 +71,9 @@ public class DivisionServiceImpl implements DivisionService {
         }
         if (StringUtils.isNotEmpty(vm.getDescription())) {
             queryParams.and("description", Filter.Operator.like, vm.getDescription());
+        }
+        if(StringUtils.isNotEmpty(vm.getStatus())){
+            queryParams.and("status", Filter.Operator.eq, RecordStatus.resolve(vm.getStatus()));
         }
         return divisionRepository.findAll(queryParams, pageable)
             .map(this::toDto);

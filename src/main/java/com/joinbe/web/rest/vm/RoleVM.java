@@ -11,16 +11,15 @@ import java.io.Serializable;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class RoleVM implements Serializable {
-    @NotNull
-    @Size(max = 80)
+
     private String name;
 
-    @Size(max = 200)
+
     private String description;
 
-    @Size(max = 20)
+
     private String code;
 
-    private RecordStatus status;
+    private String status;
 
 }

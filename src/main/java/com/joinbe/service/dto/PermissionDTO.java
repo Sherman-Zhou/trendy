@@ -1,5 +1,6 @@
 package com.joinbe.service.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.joinbe.domain.enumeration.OperationType;
 import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.domain.enumeration.RecordStatus;
@@ -24,6 +25,7 @@ public class PermissionDTO implements Serializable {
 
     private Integer lvl;
 
+    @JsonIgnore
     private PermissionType permissionType;
 
     private String titleKey;
@@ -40,14 +42,14 @@ public class PermissionDTO implements Serializable {
 
    // @Size(max = 200)
    // private String description;
-
+    @JsonIgnore
     private BigDecimal sortOrder;
 
    // @Size(max = 20)
    // private String backendUrl;
 
    // private RecordStatus status;
-
+    @JsonIgnore
     private Long parentId;
 
     private List<PermissionDTO> children;

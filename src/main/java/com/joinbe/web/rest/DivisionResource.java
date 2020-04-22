@@ -64,9 +64,9 @@ public class DivisionResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/divisions")
-    public ResponseEntity<DivisionDTO> updateDivision(@Valid @RequestBody DivisionDTO divisionDTO) throws URISyntaxException {
+    public ResponseEntity<DivisionDTO> updateDivision(@Valid @RequestBody DivisionDTO divisionDTO) {
         log.debug("REST request to update Division : {}", divisionDTO);
-        if (divisionDTO.getId() == null || divisionDTO.getVersion() == null) {
+        if (divisionDTO.getId() == null ) {
             throw new BadRequestAlertException("Invalid id or version", ENTITY_NAME, "idnull");
         }
         DivisionDTO result = divisionService.save(divisionDTO);
