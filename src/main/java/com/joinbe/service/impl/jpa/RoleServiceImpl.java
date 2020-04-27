@@ -2,11 +2,14 @@ package com.joinbe.service.impl.jpa;
 
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
+import com.joinbe.domain.Permission;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.service.RoleService;
 import com.joinbe.service.dto.RoleDTO;
+import com.joinbe.service.dto.RoleDetailsDTO;
+import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.RoleVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -16,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -46,6 +50,27 @@ public class RoleServiceImpl implements RoleService {
         Role role = toEntity(roleDTO);
         role = roleRepository.save(role);
         return toDto(role);
+    }
+
+    @Override
+    public RoleDTO assignPermission(Long roleId, List<Long> permissionIds) {
+        RoleDTO roleDTO = null;
+        Optional<Role> roleOptional = roleRepository.findById(roleId);
+
+        if(roleOptional.isPresent()){
+            Role  role = roleOptional.get();
+            role.getPermissions().clear();
+            for(Long permissionId: permissionIds) {
+                Permission permission = new Permission();
+                permission.setId(permissionId);
+                role.getPermissions().add(permission);
+            }
+            roleDTO = toDto(role);
+        }else {
+            throw new BadRequestAlertException("Invalid id", "Role", "idnull");
+        }
+
+        return roleDTO;
     }
 
     /**
@@ -85,10 +110,10 @@ public class RoleServiceImpl implements RoleService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Optional<RoleDTO> findOne(Long id) {
+    public Optional<RoleDetailsDTO> findOne(Long id) {
         log.debug("Request to get Role : {}", id);
         return roleRepository.findOneWithEagerRelationships(id)
-            .map(this::toDto);
+            .map(this::toDetailDto);
     }
 
     /**
@@ -99,6 +124,8 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public void delete(Long id) {
         log.debug("Request to delete Role : {}", id);
-        roleRepository.deleteById(id);
+        Role role = roleRepository.getOne(id);
+        role.setStatus(RecordStatus.DELETED);
+       // roleRepository.deleteById(id);
     }
 }

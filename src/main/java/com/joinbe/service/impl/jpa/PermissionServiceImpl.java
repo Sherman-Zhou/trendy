@@ -4,8 +4,10 @@ import com.joinbe.domain.Permission;
 import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.PermissionRepository;
+import com.joinbe.repository.RoleRepository;
 import com.joinbe.service.PermissionService;
 import com.joinbe.service.dto.PermissionDTO;
+import com.joinbe.service.dto.PermissionSummaryDTO;
 import com.joinbe.web.rest.vm.PermissionVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +15,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -29,9 +34,12 @@ public class PermissionServiceImpl implements PermissionService {
 
     private final PermissionRepository permissionRepository;
 
+    private final RoleRepository roleRepository;
 
-    public PermissionServiceImpl(PermissionRepository permissionRepository) {
+
+    public PermissionServiceImpl(PermissionRepository permissionRepository, RoleRepository roleRepository) {
         this.permissionRepository = permissionRepository;
+        this.roleRepository = roleRepository;
     }
 
     /**
@@ -92,6 +100,67 @@ public class PermissionServiceImpl implements PermissionService {
         List<Permission> permissions = permissionRepository.findAllByStatus(RecordStatus.ACTIVE);
 
         return permissions.stream().filter(permission -> !PermissionType.FOLDER.equals(permission.getPermissionType()))
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PermissionSummaryDTO> findAllActivePerms(Long roleId) {
+        log.debug("Request to get all active permissions");
+        List<Permission> allActivePerms = permissionRepository.findAllPermsByStatusOrderBySortOrder(RecordStatus.ACTIVE);
+        final List<Long> permIdsInRole = roleId != null ? getPermissionIdsInRole(roleId) : new ArrayList<>();
+        //group by parentId
+        List<PermissionSummaryDTO> childPerms =  allActivePerms.stream()
+            .filter(permission -> permission.getParent() != null)
+            .map(PermissionSummaryDTO::new)
+            .map(summaryDTO -> {
+                if (isPermissionInRole(permIdsInRole, summaryDTO.getId())){
+                    log.debug("contains");
+                    summaryDTO.setChecked(true);
+                }
+                summaryDTO.setExpand(true);
+                return summaryDTO;
+            }).collect(Collectors.toList());
+
+        Map<Long, List<PermissionSummaryDTO>> childMenusMap = childPerms.stream().collect(Collectors.groupingBy(PermissionSummaryDTO::getParentId));
+        //establish relationship for child menu
+        for (PermissionSummaryDTO permissionDTO: childPerms ) {
+            if(!CollectionUtils.isEmpty(childMenusMap.get(permissionDTO.getId()))){
+                permissionDTO.setChildren(childMenusMap.get(permissionDTO.getId()));
+                permissionDTO.setExpand(true);
+            }
+        }
+
+        //get Root Menus
+        List<PermissionSummaryDTO> rootMenus = allActivePerms.stream()
+            .filter(menu -> menu.getParent() == null)
+            .map( PermissionSummaryDTO::new).map(permissionDTO -> {
+                permissionDTO.setChildren(childMenusMap.get(permissionDTO.getId()));
+                if (isPermissionInRole(permIdsInRole, permissionDTO.getId())){
+                    permissionDTO.setChecked(true);
+                }
+                permissionDTO.setExpand(true);
+                return permissionDTO;
+            })
+            .collect(Collectors.toList());
+
+        return rootMenus;
+    }
+
+    private boolean isPermissionInRole(List<Long> permIdsInRole, Long permissionId) {
+        log.debug("permIdsInRole: {}: permissionId={}", permIdsInRole, permissionId);
+        return permIdsInRole.contains(permissionId);
+    }
+
+    private List<Long> getPermissionIdsInRole(Long id) {
+        return roleRepository.findRoleWithPermissionsById(id).stream().map(role -> {
+            log.debug("Permissions {} for {}", role.getPermissions(), role.getId());
+          return  role.getPermissions();
+        })
+            .flatMap(permissions -> {
+                log.debug("permissions: {} ", permissions);
+                return permissions.stream();
+            })
+            .map(Permission::getId)
             .collect(Collectors.toList());
     }
 

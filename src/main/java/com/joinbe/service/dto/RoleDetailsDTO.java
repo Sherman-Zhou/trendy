@@ -10,7 +10,7 @@ import java.util.Set;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class RoleDetailsDTO extends RoleDTO {
-    private Integer version;
+//    private Integer version;
 
     private String createdBy;
 

@@ -24,4 +24,8 @@ public interface PermissionRepository extends JpaRepository<Permission, Long>,
 
     @EntityGraph(attributePaths = "children")
     List<Permission> findAllByStatus(RecordStatus status);
+
+    @EntityGraph(attributePaths = {"parent"})
+    List<Permission> findAllPermsByStatusOrderBySortOrder(RecordStatus status);
+
 }

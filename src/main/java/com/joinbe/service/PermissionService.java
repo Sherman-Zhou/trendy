@@ -3,6 +3,7 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Permission;
 import com.joinbe.service.dto.PermissionDTO;
+import com.joinbe.service.dto.PermissionSummaryDTO;
 import com.joinbe.web.rest.vm.PermissionVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,12 +49,15 @@ public interface PermissionService {
 
     List<Permission> loadAllPermissions();
 
+    List<PermissionSummaryDTO> findAllActivePerms(Long roleId);
+
 
     default PermissionDTO toDto(Permission permission) {
         PermissionDTO dto = BeanConverter.toDto(permission, PermissionDTO.class);
         dto.setParentId(permission.getParent() != null ? permission.getParent().getId() : null);
         return dto;
     }
+
 
     default Permission toEntity(PermissionDTO dto) {
         Permission entity = BeanConverter.toEntity(dto, Permission.class);

@@ -85,6 +85,12 @@ public class Permission extends AbstractAuditingEntity implements Serializable {
     @TableField(exist = false)
     private List<Permission> children;
 
+    public Permission() {
+    }
+
+    public Permission(Long id) {
+        this.id = id;
+    }
 
     public Permission addChild(Permission child) {
         if (children == null) {

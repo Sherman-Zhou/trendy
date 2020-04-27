@@ -1,13 +1,19 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.domain.Permission;
+import com.joinbe.service.PermissionService;
 import com.joinbe.service.RoleService;
+import com.joinbe.service.dto.PermissionDTO;
+import com.joinbe.service.dto.PermissionSummaryDTO;
 import com.joinbe.service.dto.RoleDTO;
+import com.joinbe.service.dto.RoleDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.RoleVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,8 +39,11 @@ public class RoleResource {
 
     private final RoleService roleService;
 
-    public RoleResource(RoleService roleService) {
+    private final PermissionService permissionService;
+
+    public RoleResource(RoleService roleService, PermissionService permissionService) {
         this.roleService = roleService;
+        this.permissionService = permissionService;
     }
 
     /**
@@ -96,9 +106,9 @@ public class RoleResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the roleDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/roles/{id}")
-    public ResponseEntity<RoleDTO> getRole(@PathVariable Long id) {
+    public ResponseEntity<RoleDetailsDTO> getRole(@PathVariable Long id) {
         log.debug("REST request to get Role : {}", id);
-        Optional<RoleDTO> roleDTO = roleService.findOne(id);
+        Optional<RoleDetailsDTO> roleDTO = roleService.findOne(id);
         return ResponseUtil.wrapOrNotFound(roleDTO);
     }
 
@@ -114,4 +124,46 @@ public class RoleResource {
         roleService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * GET  /roles/active-perms/:roleId: get all the active permission and set the checked of permission based on roleId.
+     *
+     * @param roleId the id of the roleDTO to set the initial status of menus.
+     * @return the ResponseEntity with status 200 (OK) and the list of Permissions in body
+     */
+    @GetMapping("/roles/active-perms/{roleId}")
+    public List<PermissionSummaryDTO> getAllActivePerms(@PathVariable Long roleId) {
+        log.debug("REST request to get all active perms, roleId = {} ", roleId);
+        return permissionService.findAllActivePerms(roleId);
+    }
+
+    /**
+     * GET  /roles/active-perms: get all the active perms.
+     *
+     * @return the ResponseEntity with status 200 (OK) and the list of Permissions in body
+     */
+    @GetMapping("/roles/active-perms")
+    public List<PermissionSummaryDTO> getAllActivePerms() {
+        log.debug("REST request to get all active perms ");
+        return permissionService.findAllActivePerms(null);
+    }
+
+    /**
+     * {@code PUT  /roles/{roleId}/assign} : assign permission to role.
+     *
+     * @param roleId the roleDTO to update.
+     * @param permissionIds the ids of permissions to assign.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated roleDTO,
+     * or with status {@code 400 (Bad Request)} if the roleDTO is not valid,
+     * or with status {@code 500 (Internal Server Error)} if the roleDTO couldn't be updated.
+      */
+    @PutMapping("/roles/{roleId}/assign")
+    public ResponseEntity<RoleDTO> assignPermission( @PathVariable Long roleId, @Valid @RequestBody List<Long> permissionIds){
+        log.debug("REST request to assign permission: {} to role : {}", permissionIds,  roleId);
+
+        RoleDTO result = roleService.assignPermission(roleId, permissionIds);
+        return ResponseEntity.ok()
+            .body(result);
+    }
+
 }
