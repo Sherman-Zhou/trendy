@@ -12,9 +12,9 @@ redis-cli \
   --cluster-replicas 1 \
   --cluster-yes \
   --cluster create \
-    $(host carmng-redis|awk '{print $4}'):6379 \
-    $(host carmng-redis-1|awk '{print $4}'):6379 \
-    $(host carmng-redis-2|awk '{print $4}'):6379 \
-    $(host carmng-redis-3|awk '{print $4}'):6379 \
-    $(host carmng-redis-4|awk '{print $4}'):6379 \
-    $(host carmng-redis-5|awk '{print $4}'):6379
+    $(host trendy-redis|awk '{print $4}'):6379 \
+    $(host trendy-redis-1|awk '{print $4}'):6379 \
+    $(host trendy-redis-2|awk '{print $4}'):6379 \
+    $(host trendy-redis-3|awk '{print $4}'):6379 \
+    $(host trendy-redis-4|awk '{print $4}'):6379 \
+    $(host trendy-redis-5|awk '{print $4}'):6379

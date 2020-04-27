@@ -30,7 +30,7 @@ public class TrendyApp {
     }
 
     /**
-     * Initializes carMng.
+     * Initializes trendy.
      * <p>
      * Spring profiles can be configured with a program argument --spring.profiles.active=your-active-profile
      * <p>

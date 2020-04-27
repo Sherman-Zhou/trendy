@@ -1,13 +1,13 @@
 version: '2'
 services:
-  carmng-mysql:
+  trendy-mysql:
     image: mysql:8.0.19
     # volumes:
-    #     - ~/volumes/jhipster/carMng/mysql/:/var/lib/mysql/
+    #     - ~/volumes/jhipster/trendy/mysql/:/var/lib/mysql/
     environment:
       - MYSQL_USER=root
       - MYSQL_ALLOW_EMPTY_PASSWORD=yes
-      - MYSQL_DATABASE=carmng
+      - MYSQL_DATABASE=trendy
     ports:
       - 3308:3306
     command: mysqld --lower_case_table_names=1 --skip-ssl --character_set_server=utf8mb4 --explicit_defaults_for_timestamp

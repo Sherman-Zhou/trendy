@@ -59,10 +59,19 @@ spring:
       hibernate.cache.use_query_cache: false
       hibernate.generate_statistics: false
   mail:
-    host: localhost
-    port: 25
-    username:
-    password:
+    host: smtp.qq.com
+    port: 465
+    username: 108405718@qq.com
+    password: tjskwrjubwntbibc
+    default-encoding: utf-8
+    properties:
+      mail.smtp.ssl.enable: true
+      mail.imap.ssl.socketFactory.fallback: false
+      mail.smtp.ssl.socketFactory.class: javax.net.ssl.SSLSocketFactory
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+
   messages:
     cache-duration: PT1S # 1 second, see the ISO 8601 standard
   thymeleaf:
@@ -103,6 +112,7 @@ jhipster:
         token-validity-in-seconds-for-remember-me: 2592000
   mail: # specific JHipster mail property, for standard properties see MailProperties
     base-url: http://127.0.0.1:8080
+    from: 108405718@qq.com
   metrics:
     logs: # Reports metrics in the logs
       enabled: false

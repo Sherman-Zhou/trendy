@@ -192,8 +192,8 @@ public class UserServiceImpl implements UserService {
             user.setLangKey(userDTO.getLangKey());
         }
         user.setSex(Sex.resolve(userDTO.getSex()));
-//        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
-//        user.setPassword(encryptedPassword);
+        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
+        user.setPassword(encryptedPassword);
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
         user.setStatus(RecordStatus.ACTIVE);

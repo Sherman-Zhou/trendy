@@ -146,8 +146,8 @@ jhipster:
   #     exposed-headers: "Authorization,Link,X-Total-Count"
   #     allow-credentials: true
   #     max-age: 1800
-  mail:
-    from: carMng@localhost
+#  mail:
+#    from: trendy@localhost
   swagger:
     default-include-pattern: /api/.*
     title: Car Management API
