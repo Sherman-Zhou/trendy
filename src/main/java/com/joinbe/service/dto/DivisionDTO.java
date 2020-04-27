@@ -7,7 +7,6 @@ import lombok.EqualsAndHashCode;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.time.Instant;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -28,7 +27,6 @@ public class DivisionDTO implements Serializable {
     private RecordStatus status;
 
     private Long parentId;
-
 
 
 }

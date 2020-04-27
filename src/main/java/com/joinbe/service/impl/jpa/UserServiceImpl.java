@@ -3,11 +3,14 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.error.EmailAlreadyUsedException;
 import com.joinbe.common.error.InvalidPasswordException;
 import com.joinbe.common.error.UsernameAlreadyUsedException;
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Permission;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.domain.enumeration.Sex;
 import com.joinbe.repository.PermissionRepository;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.repository.UserRepository;
@@ -17,18 +20,23 @@ import com.joinbe.service.RoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
+import javax.persistence.criteria.Predicate;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -108,7 +116,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User registerUser(UserDTO userDTO, String password) {
+    public Optional<User> requestPasswordReset(Long userId) {
+        return userRepository.findById(userId)
+            .filter(User::getActivated)
+            .map(user -> {
+                user.setResetKey(RandomUtil.generateResetKey());
+                user.setResetDate(Instant.now());
+                this.clearUserCaches(user);
+                return user;
+            });
+    }
+
+    @Override
+    public User registerUser(UserDetailsDTO userDTO, String password) {
         userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).ifPresent(existingUser -> {
             boolean removed = removeNonActivatedUser(existingUser);
             if (!removed) {
@@ -171,13 +191,14 @@ public class UserServiceImpl implements UserService {
         } else {
             user.setLangKey(userDTO.getLangKey());
         }
-        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
-        user.setPassword(encryptedPassword);
+        user.setSex(Sex.resolve(userDTO.getSex()));
+//        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
+//        user.setPassword(encryptedPassword);
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
         user.setStatus(RecordStatus.ACTIVE);
-        if (userDTO.getRoles() != null && !userDTO.getRoles().isEmpty()) {
-            Set<Role> roles = userDTO.getRoles().stream().map(RoleDTO::getId)
+        if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
+            Set<Role> roles = userDTO.getRoleIds().stream()
                 .map(roleRepository::findById)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -231,6 +252,8 @@ public class UserServiceImpl implements UserService {
             .findById(userDTO.getId()))
             .filter(Optional::isPresent)
             .map(Optional::get)
+            //not allow to update deleted user
+            .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 this.clearUserCaches(user);
 
@@ -241,12 +264,13 @@ public class UserServiceImpl implements UserService {
                     user.setEmail(userDTO.getEmail().toLowerCase());
                 }
                 user.setAvatar(userDTO.getAvatar());
-                user.setStatus(userDTO.getStatus());
+                user.setStatus(RecordStatus.resolve(userDTO.getStatus()));
                 user.setLangKey(userDTO.getLangKey());
-                user.setVersion(userDTO.getVersion());
+                user.setSex(Sex.resolve(userDTO.getSex()));
+                // user.setVersion(userDTO.getVersion());
                 Set<Role> managedAuthorities = user.getRoles();
                 managedAuthorities.clear();
-                userDTO.getRoles().stream().map(RoleDTO::getId)
+                userDTO.getRoleIds().stream()
                     .map(roleRepository::findById)
                     .filter(Optional::isPresent)
                     .map(Optional::get)
@@ -261,19 +285,37 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUser(String login) {
-        userRepository.findOneByLogin(login).ifPresent(user -> {
-            userRepository.delete(user);
-            this.clearUserCaches(user);
-            log.debug("Deleted User: {}", user);
-        });
+    public Optional<UserDTO> updateUserStatus(Long id, RecordStatus status) {
+        return Optional.of(userRepository
+            .findById(id))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            //not allow to update deleted user
+            .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
+            .map(user -> {
+                user.setStatus(status);
+                userRepository.save(user);
+                this.clearUserCaches(user);
+                log.debug("Disabled/enable User: {}", user.getLogin(), status);
+                return user;
+            })
+            .map(UserDTO::new);
     }
 
+//    @Override
+//    public void deleteUser(String login) {
+//        userRepository.findOneByLogin(login).ifPresent(user -> {
+//            userRepository.delete(user);
+//            this.clearUserCaches(user);
+//            log.debug("Deleted User: {}", user);
+//        });
+//    }
+
     @Override
-    public void deleteUser(Long id, Integer version) {
+    public void deleteUser(Long id) {
         userRepository.findById(id).ifPresent(user -> {
-            user.setVersion(version);
-            userRepository.delete(user);
+            // userRepository.delete(user);
+            user.setStatus(RecordStatus.DELETED);
             this.clearUserCaches(user);
             log.debug("Deleted User: {}", user);
         });
@@ -297,8 +339,33 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM userVM) {
-        return userRepository.findAllByLoginNot(pageable, Constants.ANONYMOUS_USER).map(UserDTO::new);
+    public Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM vm) {
+        QueryParams<User> queryParams = new QueryParams<>();
+
+        if (StringUtils.isNotEmpty(vm.getEmail())) {
+            queryParams.and("email", Filter.Operator.eq, vm.getEmail());
+        }
+
+        if (StringUtils.isNotEmpty(vm.getLangKey())) {
+            queryParams.and("langKey", Filter.Operator.eq, vm.getLangKey());
+        }
+
+        if (StringUtils.isNotEmpty(vm.getAddress())) {
+            queryParams.and("address", Filter.Operator.like, vm.getAddress());
+        }
+
+        Specification<User> specification = Specification.where(queryParams);
+        if (StringUtils.isNotEmpty(vm.getName())) {
+            //name or account search...
+            Specification<User> itemSpecification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate namePredicate = criteriaBuilder.like(root.get("name"), "%" + vm.getName().trim() + "%");
+                Predicate loginPredicate = criteriaBuilder.like(root.get("login"), "%" + vm.getName().trim() + "%");
+                Predicate nameOrLoginPredicate = criteriaBuilder.or(namePredicate, loginPredicate);
+                return nameOrLoginPredicate;
+            };
+            specification = specification.and(itemSpecification);
+        }
+        return userRepository.findAll(specification, pageable).map(UserDTO::new);
     }
 
     @Override

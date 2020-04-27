@@ -3,7 +3,6 @@ package com.joinbe.service.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.joinbe.domain.enumeration.OperationType;
 import com.joinbe.domain.enumeration.PermissionType;
-import com.joinbe.domain.enumeration.RecordStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -40,15 +39,15 @@ public class PermissionDTO implements Serializable {
 
     private OperationType operationType;
 
-   // @Size(max = 200)
-   // private String description;
+    // @Size(max = 200)
+    // private String description;
     @JsonIgnore
     private BigDecimal sortOrder;
 
-   // @Size(max = 20)
-   // private String backendUrl;
+    // @Size(max = 20)
+    // private String backendUrl;
 
-   // private RecordStatus status;
+    // private RecordStatus status;
     @JsonIgnore
     private Long parentId;
 

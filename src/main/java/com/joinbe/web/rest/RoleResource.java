@@ -1,9 +1,7 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.domain.Permission;
 import com.joinbe.service.PermissionService;
 import com.joinbe.service.RoleService;
-import com.joinbe.service.dto.PermissionDTO;
 import com.joinbe.service.dto.PermissionSummaryDTO;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.RoleDetailsDTO;
@@ -13,7 +11,6 @@ import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.RoleVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -87,7 +84,7 @@ public class RoleResource {
     /**
      * {@code GET  /roles} : get all the roles.
      *
-     * @param pageable  the pagination information.
+     * @param pageable the pagination information.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of roles in body.
      */
     @GetMapping("/roles")
@@ -151,15 +148,15 @@ public class RoleResource {
     /**
      * {@code PUT  /roles/{roleId}/assign} : assign permission to role.
      *
-     * @param roleId the roleDTO to update.
+     * @param roleId        the roleDTO to update.
      * @param permissionIds the ids of permissions to assign.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated roleDTO,
      * or with status {@code 400 (Bad Request)} if the roleDTO is not valid,
      * or with status {@code 500 (Internal Server Error)} if the roleDTO couldn't be updated.
-      */
+     */
     @PutMapping("/roles/{roleId}/assign")
-    public ResponseEntity<RoleDTO> assignPermission( @PathVariable Long roleId, @Valid @RequestBody List<Long> permissionIds){
-        log.debug("REST request to assign permission: {} to role : {}", permissionIds,  roleId);
+    public ResponseEntity<RoleDTO> assignPermission(@PathVariable Long roleId, @Valid @RequestBody List<Long> permissionIds) {
+        log.debug("REST request to assign permission: {} to role : {}", permissionIds, roleId);
 
         RoleDTO result = roleService.assignPermission(roleId, permissionIds);
         return ResponseEntity.ok()

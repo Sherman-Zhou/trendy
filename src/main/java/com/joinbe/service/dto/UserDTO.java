@@ -4,25 +4,27 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
-import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.domain.enumeration.Sex;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.util.CollectionUtils;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.time.Instant;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-/**
- * A DTO representing a user, with his authorities.
- */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class UserDTO {
+public class UserDTO implements Serializable {
+
+    public static final int PASSWORD_MIN_LENGTH = 4;
+
+    public static final int PASSWORD_MAX_LENGTH = 100;
 
     private Long id;
 
@@ -44,60 +46,44 @@ public class UserDTO {
     @Size(max = 2000)
     private String remark;
 
+    private String sex;
+
     @Size(max = 500)
     private String address;
 
     @Size(min = 2, max = 10)
     private String langKey;
 
-    private RecordStatus status;
+    private String status;
 
-    public static final int PASSWORD_MIN_LENGTH = 4;
-
-    public static final int PASSWORD_MAX_LENGTH = 100;
 
     @JsonIgnore
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     private String password;
 
-    private Set<String> authorities;
+    private String roleName;
 
-    private Set<RoleDTO> roles;
-
-    private Integer version;
-
-    private String createdBy;
-
-    private Instant createdDate;
-
-    private String lastModifiedBy;
-
-    private Instant lastModifiedDate;
-
-    private List<PermissionDTO> menus;
-
-    private List<PermissionDTO> permissions;
+    private List<Long> roleIds;
 
     public UserDTO() {
-        // Empty constructor needed for Jackson.
     }
 
     public UserDTO(User user) {
-        this.id = user.getId();
-        this.login = user.getLogin();
-        this.name = user.getName();
-        this.email = user.getEmail();
-        this.status = user.getStatus();
-        this.avatar = user.getAvatar();
-        this.langKey = user.getLangKey();
-        this.version = user.getVersion();
-        this.authorities = user.getRoles().stream()
-            .map(Role::getName)
-            .collect(Collectors.toSet());
-    }
+        this.setId(user.getId());
+        this.setLogin(user.getLogin());
+        this.setName(user.getName());
+        this.setEmail(user.getEmail());
+        this.setStatus(user.getStatus() != null ? user.getStatus().getCode() : null);
+        this.setAvatar(user.getAvatar());
+        this.setSex(Sex.getCode(user.getSex()));
+        this.setLangKey(user.getLangKey());
+        if (!CollectionUtils.isEmpty(user.getRoles())) {
+            Set<String> roleNames = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+            this.setRoleName(String.join(", ", roleNames));
+        }
 
-    public Boolean getActivated() {
-        return RecordStatus.ACTIVE.equals(status);
     }
 
 

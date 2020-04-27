@@ -37,7 +37,7 @@ public class PermissionSummaryDTO implements Serializable {
     public PermissionSummaryDTO(Permission permission) {
         this.id = permission.getId();
         this.description = permission.getDescription();
-        this.titleKey= permission.getTitleKey();
+        this.titleKey = permission.getTitleKey();
         this.parentId = permission.getParent() != null ? permission.getParent().getId() : null;
 
     }

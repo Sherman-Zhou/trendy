@@ -2,8 +2,10 @@ package com.joinbe.service;
 
 import com.joinbe.domain.Permission;
 import com.joinbe.domain.User;
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.vm.UserVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +20,9 @@ public interface UserService {
 
     Optional<User> requestPasswordReset(String mail);
 
-    User registerUser(UserDTO userDTO, String password);
+    Optional<User> requestPasswordReset(Long userId);
+
+    User registerUser(UserDetailsDTO userDTO, String password);
 
     User createUser(UserDTO userDTO);
 
@@ -26,9 +30,11 @@ public interface UserService {
 
     Optional<UserDTO> updateUser(UserDTO userDTO);
 
-    void deleteUser(String login);
+//    void deleteUser(String login);
 
-    void deleteUser(Long id, Integer version);
+    Optional<UserDTO> updateUserStatus(Long id, RecordStatus status);
+
+    void deleteUser(Long id);
 
     void changePassword(String currentClearTextPassword, String newPassword);
 

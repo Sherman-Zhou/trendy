@@ -109,11 +109,11 @@ public class PermissionServiceImpl implements PermissionService {
         List<Permission> allActivePerms = permissionRepository.findAllPermsByStatusOrderBySortOrder(RecordStatus.ACTIVE);
         final List<Long> permIdsInRole = roleId != null ? getPermissionIdsInRole(roleId) : new ArrayList<>();
         //group by parentId
-        List<PermissionSummaryDTO> childPerms =  allActivePerms.stream()
+        List<PermissionSummaryDTO> childPerms = allActivePerms.stream()
             .filter(permission -> permission.getParent() != null)
             .map(PermissionSummaryDTO::new)
             .map(summaryDTO -> {
-                if (isPermissionInRole(permIdsInRole, summaryDTO.getId())){
+                if (isPermissionInRole(permIdsInRole, summaryDTO.getId())) {
                     log.debug("contains");
                     summaryDTO.setChecked(true);
                 }
@@ -123,8 +123,8 @@ public class PermissionServiceImpl implements PermissionService {
 
         Map<Long, List<PermissionSummaryDTO>> childMenusMap = childPerms.stream().collect(Collectors.groupingBy(PermissionSummaryDTO::getParentId));
         //establish relationship for child menu
-        for (PermissionSummaryDTO permissionDTO: childPerms ) {
-            if(!CollectionUtils.isEmpty(childMenusMap.get(permissionDTO.getId()))){
+        for (PermissionSummaryDTO permissionDTO : childPerms) {
+            if (!CollectionUtils.isEmpty(childMenusMap.get(permissionDTO.getId()))) {
                 permissionDTO.setChildren(childMenusMap.get(permissionDTO.getId()));
                 permissionDTO.setExpand(true);
             }
@@ -133,9 +133,9 @@ public class PermissionServiceImpl implements PermissionService {
         //get Root Menus
         List<PermissionSummaryDTO> rootMenus = allActivePerms.stream()
             .filter(menu -> menu.getParent() == null)
-            .map( PermissionSummaryDTO::new).map(permissionDTO -> {
+            .map(PermissionSummaryDTO::new).map(permissionDTO -> {
                 permissionDTO.setChildren(childMenusMap.get(permissionDTO.getId()));
-                if (isPermissionInRole(permIdsInRole, permissionDTO.getId())){
+                if (isPermissionInRole(permIdsInRole, permissionDTO.getId())) {
                     permissionDTO.setChecked(true);
                 }
                 permissionDTO.setExpand(true);
@@ -154,7 +154,7 @@ public class PermissionServiceImpl implements PermissionService {
     private List<Long> getPermissionIdsInRole(Long id) {
         return roleRepository.findRoleWithPermissionsById(id).stream().map(role -> {
             log.debug("Permissions {} for {}", role.getPermissions(), role.getId());
-          return  role.getPermissions();
+            return role.getPermissions();
         })
             .flatMap(permissions -> {
                 log.debug("permissions: {} ", permissions);

@@ -13,6 +13,7 @@ import com.joinbe.service.UserRoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -92,9 +93,9 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
 
         this.save(user);
 
-        if (!CollectionUtils.isEmpty(userDTO.getRoles())) {
-            List<UserRole> userRoles = new ArrayList<>(userDTO.getRoles().size());
-            Set<Long> roleIds = userDTO.getRoles().stream().map(RoleDTO::getId)
+        if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
+            List<UserRole> userRoles = new ArrayList<>(userDTO.getRoleIds().size());
+            Set<Long> roleIds = userDTO.getRoleIds().stream()
                 .collect(Collectors.toSet());
             for (Long roleId : roleIds) {
                 UserRole userRole = new UserRole();
@@ -119,12 +120,12 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public void deleteUser(String login) {
-
+    public Optional<UserDTO> updateUserStatus(Long id, RecordStatus status) {
+        return Optional.empty();
     }
 
     @Override
-    public void deleteUser(Long id, Integer version) {
+    public void deleteUser(Long id) {
 
     }
 
@@ -144,7 +145,12 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public User registerUser(UserDTO userDTO, String password) {
+    public Optional<User> requestPasswordReset(Long userId) {
+        return Optional.empty();
+    }
+
+    @Override
+    public User registerUser(UserDetailsDTO userDTO, String password) {
         return null;
     }
 

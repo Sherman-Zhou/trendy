@@ -1,10 +1,8 @@
 package com.joinbe.web.rest.vm;
 
-import com.joinbe.domain.enumeration.RecordStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 @Data

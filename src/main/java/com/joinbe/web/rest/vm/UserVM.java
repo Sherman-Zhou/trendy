@@ -1,13 +1,10 @@
 package com.joinbe.web.rest.vm;
 
-import com.joinbe.config.Constants;
 import com.joinbe.domain.enumeration.RecordStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 
@@ -22,10 +19,10 @@ public class UserVM implements Serializable {
         // Empty constructor needed for Jackson.
     }
 
-    @NotBlank
-    @Pattern(regexp = Constants.LOGIN_REGEX)
-    @Size(min = 1, max = 50)
-    private String login;
+//    @NotBlank
+//    @Pattern(regexp = Constants.LOGIN_REGEX)
+//    @Size(min = 1, max = 50)
+//    private String login;
 
     @Size(max = 50)
     private String name;
@@ -33,12 +30,12 @@ public class UserVM implements Serializable {
     @Email
     @Size(min = 5, max = 254)
     private String email;
+//
+//    @Size(max = 256)
+//    private String avatar;
 
-    @Size(max = 256)
-    private String avatar;
-
-    @Size(max = 2000)
-    private String remark;
+//    @Size(max = 2000)
+//    private String remark;
 
     @Size(max = 500)
     private String address;

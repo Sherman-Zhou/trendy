@@ -3,6 +3,7 @@ package com.joinbe.web.rest;
 import com.joinbe.domain.User;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.LoginAlreadyUsedException;
@@ -45,7 +46,7 @@ public class MpUserResource {
 
     @PostMapping("/users")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<User> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
+    public ResponseEntity<User> createUser(@Valid @RequestBody UserDetailsDTO userDTO) throws URISyntaxException {
 
         if (userDTO.getId() != null) {
             throw new BadRequestAlertException("A new user cannot already have an ID", "userManagement", "idexists");

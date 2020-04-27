@@ -57,16 +57,16 @@ public class RoleServiceImpl implements RoleService {
         RoleDTO roleDTO = null;
         Optional<Role> roleOptional = roleRepository.findById(roleId);
 
-        if(roleOptional.isPresent()){
-            Role  role = roleOptional.get();
+        if (roleOptional.isPresent()) {
+            Role role = roleOptional.get();
             role.getPermissions().clear();
-            for(Long permissionId: permissionIds) {
+            for (Long permissionId : permissionIds) {
                 Permission permission = new Permission();
                 permission.setId(permissionId);
                 role.getPermissions().add(permission);
             }
             roleDTO = toDto(role);
-        }else {
+        } else {
             throw new BadRequestAlertException("Invalid id", "Role", "idnull");
         }
 
@@ -94,7 +94,7 @@ public class RoleServiceImpl implements RoleService {
         if (StringUtils.isNotEmpty(vm.getDescription())) {
             queryParams.and("description", Filter.Operator.like, vm.getDescription());
         }
-        if(StringUtils.isNotEmpty(vm.getStatus())){
+        if (StringUtils.isNotEmpty(vm.getStatus())) {
             queryParams.and("status", Filter.Operator.eq, RecordStatus.resolve(vm.getStatus()));
         }
         return roleRepository.findAll(queryParams, pageable)
@@ -126,6 +126,6 @@ public class RoleServiceImpl implements RoleService {
         log.debug("Request to delete Role : {}", id);
         Role role = roleRepository.getOne(id);
         role.setStatus(RecordStatus.DELETED);
-       // roleRepository.deleteById(id);
+        // roleRepository.deleteById(id);
     }
 }

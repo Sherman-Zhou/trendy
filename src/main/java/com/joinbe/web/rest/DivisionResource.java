@@ -66,7 +66,7 @@ public class DivisionResource {
     @PutMapping("/divisions")
     public ResponseEntity<DivisionDTO> updateDivision(@Valid @RequestBody DivisionDTO divisionDTO) {
         log.debug("REST request to update Division : {}", divisionDTO);
-        if (divisionDTO.getId() == null ) {
+        if (divisionDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id or version", ENTITY_NAME, "idnull");
         }
         DivisionDTO result = divisionService.save(divisionDTO);

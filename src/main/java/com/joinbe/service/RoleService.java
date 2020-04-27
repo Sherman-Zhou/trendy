@@ -1,7 +1,6 @@
 package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
-import com.joinbe.domain.Permission;
 import com.joinbe.domain.Role;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.RoleDetailsDTO;

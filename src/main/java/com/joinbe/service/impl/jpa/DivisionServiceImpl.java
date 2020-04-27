@@ -72,7 +72,7 @@ public class DivisionServiceImpl implements DivisionService {
         if (StringUtils.isNotEmpty(vm.getDescription())) {
             queryParams.and("description", Filter.Operator.like, vm.getDescription());
         }
-        if(StringUtils.isNotEmpty(vm.getStatus())){
+        if (StringUtils.isNotEmpty(vm.getStatus())) {
             queryParams.and("status", Filter.Operator.eq, RecordStatus.resolve(vm.getStatus()));
         }
         return divisionRepository.findAll(queryParams, pageable)

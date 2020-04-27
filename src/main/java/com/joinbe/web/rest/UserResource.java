@@ -2,15 +2,18 @@ package com.joinbe.web.rest;
 
 import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.MailService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.LoginAlreadyUsedException;
 import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
+import com.joinbe.web.rest.vm.UserOperation;
 import com.joinbe.web.rest.vm.UserVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,6 +127,36 @@ public class UserResource {
     }
 
     /**
+     * {@code GET /users/:id/:op} : disable/enable an existing User.
+     *
+     * @param id the id of the user to update.
+     * @param op the operation: enable/disable.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated user.
+     */
+    @GetMapping("/users/{id}/{op}")
+    public ResponseEntity<UserDTO> disableOrEnableUser(@PathVariable Long id, @PathVariable UserOperation op) {
+        log.debug("REST request to {} User : {}: {}", op, id);
+        RecordStatus status = UserOperation.enable.equals(op) ? RecordStatus.ACTIVE : RecordStatus.INACTIVE;
+        Optional<UserDTO> updatedUser = userService.updateUserStatus(id, status);
+        return ResponseUtil.wrapOrNotFound(updatedUser);
+    }
+
+    /**
+     * {@code GET   /user/:id/reset} : Send an email to reset the password of the user.
+     *
+     * @param id the id of the user.
+     */
+    @GetMapping(path = "/user/{id}/reset")
+    public ResponseEntity<UserDTO> requestPasswordReset(@PathVariable Long id) {
+        Optional<User> user = userService.requestPasswordReset(id);
+        if (user.isPresent()) {
+            mailService.sendPasswordResetMail(user.get());
+        }
+
+        return ResponseUtil.wrapOrNotFound(user.map(UserDTO::new));
+    }
+
+    /**
      * {@code GET /users} : get all users.
      *
      * @param pageable the pagination information.
@@ -153,38 +186,38 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the "login" user, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
-    public ResponseEntity<UserDTO> getUser(@PathVariable String login) {
+    public ResponseEntity<UserDetailsDTO> getUser(@PathVariable String login) {
         log.debug("REST request to get User : {}", login);
         return ResponseUtil.wrapOrNotFound(
             userService.getUserWithAuthoritiesByLogin(login)
-                .map(UserDTO::new));
+                .map(UserDetailsDTO::new));
     }
 
-    /**
-     * {@code DELETE /users/:login} : delete the "login" User.
-     *
-     * @param login the login of the user to delete.
-     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
-     */
-    @DeleteMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
-//    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<Void> deleteUser(@PathVariable String login) {
-        log.debug("REST request to delete User: {}", login);
-        userService.deleteUser(login);
-        return ResponseEntity.noContent().build();
-    }
+//    /**
+//     * {@code DELETE /users/:login} : delete the "login" User.
+//     *
+//     * @param login the login of the user to delete.
+//     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+//     */
+//    @DeleteMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
+////    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+//    public ResponseEntity<Void> deleteUser(@PathVariable String login) {
+//        log.debug("REST request to delete User: {}", login);
+//        userService.deleteUser(login);
+//        return ResponseEntity.noContent().build();
+//    }
 
     /**
-     * {@code DELETE /users/:id/:version} : delete the  User by Id.
+     * {@code DELETE /users/:id} : delete the  User by Id.
      *
      * @param id the id of the user to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
-    @DeleteMapping("/users/{id}/{version}")
+    @DeleteMapping("/users/{id}")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id, @PathVariable Integer version) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         log.debug("REST request to delete User: {}", id);
-        userService.deleteUser(id, version);
+        userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 }

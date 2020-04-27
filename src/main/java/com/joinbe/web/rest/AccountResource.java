@@ -1,6 +1,5 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.domain.Permission;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.security.SecurityUtils;
@@ -9,7 +8,7 @@ import com.joinbe.service.PermissionService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.PasswordChangeDTO;
 import com.joinbe.service.dto.PermissionDTO;
-import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
 import com.joinbe.web.rest.vm.KeyAndPasswordVM;
@@ -89,15 +88,15 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be returned.
      */
     @GetMapping("/account")
-    public UserDTO getAccount() {
+    public UserDetailsDTO getAccount() {
         return userService.getUserWithAuthorities()
             .map(user -> {
-                UserDTO userDTO = new UserDTO(user);
+                UserDetailsDTO userDTO = new UserDetailsDTO(user);
                 List<PermissionDTO> permissionAndMenu = userService.findAllUserPermissionsByLogin(userDTO.getLogin()).stream()
                     .map(permissionService::toDto).collect(Collectors.toList());
                 Map<Long, List<PermissionDTO>> children = permissionAndMenu.stream()
-                    .filter(menu ->(menu.getParentId() != null && !PermissionType.OPERATION.equals( menu.getPermissionType()))).
-                    collect(Collectors.groupingBy(PermissionDTO::getParentId));
+                    .filter(menu -> (menu.getParentId() != null && !PermissionType.OPERATION.equals(menu.getPermissionType()))).
+                        collect(Collectors.groupingBy(PermissionDTO::getParentId));
                 for (PermissionDTO menu : permissionAndMenu) {
                     if (children.get(menu.getId()) != null) {
                         menu.setChildren(children.get(menu.getId()).stream().sorted(Comparator.comparing(PermissionDTO::getSortOrder)).collect(Collectors.toList()));
@@ -108,7 +107,7 @@ public class AccountResource {
 
                 userDTO.setMenus(parents);
                 List<PermissionDTO> permissions = permissionAndMenu.stream()
-                           .filter(permission -> PermissionType.OPERATION.equals( permission.getPermissionType())).collect(Collectors.toList());
+                    .filter(permission -> PermissionType.OPERATION.equals(permission.getPermissionType())).collect(Collectors.toList());
                 userDTO.setPermissions(permissions);
                 return userDTO;
             })
@@ -123,7 +122,7 @@ public class AccountResource {
      * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
-    public void saveAccount(@Valid @RequestBody UserDTO userDTO) {
+    public void saveAccount(@Valid @RequestBody UserDetailsDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
         Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
@@ -190,7 +189,7 @@ public class AccountResource {
 
     private static boolean checkPasswordLength(String password) {
         return !StringUtils.isEmpty(password) &&
-            password.length() >= UserDTO.PASSWORD_MIN_LENGTH &&
-            password.length() <= UserDTO.PASSWORD_MAX_LENGTH;
+            password.length() >= UserDetailsDTO.PASSWORD_MIN_LENGTH &&
+            password.length() <= UserDetailsDTO.PASSWORD_MAX_LENGTH;
     }
 }

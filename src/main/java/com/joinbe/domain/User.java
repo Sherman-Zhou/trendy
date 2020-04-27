@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.domain.enumeration.Sex;
 import org.hibernate.annotations.BatchSize;
 
 import javax.persistence.*;
@@ -71,6 +72,9 @@ public class User extends AbstractAuditingEntity implements Serializable {
     @Size(max = 256)
     @Column(name = "avatar", length = 256)
     private String avatar;
+
+    @Column(name = "sex")
+    private Sex sex;
 
     @Size(max = 20)
     @Column(name = "activation_key", length = 20)
@@ -237,5 +241,13 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     public void setVersion(Integer version) {
         this.version = version;
+    }
+
+    public Sex getSex() {
+        return sex;
+    }
+
+    public void setSex(Sex sex) {
+        this.sex = sex;
     }
 }
