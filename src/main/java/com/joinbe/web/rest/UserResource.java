@@ -3,6 +3,7 @@ package com.joinbe.web.rest;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.service.DivisionService;
 import com.joinbe.service.MailService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
@@ -17,6 +18,7 @@ import com.joinbe.web.rest.vm.UserOperation;
 import com.joinbe.web.rest.vm.UserVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,11 +64,14 @@ public class UserResource {
 
     private final UserService userService;
 
+    private final DivisionService divisionService;
+
     private final MailService mailService;
 
-    public UserResource(@Qualifier("JpaUserService") UserService userService, MailService mailService) {
+    public UserResource(@Qualifier("JpaUserService") UserService userService, MailService mailService, DivisionService divisionService) {
         this.userService = userService;
         this.mailService = mailService;
+        this.divisionService = divisionService;
     }
 
     /**

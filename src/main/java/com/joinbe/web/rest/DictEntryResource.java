@@ -21,7 +21,7 @@ import java.util.Optional;
 /**
  * REST controller for managing {@link com.joinbe.domain.DictEntry}.
  */
-@RestController
+//@RestController
 @RequestMapping("/api")
 public class DictEntryResource {
 

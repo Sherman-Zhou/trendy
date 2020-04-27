@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> requestPasswordReset(Long userId) {
-        return userRepository.findById(userId)
+        return userRepository.findOneWithRolesById(userId)
             .filter(User::getActivated)
             .map(user -> {
                 user.setResetKey(RandomUtil.generateResetKey());

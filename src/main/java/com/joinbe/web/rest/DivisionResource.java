@@ -22,7 +22,7 @@ import java.util.Optional;
 /**
  * REST controller for managing {@link com.joinbe.domain.Division}.
  */
-@RestController
+//@RestController
 @RequestMapping("/api")
 public class DivisionResource {
 
