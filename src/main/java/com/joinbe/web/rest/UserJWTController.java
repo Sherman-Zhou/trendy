@@ -6,6 +6,8 @@ import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.jwt.JWTFilter;
 import com.joinbe.security.jwt.TokenProvider;
 import com.joinbe.web.rest.vm.LoginVM;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import javax.validation.Valid;
  */
 @RestController
 @RequestMapping("/api")
+@Api("用户登陆相关API")
 public class UserJWTController {
 
 
@@ -39,11 +42,11 @@ public class UserJWTController {
     }
 
     @PostMapping("/authenticate")
+    @ApiOperation("登陆")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
 
         UsernamePasswordAuthenticationToken authenticationToken =
             new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
-
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         boolean rememberMe = (loginVM.isRememberMe() == null) ? false : loginVM.isRememberMe();
@@ -55,6 +58,7 @@ public class UserJWTController {
     }
 
     @GetMapping("/logout")
+    @ApiOperation("登出")
     public ResponseEntity<Void> logout() {
         redissonTokenStore.removeFromRedis(SecurityUtils.getCurrentUserLogin().orElse(""));
         return ResponseEntity.noContent().build();

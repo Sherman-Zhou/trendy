@@ -106,14 +106,14 @@ public class DivisionServiceImpl implements DivisionService {
 
     @Override
     public List<DivisionDTO> findAllByParentId(Long parentId) {
-        List<Division> divisions = null;
+        List<Division> divisions;
         if (parentId == null || parentId == 0) {
             divisions = divisionRepository.findAllRootDeptByParentIsNull();
         } else {
             divisions = divisionRepository.findAllByParentId(parentId);
         }
 
-        return divisions.stream()
+        return divisions.stream().filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
             .map(this::toDto).collect(Collectors.toList());
     }
 }

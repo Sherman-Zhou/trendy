@@ -1,5 +1,7 @@
 package com.joinbe.web.rest.vm;
 
+import io.swagger.annotations.ApiModelProperty;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -10,12 +12,15 @@ public class LoginVM {
 
     @NotNull
     @Size(min = 1, max = 50)
+    @ApiModelProperty(value = "用户名或者邮箱地址")
     private String username;
 
     @NotNull
     @Size(min = 4, max = 100)
+    @ApiModelProperty(value = "用户密码")
     private String password;
 
+    @ApiModelProperty(value = "是否记住用户")
     private Boolean rememberMe;
 
     public String getUsername() {

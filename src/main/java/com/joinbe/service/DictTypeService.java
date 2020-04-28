@@ -2,10 +2,12 @@ package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.DictType;
+import com.joinbe.service.dto.DictEntryDTO;
 import com.joinbe.service.dto.DictTypeDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -44,13 +46,13 @@ public interface DictTypeService {
      */
     void delete(Long id);
 
+    List<DictEntryDTO> getDictEntriesByType(String type);
+
     default DictTypeDTO toDto(DictType model) {
-        DictTypeDTO dto = BeanConverter.toDto(model, DictTypeDTO.class);
-        return dto;
+        return BeanConverter.toDto(model, DictTypeDTO.class);
     }
 
     default DictType toEntity(DictTypeDTO dto) {
-        DictType model = BeanConverter.toEntity(dto, DictType.class);
-        return model;
+        return BeanConverter.toEntity(dto, DictType.class);
     }
 }

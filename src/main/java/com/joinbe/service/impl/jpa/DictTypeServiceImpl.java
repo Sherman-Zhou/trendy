@@ -1,8 +1,13 @@
 package com.joinbe.service.impl.jpa;
 
+import com.joinbe.domain.DictEntry;
 import com.joinbe.domain.DictType;
+import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.repository.DictEntryRepository;
 import com.joinbe.repository.DictTypeRepository;
+import com.joinbe.service.DictEntryService;
 import com.joinbe.service.DictTypeService;
+import com.joinbe.service.dto.DictEntryDTO;
 import com.joinbe.service.dto.DictTypeDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,7 +16,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing {@link DictType}.
@@ -24,9 +33,12 @@ public class DictTypeServiceImpl implements DictTypeService {
 
     private final DictTypeRepository dictTypeRepository;
 
+    private final DictEntryRepository dictEntryRepository;
 
-    public DictTypeServiceImpl(DictTypeRepository dictTypeRepository) {
+
+    public DictTypeServiceImpl(DictTypeRepository dictTypeRepository, DictEntryRepository dictEntryRepository) {
         this.dictTypeRepository = dictTypeRepository;
+        this.dictEntryRepository = dictEntryRepository;
     }
 
     /**
@@ -81,4 +93,17 @@ public class DictTypeServiceImpl implements DictTypeService {
         log.debug("Request to delete DictType : {}", id);
         dictTypeRepository.deleteById(id);
     }
+
+    @Override
+    public List<DictEntryDTO> getDictEntriesByType(String type) {
+        DictType dictType = dictTypeRepository.findOneByTypeAndStatus(type, RecordStatus.ACTIVE);
+        if (dictType == null) {
+            return new ArrayList<>();
+        }
+        return dictType.getEntries().stream().filter(dictEntry -> RecordStatus.ACTIVE.equals(dictEntry.getStatus()))
+            .sorted(Comparator.comparing(DictEntry::getSortOrder))
+            .map(DictEntryService::toDto).collect(Collectors.toList());
+    }
+
+
 }

@@ -3,9 +3,9 @@ package com.joinbe.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.joinbe.domain.enumeration.RecordStatus;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
@@ -46,10 +46,9 @@ public class DictType extends AbstractAuditingEntity {
     @Column(name = "remark", length = 500)
     private String remark;
 
-    @NotNull
-    @Size(max = 1)
-    @Column(name = "status", length = 1, nullable = false)
-    private String status;
+
+    @Column(name = "status")
+    private RecordStatus status;
 
     @OneToMany(mappedBy = "dictType")
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -104,16 +103,16 @@ public class DictType extends AbstractAuditingEntity {
         this.remark = remark;
     }
 
-    public String getStatus() {
+    public RecordStatus getStatus() {
         return status;
     }
 
-    public DictType status(String status) {
+    public DictType status(RecordStatus status) {
         this.status = status;
         return this;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(RecordStatus status) {
         this.status = status;
     }
 

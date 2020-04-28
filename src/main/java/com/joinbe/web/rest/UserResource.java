@@ -6,6 +6,7 @@ import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.MailService;
 import com.joinbe.service.UserService;
+import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
@@ -18,7 +19,6 @@ import com.joinbe.web.rest.vm.UserOperation;
 import com.joinbe.web.rest.vm.UserVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -140,7 +140,7 @@ public class UserResource {
      */
     @GetMapping("/users/{id}/{op}")
     public ResponseEntity<UserDTO> disableOrEnableUser(@PathVariable Long id, @PathVariable UserOperation op) {
-        log.debug("REST request to {} User : {}: {}", op, id);
+        log.debug("REST request to {} User : {} ", op, id);
         RecordStatus status = UserOperation.enable.equals(op) ? RecordStatus.ACTIVE : RecordStatus.INACTIVE;
         Optional<UserDTO> updatedUser = userService.updateUserStatus(id, status);
         return ResponseUtil.wrapOrNotFound(updatedUser);
@@ -154,9 +154,7 @@ public class UserResource {
     @GetMapping(path = "/user/{id}/reset")
     public ResponseEntity<UserDTO> requestPasswordReset(@PathVariable Long id) {
         Optional<User> user = userService.requestPasswordReset(id);
-        if (user.isPresent()) {
-            mailService.sendPasswordResetMail(user.get());
-        }
+        user.ifPresent(mailService::sendPasswordResetMail);
 
         return ResponseUtil.wrapOrNotFound(user.map(UserDTO::new));
     }
@@ -176,12 +174,41 @@ public class UserResource {
     /**
      * Gets a list of all roles.
      *
-     * @return a string list of all roles.
+     * @return a list of all roles.
      */
     @GetMapping("/users/roles")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public List<RoleDTO> getRoles() {
         return userService.getRoles();
+    }
+
+
+    /**
+     * {@code PUT  /users/{userId}/assign} : assign division to role.
+     *
+     * @param userId     the id of the user to update.
+     * @param divisionId the id  of division to assign.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated userDto,
+     * or with status {@code 500 (Internal Server Error)} if the userDto couldn't be updated.
+     */
+    @PutMapping("/users/{userId}/assign")
+    public ResponseEntity<UserDTO> assignDivision(@PathVariable Long userId, @Valid @RequestBody Long divisionId) {
+        log.debug("REST request to assign division: {} to user : {}", divisionId, userId);
+        UserDTO result = userService.assignDivision(userId, divisionId);
+        return ResponseEntity.ok()
+            .body(result);
+    }
+
+    /**
+     * GET  /users/division/:parentId/children: get all the children departments.
+     *
+     * @param parentId the parentId
+     * @return the ResponseEntity with status 200 (OK) and the list of divisions in body
+     */
+    @GetMapping("/users/division/:parentId/children")
+    public List<DivisionDTO> getAllSubDivisions(@PathVariable Long parentId) {
+        log.debug("REST request to get a List of children divisions for parent:{}", parentId);
+        return divisionService.findAllByParentId(parentId);
     }
 
     /**

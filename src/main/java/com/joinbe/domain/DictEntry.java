@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.joinbe.domain.enumeration.RecordStatus;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 
@@ -55,10 +55,8 @@ public class DictEntry extends AbstractAuditingEntity {
     @Column(name = "remark", length = 500)
     private String remark;
 
-    @NotNull
-    @Size(max = 1)
-    @Column(name = "status", length = 1, nullable = false)
-    private String status;
+    @Column(name = "status")
+    private RecordStatus status;
 
     @ManyToOne
     @JsonIgnoreProperties("entries")
@@ -139,16 +137,16 @@ public class DictEntry extends AbstractAuditingEntity {
         this.remark = remark;
     }
 
-    public String getStatus() {
+    public RecordStatus getStatus() {
         return status;
     }
 
-    public DictEntry status(String status) {
+    public DictEntry status(RecordStatus status) {
         this.status = status;
         return this;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(RecordStatus status) {
         this.status = status;
     }
 

@@ -59,7 +59,7 @@ management:
 
 spring:
   application:
-    name: Car Management
+    name: Trendy App
   profiles:
     # The commented value for `active` can be replaced with valid Spring profiles to load.
     # Otherwise, it will be filled in by maven when building the JAR file
@@ -150,8 +150,8 @@ jhipster:
 #    from: trendy@localhost
   swagger:
     default-include-pattern: /api/.*
-    title: Car Management API
-    description: Car Management API documentation
+    title: Trendy API
+    description: Trendy API documentation
     version: 0.0.1
     terms-of-service-url:
     contact-name:

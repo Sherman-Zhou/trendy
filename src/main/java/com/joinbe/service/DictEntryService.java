@@ -44,13 +44,11 @@ public interface DictEntryService {
      */
     void delete(Long id);
 
-    default DictEntryDTO toDto(DictEntry model) {
-        DictEntryDTO dto = BeanConverter.toDto(model, DictEntryDTO.class);
-        return dto;
+    static DictEntryDTO toDto(DictEntry model) {
+        return BeanConverter.toDto(model, DictEntryDTO.class);
     }
 
-    default DictEntry toEntity(DictEntryDTO dto) {
-        DictEntry model = BeanConverter.toEntity(dto, DictEntry.class);
-        return model;
+    static DictEntry toEntity(DictEntryDTO dto) {
+        return BeanConverter.toEntity(dto, DictEntry.class);
     }
 }

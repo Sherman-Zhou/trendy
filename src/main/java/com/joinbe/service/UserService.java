@@ -54,4 +54,6 @@ public interface UserService {
 
     List<Permission> findAllUserPermissionsByLogin(String login);
 
+    UserDTO assignDivision(Long userId, Long divisionId);
+
 }

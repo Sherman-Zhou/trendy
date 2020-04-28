@@ -6,6 +6,7 @@ import com.joinbe.common.error.UsernameAlreadyUsedException;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.Constants;
+import com.joinbe.domain.Division;
 import com.joinbe.domain.Permission;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
@@ -21,6 +22,7 @@ import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
+import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -296,7 +298,7 @@ public class UserServiceImpl implements UserService {
                 user.setStatus(status);
                 userRepository.save(user);
                 this.clearUserCaches(user);
-                log.debug("Disabled/enable User: {}", user.getLogin(), status);
+                log.debug("Disabled/enable User: {}: {}", user.getLogin(), status);
                 return user;
             })
             .map(UserDTO::new);
@@ -360,8 +362,7 @@ public class UserServiceImpl implements UserService {
             Specification<User> itemSpecification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
                 Predicate namePredicate = criteriaBuilder.like(root.get("name"), "%" + vm.getName().trim() + "%");
                 Predicate loginPredicate = criteriaBuilder.like(root.get("login"), "%" + vm.getName().trim() + "%");
-                Predicate nameOrLoginPredicate = criteriaBuilder.or(namePredicate, loginPredicate);
-                return nameOrLoginPredicate;
+                return criteriaBuilder.or(namePredicate, loginPredicate);
             };
             specification = specification.and(itemSpecification);
         }
@@ -427,6 +428,24 @@ public class UserServiceImpl implements UserService {
         List<Permission> permissions = permissionRepository.findAllByUserLogin(login);
         log.debug("user permissions:{}", permissions.size());
         return permissions;
+    }
+
+    @Override
+    public UserDTO assignDivision(Long userId, Long divisionId) {
+        UserDTO userDTO;
+        Optional<User> userOptional = userRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            Division division = new Division();
+            division.setId(divisionId);
+            user.setDivision(division);
+            this.clearUserCaches(user);
+            userDTO = new UserDTO(user);
+        } else {
+            throw new BadRequestAlertException("Invalid id", "User", "idnull");
+        }
+        return userDTO;
     }
 
 

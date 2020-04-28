@@ -37,9 +37,9 @@ public class DictEntryServiceImpl implements DictEntryService {
     @Override
     public DictEntryDTO save(DictEntryDTO dictEntryDTO) {
         log.debug("Request to save DictEntry : {}", dictEntryDTO);
-        DictEntry dictEntry = this.toEntity(dictEntryDTO);
+        DictEntry dictEntry = DictEntryService.toEntity(dictEntryDTO);
         dictEntry = dictEntryRepository.save(dictEntry);
-        return this.toDto(dictEntry);
+        return DictEntryService.toDto(dictEntry);
     }
 
     /**
@@ -53,7 +53,7 @@ public class DictEntryServiceImpl implements DictEntryService {
     public Page<DictEntryDTO> findAll(Pageable pageable) {
         log.debug("Request to get all DictEntries");
         return dictEntryRepository.findAll(pageable)
-            .map(this::toDto);
+            .map(DictEntryService::toDto);
     }
 
     /**
@@ -67,7 +67,7 @@ public class DictEntryServiceImpl implements DictEntryService {
     public Optional<DictEntryDTO> findOne(Long id) {
         log.debug("Request to get DictEntry : {}", id);
         return dictEntryRepository.findById(id)
-            .map(this::toDto);
+            .map(DictEntryService::toDto);
     }
 
     /**
