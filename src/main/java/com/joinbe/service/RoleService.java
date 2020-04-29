@@ -50,21 +50,17 @@ public interface RoleService {
      */
     void delete(Long id);
 
-    default RoleDTO toDto(Role role) {
-        RoleDTO dto = BeanConverter.toDto(role, RoleDTO.class);
+    static RoleDTO toDto(Role role) {
 
-        return dto;
+        return BeanConverter.toDto(role, RoleDTO.class);
     }
 
-    default RoleDetailsDTO toDetailDto(Role role) {
-        RoleDetailsDTO dto = BeanConverter.toDto(role, RoleDetailsDTO.class);
-        return dto;
+    static RoleDetailsDTO toDetailDto(Role role) {
+        return BeanConverter.toDto(role, RoleDetailsDTO.class);
     }
 
-    default Role toEntity(RoleDTO roleDTO) {
+    static Role toEntity(RoleDTO roleDTO) {
 
-        Role role = BeanConverter.toEntity(roleDTO, Role.class);
-
-        return role;
+        return BeanConverter.toEntity(roleDTO, Role.class);
     }
 }

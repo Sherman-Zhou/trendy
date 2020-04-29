@@ -1,6 +1,5 @@
 package com.joinbe.web.rest.vm;
 
-import com.joinbe.domain.enumeration.RecordStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -43,7 +42,7 @@ public class UserVM implements Serializable {
     @Size(min = 2, max = 10)
     private String langKey;
 
-    private RecordStatus status;
+    private String status;
 
     @Override
     public String toString() {

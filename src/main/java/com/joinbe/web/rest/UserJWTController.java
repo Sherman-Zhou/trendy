@@ -1,13 +1,18 @@
 package com.joinbe.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.joinbe.domain.User;
 import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.jwt.JWTFilter;
 import com.joinbe.security.jwt.TokenProvider;
+import com.joinbe.service.UserService;
 import com.joinbe.web.rest.vm.LoginVM;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +23,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Controller to authenticate users.
@@ -33,17 +40,40 @@ public class UserJWTController {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     private final RedissonTokenStore redissonTokenStore;
+    private final UserService userService;
 
-    public UserJWTController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder, RedissonTokenStore redissonTokenStore) {
+    public UserJWTController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder,
+                             RedissonTokenStore redissonTokenStore,
+                             @Qualifier("JpaUserService") UserService userService) {
         this.tokenProvider = tokenProvider;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.redissonTokenStore = redissonTokenStore;
 
+        this.userService = userService;
     }
 
     @PostMapping("/authenticate")
     @ApiOperation("登陆")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
+        if (new EmailValidator().isValid(loginVM.getUsername(), null)) {
+            Optional<User> userOptional = userService.findOneByEmailIgnoreCase(loginVM.getUsername());
+            if (userOptional.isPresent()) {
+                if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
+                    JWTToken token = new JWTToken();
+                    token.setNeedRegister(true);
+                    return new ResponseEntity<>(token, HttpStatus.OK);
+                }
+            }
+        }
+        String lowercaseLogin = loginVM.getUsername().toLowerCase(Locale.ENGLISH);
+        Optional<User> userOptional = userService.findOneByLogin(lowercaseLogin);
+        if (userOptional.isPresent()) {
+            if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
+                JWTToken token = new JWTToken();
+                token.setNeedRegister(true);
+                return new ResponseEntity<>(token, HttpStatus.OK);
+            }
+        }
 
         UsernamePasswordAuthenticationToken authenticationToken =
             new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
@@ -71,8 +101,13 @@ public class UserJWTController {
 
         private String idToken;
 
+        private boolean needRegister;
+
         JWTToken(String idToken) {
             this.idToken = idToken;
+        }
+
+        public JWTToken() {
         }
 
         @JsonProperty("id_token")
@@ -82,6 +117,14 @@ public class UserJWTController {
 
         void setIdToken(String idToken) {
             this.idToken = idToken;
+        }
+
+        public boolean isNeedRegister() {
+            return needRegister;
+        }
+
+        public void setNeedRegister(boolean needRegister) {
+            this.needRegister = needRegister;
         }
     }
 }

@@ -27,9 +27,9 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     Optional<User> findOneByResetKey(String resetKey);
 
-    Optional<User> findOneByEmailIgnoreCase(String email);
+    Optional<User> findOneByEmailIgnoreCaseAndStatusNot(String email, RecordStatus status);
 
-    Optional<User> findOneByLogin(String login);
+    Optional<User> findOneByLoginAndStatusNot(String login, RecordStatus status);
 
 
     @EntityGraph(attributePaths = "roles")

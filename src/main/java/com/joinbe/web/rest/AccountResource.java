@@ -8,6 +8,7 @@ import com.joinbe.service.PermissionService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.PasswordChangeDTO;
 import com.joinbe.service.dto.PermissionDTO;
+import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
@@ -122,7 +123,7 @@ public class AccountResource {
      * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
-    public void saveAccount(@Valid @RequestBody UserDetailsDTO userDTO) {
+    public void saveAccount(@Valid @RequestBody UserDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
         Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {

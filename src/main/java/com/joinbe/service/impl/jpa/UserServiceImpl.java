@@ -2,7 +2,6 @@ package com.joinbe.service.impl.jpa;
 
 import com.joinbe.common.error.EmailAlreadyUsedException;
 import com.joinbe.common.error.InvalidPasswordException;
-import com.joinbe.common.error.UsernameAlreadyUsedException;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.Constants;
@@ -21,7 +20,6 @@ import com.joinbe.service.RoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
-import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
@@ -107,7 +105,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> requestPasswordReset(String mail) {
-        return userRepository.findOneByEmailIgnoreCase(mail)
+        return userRepository.findOneByEmailIgnoreCaseAndStatusNot(mail, RecordStatus.DELETED)
             .filter(User::getActivated)
             .map(user -> {
                 user.setResetKey(RandomUtil.generateResetKey());
@@ -130,42 +128,28 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User registerUser(UserDetailsDTO userDTO, String password) {
-        userRepository.findOneByLogin(userDTO.getLogin().toLowerCase()).ifPresent(existingUser -> {
-            boolean removed = removeNonActivatedUser(existingUser);
-            if (!removed) {
-                throw new UsernameAlreadyUsedException();
-            }
-        });
-        userRepository.findOneByEmailIgnoreCase(userDTO.getEmail()).ifPresent(existingUser -> {
-            boolean removed = removeNonActivatedUser(existingUser);
-            if (!removed) {
+    public Optional<User> registerUserEmail(UserDTO userDTO) {
+        userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
+            if (!existingUser.getId().equals(userDTO.getId()) && existingUser.getActivated()) {
                 throw new EmailAlreadyUsedException();
             }
         });
-        User newUser = new User();
-        String encryptedPassword = passwordEncoder.encode(password);
-        newUser.setLogin(userDTO.getLogin().toLowerCase());
-        // new user gets initially a generated password
-        newUser.setPassword(encryptedPassword);
-        newUser.setName(userDTO.getName());
 
-        if (userDTO.getEmail() != null) {
-            newUser.setEmail(userDTO.getEmail().toLowerCase());
-        }
-        newUser.setAvatar(userDTO.getAvatar());
-        newUser.setLangKey(userDTO.getLangKey());
-        // new user is not active
-        newUser.setStatus(RecordStatus.INACTIVE);
-        // new user gets registration key
-        newUser.setActivationKey(RandomUtil.generateActivationKey());
-        Set<Role> roles = new HashSet<>();
-        roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.USER, RecordStatus.ACTIVE).ifPresent(roles::add);
-        newUser.setRoles(roles);
-        userRepository.save(newUser);
-        this.clearUserCaches(newUser);
-        log.debug("Created Information for User: {}", newUser);
-        return newUser;
+        return Optional.of(userRepository
+            .findOneWithRolesByLogin(userDTO.getLogin()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            //not allow to update deleted user
+            .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
+            .map(user -> {
+                user.setEmail(userDTO.getEmail().toLowerCase());
+                user.setStatus(RecordStatus.ACTIVE);
+                user.setActivationKey(null);
+                userRepository.save(user);
+                this.clearUserCaches(user);
+                log.debug("Created Information for User: {}", user);
+                return user;
+            });
     }
 
     private boolean removeNonActivatedUser(User existingUser) {
@@ -187,6 +171,7 @@ public class UserServiceImpl implements UserService {
         if (userDTO.getEmail() != null) {
             user.setEmail(userDTO.getEmail().toLowerCase());
         }
+
         user.setAvatar(userDTO.getAvatar());
         if (userDTO.getLangKey() == null) {
             user.setLangKey(Constants.DEFAULT_LANGUAGE); // default language
@@ -194,11 +179,13 @@ public class UserServiceImpl implements UserService {
             user.setLangKey(userDTO.getLangKey());
         }
         user.setSex(Sex.resolve(userDTO.getSex()));
-        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
+//        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
+        String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
         user.setPassword(encryptedPassword);
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
-        user.setStatus(RecordStatus.ACTIVE);
+        user.setStatus(RecordStatus.INACTIVE);
+        user.setActivationKey(RandomUtil.generateActivationKey());
         if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
             Set<Role> roles = userDTO.getRoleIds().stream()
                 .map(roleRepository::findById)
@@ -229,7 +216,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUser(String name, String email, String langKey, String imageUrl) {
         SecurityUtils.getCurrentUserLogin()
-            .flatMap(userRepository::findOneByLogin)
+            .flatMap(login -> userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
             .ifPresent(user -> {
                 user.setName(name);
                 if (email != null) {
@@ -326,7 +313,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(String currentClearTextPassword, String newPassword) {
         SecurityUtils.getCurrentUserLogin()
-            .flatMap(userRepository::findOneByLogin)
+            .flatMap(login -> userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
             .ifPresent(user -> {
                 String currentEncryptedPassword = user.getPassword();
                 if (!passwordEncoder.matches(currentClearTextPassword, currentEncryptedPassword)) {
@@ -410,17 +397,17 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public List<RoleDTO> getRoles() {
-        return roleRepository.findAllByStatus(RecordStatus.ACTIVE).stream().map(roleService::toDto).collect(Collectors.toList());
+        return roleRepository.findAllByStatus(RecordStatus.ACTIVE).stream().map(RoleService::toDto).collect(Collectors.toList());
     }
 
     @Override
     public Optional<User> findOneByEmailIgnoreCase(String email) {
-        return userRepository.findOneByEmailIgnoreCase(email);
+        return userRepository.findOneByEmailIgnoreCaseAndStatusNot(email, RecordStatus.DELETED);
     }
 
     @Override
     public Optional<User> findOneByLogin(String login) {
-        return userRepository.findOneByLogin(login);
+        return userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED);
     }
 
     @Override

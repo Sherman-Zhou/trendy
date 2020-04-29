@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -251,5 +252,20 @@ public class UserResource {
         log.debug("REST request to delete User: {}", id);
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * {@code POST  /users/register} : register email for the user.
+     *
+     * @param managedUserVM the managed user View Model.
+     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
+     */
+    @PostMapping("/users/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void registerEmail(@Valid @RequestBody UserDTO managedUserVM) {
+
+        Optional<User> userOptional = userService.registerUserEmail(managedUserVM);
+        userOptional.ifPresent(user -> log.debug("user is registered with email: {}", user.getEmail()));
+        // mailService.sendActivationEmail(user);
     }
 }

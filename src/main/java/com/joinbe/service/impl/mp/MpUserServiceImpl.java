@@ -13,7 +13,6 @@ import com.joinbe.service.UserRoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
-import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -28,11 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * Service class for managing users.
@@ -95,8 +90,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
 
         if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
             List<UserRole> userRoles = new ArrayList<>(userDTO.getRoleIds().size());
-            Set<Long> roleIds = userDTO.getRoleIds().stream()
-                .collect(Collectors.toSet());
+            Set<Long> roleIds = new HashSet<>(userDTO.getRoleIds());
             for (Long roleId : roleIds) {
                 UserRole userRole = new UserRole();
                 userRole.setUserId(user.getId());
@@ -150,9 +144,10 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public User registerUser(UserDetailsDTO userDTO, String password) {
-        return null;
+    public Optional<User> registerUserEmail(UserDTO userDTO) {
+        return Optional.empty();
     }
+
 
     @Override
     public void changePassword(String currentClearTextPassword, String newPassword) {
@@ -192,6 +187,11 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
 
     @Override
     public List<Permission> findAllUserPermissionsByLogin(String login) {
+        return null;
+    }
+
+    @Override
+    public UserDTO assignDivision(Long userId, Long divisionId) {
         return null;
     }
 }

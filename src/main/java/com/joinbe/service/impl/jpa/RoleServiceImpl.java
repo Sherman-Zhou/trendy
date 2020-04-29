@@ -47,14 +47,14 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleDTO save(RoleDTO roleDTO) {
         log.debug("Request to save Role : {}", roleDTO);
-        Role role = toEntity(roleDTO);
+        Role role = RoleService.toEntity(roleDTO);
         role = roleRepository.save(role);
-        return toDto(role);
+        return RoleService.toDto(role);
     }
 
     @Override
     public RoleDTO assignPermission(Long roleId, List<Long> permissionIds) {
-        RoleDTO roleDTO = null;
+        RoleDTO roleDTO;
         Optional<Role> roleOptional = roleRepository.findById(roleId);
 
         if (roleOptional.isPresent()) {
@@ -65,7 +65,7 @@ public class RoleServiceImpl implements RoleService {
                 permission.setId(permissionId);
                 role.getPermissions().add(permission);
             }
-            roleDTO = toDto(role);
+            roleDTO = RoleService.toDto(role);
         } else {
             throw new BadRequestAlertException("Invalid id", "Role", "idnull");
         }
@@ -98,7 +98,7 @@ public class RoleServiceImpl implements RoleService {
             queryParams.and("status", Filter.Operator.eq, RecordStatus.resolve(vm.getStatus()));
         }
         return roleRepository.findAll(queryParams, pageable)
-            .map(this::toDto);
+            .map(RoleService::toDto);
     }
 
 
@@ -113,7 +113,7 @@ public class RoleServiceImpl implements RoleService {
     public Optional<RoleDetailsDTO> findOne(Long id) {
         log.debug("Request to get Role : {}", id);
         return roleRepository.findOneWithEagerRelationships(id)
-            .map(this::toDetailDto);
+            .map(RoleService::toDetailDto);
     }
 
     /**

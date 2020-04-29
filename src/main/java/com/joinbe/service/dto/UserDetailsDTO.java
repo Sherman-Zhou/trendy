@@ -3,6 +3,7 @@ package com.joinbe.service.dto;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.service.RoleService;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -49,13 +50,16 @@ public class UserDetailsDTO extends UserDTO {
         this.setAvatar(user.getAvatar());
         this.setLangKey(user.getLangKey());
         this.version = user.getVersion();
+        this.roles = user.getRoles().stream()
+            .map(RoleService::toDto)
+            .collect(Collectors.toSet());
         this.authorities = user.getRoles().stream()
             .map(Role::getName)
             .collect(Collectors.toSet());
     }
 
     public Boolean getActivated() {
-        return RecordStatus.ACTIVE.equals(this.getStatus());
+        return RecordStatus.ACTIVE.getCode().equals(this.getStatus());
     }
 
 }

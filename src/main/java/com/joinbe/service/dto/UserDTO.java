@@ -1,6 +1,5 @@
 package com.joinbe.service.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
@@ -56,8 +55,6 @@ public class UserDTO implements Serializable {
 
     private String status;
 
-
-    @JsonIgnore
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
     private String password;
 
