@@ -9,6 +9,7 @@ import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.RoleVM;
+import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -27,6 +28,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api")
+@Api(value ="角色管理相关接口", tags={"角色管理相关接口"}, produces = "application/json" )
 public class RoleResource {
 
     private final Logger log = LoggerFactory.getLogger(RoleResource.class);

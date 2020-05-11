@@ -32,7 +32,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api")
-@Api(value ="用户登陆相关接口", tags={"用户登陆相关接口"})
+@Api(value ="用户登陆相关接口", tags={"用户登陆相关接口"}, produces = "application/json" )
 public class UserJWTController {
 
 
@@ -54,7 +54,7 @@ public class UserJWTController {
     }
 
     @PostMapping("/authenticate")
-    @ApiOperation("登陆")
+    @ApiOperation("用户登陆")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
         if (new EmailValidator().isValid(loginVM.getUsername(), null)) {
             Optional<User> userOptional = userService.findOneByEmailIgnoreCase(loginVM.getUsername());
@@ -89,7 +89,7 @@ public class UserJWTController {
     }
 
     @GetMapping("/logout")
-    @ApiOperation("登出")
+    @ApiOperation("用户登出")
     public ResponseEntity<Void> logout() {
         redissonTokenStore.removeFromRedis(SecurityUtils.getCurrentUserLogin().orElse(""));
         return ResponseEntity.noContent().build();

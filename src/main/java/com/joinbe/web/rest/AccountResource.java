@@ -13,6 +13,7 @@ import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
 import com.joinbe.web.rest.vm.KeyAndPasswordVM;
+import io.swagger.annotations.Api;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api")
+@Api(value ="当前登陆用户操作相关接口", tags={"当前登陆用户操作相关接口"}, produces = "application/json" )
 public class AccountResource {
 
     private static class AccountResourceException extends RuntimeException {

@@ -2,6 +2,9 @@ package com.joinbe.web.rest;
 
 import com.joinbe.service.DictTypeService;
 import com.joinbe.service.dto.DictEntryDTO;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api")
+@Api(value ="数据字典相关接口", tags={"数据字典相关接口"}, produces = "application/json" )
 public class DictTypeResource {
 
     private final Logger log = LoggerFactory.getLogger(DictTypeResource.class);
@@ -84,6 +88,8 @@ public class DictTypeResource {
      * @param type the type of the diction to retrieve.
      * @return a list of diction entries for the type
      */
+    @ApiOperation("获取数据字典值")
+    @ApiParam(value="数据字典key")
     @GetMapping("/dict-types/{type}")
     public List<DictEntryDTO> getDictionEntryByType(@PathVariable String type) {
         log.debug("REST request to get DictType : {}", type);

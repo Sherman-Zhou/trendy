@@ -9,7 +9,7 @@ import javax.validation.constraints.Size;
 /**
  * View Model object for storing a user's credentials.
  */
-@ApiModel(value = "用户登陆对象", description = "用户登陆对象")
+//@ApiModel(value = "用户登陆对象", description = "用户登陆对象")
 public class LoginVM {
 
     @NotNull
@@ -23,7 +23,7 @@ public class LoginVM {
     @ApiModelProperty(value = "用户密码", required= true)
     private String password;
 
-    @ApiModelProperty(value = "是否记住用户")
+    @ApiModelProperty(value = "是否记住用户", hidden =true)
     private Boolean rememberMe;
 
     public String getUsername() {
