@@ -17,7 +17,7 @@ public class RoleDTO implements Serializable {
 
     @NotNull
     @Size(max = 100)
-    @ApiModelProperty(value = "角色名")
+    @ApiModelProperty(value = "角色名", required = true)
     private String name;
 
     @Size(max = 200)

@@ -131,7 +131,7 @@ public class AccountResource {
      * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
-    @ApiOperation("跟新当前登陆用户部分信息")
+    @ApiOperation(value = "更新当前登陆用户部分信息", notes = "仅允许并且只更新 用户姓名， 用户邮件， 用户语言，和用户图像地址")
     public void saveAccount(@Valid @RequestBody UserDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
         Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
@@ -168,7 +168,7 @@ public class AccountResource {
      */
     @PostMapping(path = "/account/reset-password/init")
     @ApiOperation("申请重置用户密码")
-    public void requestPasswordReset(@RequestBody @ApiParam("用户邮件") String mail) {
+    public void requestPasswordReset(@RequestBody @ApiParam(value = "用户邮件", required = true) String mail) {
         Optional<User> user = userService.requestPasswordReset(mail);
         if (user.isPresent()) {
             mailService.sendPasswordResetMail(user.get());

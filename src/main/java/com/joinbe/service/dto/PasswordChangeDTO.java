@@ -4,14 +4,18 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.validation.constraints.NotBlank;
+
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class PasswordChangeDTO {
 
-    @ApiModelProperty(value = "用户当前密码")
+    @ApiModelProperty(value = "用户当前密码", required = true)
+    @NotBlank
     private String currentPassword;
 
-    @ApiModelProperty(value = "用户新密码")
+    @ApiModelProperty(value = "用户新密码", required = true)
+    @NotBlank
     private String newPassword;
 
     public PasswordChangeDTO() {
