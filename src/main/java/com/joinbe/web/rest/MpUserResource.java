@@ -21,7 +21,7 @@ import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-@RestController
+//@RestController
 @RequestMapping("/api/mp")
 public class MpUserResource {
     private final Logger log = LoggerFactory.getLogger(MpUserResource.class);

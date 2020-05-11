@@ -25,7 +25,7 @@ import java.util.Optional;
 /**
  * REST controller for managing {@link com.joinbe.domain.VehicleTrajectoryDetails}.
  */
-@RestController
+//@RestController
 @RequestMapping("/api")
 public class VehicleTrajectoryDetailsResource {
 

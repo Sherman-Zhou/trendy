@@ -9,6 +9,7 @@ import com.joinbe.security.jwt.TokenProvider;
 import com.joinbe.service.UserService;
 import com.joinbe.web.rest.vm.LoginVM;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiModelProperty;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
@@ -31,7 +32,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api")
-@Api("用户登陆相关API")
+@Api(value ="用户登陆相关接口", tags={"用户登陆相关接口"})
 public class UserJWTController {
 
 
@@ -97,10 +98,13 @@ public class UserJWTController {
     /**
      * Object to return as body in JWT Authentication.
      */
+
     static class JWTToken {
 
+        @ApiModelProperty(value = "JWT令牌, 后续请求需设置在http header")
         private String idToken;
 
+        @ApiModelProperty(value = "是否第一次登陆，需要注册邮件")
         private boolean needRegister;
 
         JWTToken(String idToken) {
