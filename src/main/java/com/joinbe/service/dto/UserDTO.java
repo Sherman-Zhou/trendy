@@ -31,7 +31,7 @@ public class UserDTO implements Serializable {
     @NotBlank
     @Pattern(regexp = Constants.LOGIN_REGEX)
     @Size(min = 1, max = 50)
-    @ApiModelProperty(value = "用户登陆id")
+    @ApiModelProperty(value = "用户登陆id（必须唯一）")
     private String login;
 
     @Size(max = 50)
@@ -40,7 +40,7 @@ public class UserDTO implements Serializable {
 
     @Email
     @Size(min = 5, max = 254)
-    @ApiModelProperty(value = "用户邮件（不能重复）")
+    @ApiModelProperty(value = "用户邮件（必须唯一）")
     private String email;
 
     @Size(max = 256)
@@ -63,6 +63,7 @@ public class UserDTO implements Serializable {
     @ApiModelProperty(value = "用户语言", example = "zh-cn")
     private String langKey;
 
+    @ApiModelProperty(value = "用户状态", example = "A-已启用，I-已停用， D-已删除")
     private String status;
 
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)

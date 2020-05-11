@@ -24,7 +24,7 @@ public interface RoleService {
      */
     RoleDTO save(RoleDTO roleDTO);
 
-    RoleDTO assignPermission(Long roleId, List<Long> permissionIds);
+    RoleDetailsDTO assignPermission(Long roleId, List<Long> permissionIds);
 
 
     /**

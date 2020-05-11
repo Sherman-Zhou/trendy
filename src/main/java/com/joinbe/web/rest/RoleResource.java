@@ -137,7 +137,7 @@ public class RoleResource {
      * @return the ResponseEntity with status 200 (OK) and the list of Permissions in body
      */
     @GetMapping("/roles/active-perms/{roleId}")
-    @ApiOperation("获取所有权限，该角色拥有的权限的checked设为true")
+    @ApiOperation( value = "获取所有权限", notes = "该角色拥有的权限的checked会设为true")
     public List<PermissionSummaryDTO> getAllActivePerms(@PathVariable @ApiParam(value = "角色主键", required = true)  Long roleId) {
         log.debug("REST request to get all active perms, roleId = {} ", roleId);
         return permissionService.findAllActivePerms(roleId);
@@ -166,11 +166,11 @@ public class RoleResource {
      */
     @PutMapping("/roles/{roleId}/assign")
     @ApiOperation("分配权限")
-    public ResponseEntity<RoleDTO> assignPermission(@PathVariable @ApiParam(value = "角色主键", required = true) Long roleId,
+    public ResponseEntity<RoleDetailsDTO> assignPermission(@PathVariable @ApiParam(value = "角色主键", required = true) Long roleId,
                                                     @Valid @RequestBody @ApiParam(value = "权限主键列表", required = true) List<Long> permissionIds) {
         log.debug("REST request to assign permission: {} to role : {}", permissionIds, roleId);
 
-        RoleDTO result = roleService.assignPermission(roleId, permissionIds);
+        RoleDetailsDTO result = roleService.assignPermission(roleId, permissionIds);
         return ResponseEntity.ok()
             .body(result);
     }

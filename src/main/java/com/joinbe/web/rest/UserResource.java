@@ -18,6 +18,8 @@ import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.UserOperation;
 import com.joinbe.web.rest.vm.UserVM;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -91,6 +93,7 @@ public class UserResource {
      */
     @PostMapping("/users")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiOperation(value = "创建新用户", notes = "")
     public ResponseEntity<User> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
         log.debug("REST request to save User : {}", userDTO);
 
@@ -119,6 +122,7 @@ public class UserResource {
      */
     @PutMapping("/users")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiOperation(value = "更新新用户", notes = "")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
         Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
@@ -142,7 +146,9 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated user.
      */
     @GetMapping("/users/{id}/{op}")
-    public ResponseEntity<UserDTO> disableOrEnableUser(@PathVariable Long id, @PathVariable UserOperation op) {
+    @ApiOperation(value = "启用/停用用户", notes = "启用： enable， 停用： disable")
+    public ResponseEntity<UserDTO> disableOrEnableUser(@PathVariable @ApiParam(value ="用户主键", required = true ) Long id,
+                                                       @PathVariable @ApiParam(value ="操作类型", required = true ) UserOperation op) {
         log.debug("REST request to {} User : {} ", op, id);
         RecordStatus status = UserOperation.enable.equals(op) ? RecordStatus.ACTIVE : RecordStatus.INACTIVE;
         Optional<UserDTO> updatedUser = userService.updateUserStatus(id, status);
@@ -155,7 +161,8 @@ public class UserResource {
      * @param id the id of the user.
      */
     @GetMapping(path = "/user/{id}/reset")
-    public ResponseEntity<UserDTO> requestPasswordReset(@PathVariable Long id) {
+    @ApiOperation(value = "重置用户密码", notes = "")
+    public ResponseEntity<UserDTO> requestPasswordReset(@PathVariable  @ApiParam(value ="用户主键", required = true ) Long id) {
         Optional<User> user = userService.requestPasswordReset(id);
         user.ifPresent(mailService::sendPasswordResetMail);
 
@@ -169,6 +176,7 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body all users.
      */
     @GetMapping("/users")
+    @ApiOperation("搜索用户")
     public ResponseEntity<PageData<UserDTO>> getAllUsers(Pageable pageable, UserVM userVM) {
         final Page<UserDTO> page = userService.getAllManagedUsers(pageable, userVM);
         return ResponseUtil.toPageData(page);
@@ -181,6 +189,7 @@ public class UserResource {
      */
     @GetMapping("/users/roles")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
+    @ApiOperation("获取所有角色")
     public List<RoleDTO> getRoles() {
         return userService.getRoles();
     }
@@ -195,7 +204,9 @@ public class UserResource {
      * or with status {@code 500 (Internal Server Error)} if the userDto couldn't be updated.
      */
     @PutMapping("/users/{userId}/assign")
-    public ResponseEntity<UserDTO> assignDivision(@PathVariable Long userId, @Valid @RequestBody Long divisionId) {
+    @ApiOperation("分配用户城市/部门")
+    public ResponseEntity<UserDTO> assignDivision(@PathVariable @ApiParam(value ="用户主键", required = true ) Long userId,
+                                                  @Valid @RequestBody @ApiParam(value ="城市/部门主键", required = true ) Long divisionId) {
         log.debug("REST request to assign division: {} to user : {}", divisionId, userId);
         UserDTO result = userService.assignDivision(userId, divisionId);
         return ResponseEntity.ok()
@@ -209,7 +220,8 @@ public class UserResource {
      * @return the ResponseEntity with status 200 (OK) and the list of divisions in body
      */
     @GetMapping("/users/division/:parentId/children")
-    public List<DivisionDTO> getAllSubDivisions(@PathVariable Long parentId) {
+    @ApiOperation(value = "获取子部门", notes = "若要获取顶级部门parentId设置为0")
+    public List<DivisionDTO> getAllSubDivisions(@PathVariable @ApiParam(value ="父城市/部门主键", required = true )  Long parentId) {
         log.debug("REST request to get a List of children divisions for parent:{}", parentId);
         return divisionService.findAllByParentId(parentId);
     }
@@ -221,7 +233,8 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the "login" user, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
-    public ResponseEntity<UserDetailsDTO> getUser(@PathVariable String login) {
+    @ApiOperation("获取用户详情")
+    public ResponseEntity<UserDetailsDTO> getUser(@PathVariable @ApiParam(value ="用户登陆id", required = true ) String login) {
         log.debug("REST request to get User : {}", login);
         return ResponseUtil.wrapOrNotFound(
             userService.getUserWithAuthoritiesByLogin(login)
@@ -249,8 +262,9 @@ public class UserResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/users/{id}")
+    @ApiOperation("删除用户")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable @ApiParam(value ="用户主键", required = true ) Long id) {
         log.debug("REST request to delete User: {}", id);
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();

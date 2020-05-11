@@ -53,8 +53,8 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public RoleDTO assignPermission(Long roleId, List<Long> permissionIds) {
-        RoleDTO roleDTO;
+    public RoleDetailsDTO assignPermission(Long roleId, List<Long> permissionIds) {
+        RoleDetailsDTO roleDTO;
         Optional<Role> roleOptional = roleRepository.findById(roleId);
 
         if (roleOptional.isPresent()) {
@@ -65,7 +65,7 @@ public class RoleServiceImpl implements RoleService {
                 permission.setId(permissionId);
                 role.getPermissions().add(permission);
             }
-            roleDTO = RoleService.toDto(role);
+            roleDTO = RoleService.toDetailDto(role);
         } else {
             throw new BadRequestAlertException("Invalid id", "Role", "idnull");
         }
