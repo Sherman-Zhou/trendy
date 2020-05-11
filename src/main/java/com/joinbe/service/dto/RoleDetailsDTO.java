@@ -19,7 +19,7 @@ public class RoleDetailsDTO extends RoleDTO {
     @ApiModelProperty(value = "创建时间")
     private Instant createdDate;
 
-    @ApiModelProperty(value = "最好更新者")
+    @ApiModelProperty(value = "最后更新者")
     private String lastModifiedBy;
 
     @ApiModelProperty(value = "最后更新时间")

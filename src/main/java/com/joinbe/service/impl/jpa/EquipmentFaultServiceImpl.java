@@ -1,9 +1,14 @@
 package com.joinbe.service.impl.jpa;
 
+import com.joinbe.common.util.DateUtils;
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.EquipmentFault;
 import com.joinbe.repository.EquipmentFaultRepository;
 import com.joinbe.service.EquipmentFaultService;
 import com.joinbe.service.dto.EquipmentFaultDTO;
+import com.joinbe.web.rest.vm.EquipmentFaultVM;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -11,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -42,6 +49,29 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
         return EquipmentFaultService.toDto(equipmentFault);
     }
 
+    @Override
+    public Optional<EquipmentFaultDTO> read(Long id) {
+        return Optional.of(equipmentFaultRepository
+            .findById(id))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(equipmentFault -> {
+                log.debug("isRead: {}", equipmentFault.isIsRead());
+                equipmentFault.setIsRead(true);
+                return equipmentFault;
+            })
+            .map(EquipmentFaultService::toDto);
+    }
+
+    @Override
+    public void batchRead(List<Long> ids) {
+       List<EquipmentFault> faults = equipmentFaultRepository.findAllById(ids);
+       faults.forEach(equipmentFault -> {
+           log.debug("isRead:{} of {}", equipmentFault.isIsRead(), equipmentFault.getId());
+           equipmentFault.setIsRead(true);
+       });
+    }
+
     /**
      * Get all the equipmentFaults.
      *
@@ -50,9 +80,28 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<EquipmentFaultDTO> findAll(Pageable pageable) {
+    public Page<EquipmentFaultDTO> findAll(Pageable pageable, EquipmentFaultVM vm) {
         log.debug("Request to get all EquipmentFaults");
-        return equipmentFaultRepository.findAll(pageable)
+        QueryParams<EquipmentFault> queryParams = new QueryParams<>();
+
+        if (vm.getIsRead() != null) {
+            queryParams.and("isRead", Filter.Operator.eq, vm.getIsRead());
+        }
+        if (StringUtils.isNotEmpty(vm.getEquipmentId())) {
+            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentId());
+        }
+        if (StringUtils.isNotEmpty(vm.getAlertContent())) {
+            queryParams.and("alertContent", Filter.Operator.like, vm.getAlertContent());
+        }
+        if (StringUtils.isNotEmpty(vm.getStartDate())) {
+            Date startDate = DateUtils.parseDate(vm.getStartDate(), DateUtils.PATTERN_DATE);
+            queryParams.and("createdDate", Filter.Operator.ge, startDate);
+        }
+        if (StringUtils.isNotEmpty(vm.getEndDate())) {
+            Date endDate = DateUtils.parseDate(vm.getEndDate() + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME);
+            queryParams.and("createdDate", Filter.Operator.le, endDate);
+        }
+        return equipmentFaultRepository.findAll(queryParams, pageable)
             .map(EquipmentFaultService::toDto);
     }
 
