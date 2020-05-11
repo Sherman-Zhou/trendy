@@ -256,18 +256,5 @@ public class UserResource {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * {@code POST  /users/register} : register email for the user.
-     *
-     * @param managedUserVM the managed user View Model.
-     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
-     */
-    @PostMapping("/users/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public void registerEmail(@Valid @RequestBody UserDTO managedUserVM) {
 
-        Optional<User> userOptional = userService.registerUserEmail(managedUserVM);
-        userOptional.ifPresent(user -> log.debug("user is registered with email: {}", user.getEmail()));
-        // mailService.sendActivationEmail(user);
-    }
 }

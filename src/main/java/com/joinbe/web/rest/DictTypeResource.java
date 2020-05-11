@@ -89,9 +89,8 @@ public class DictTypeResource {
      * @return a list of diction entries for the type
      */
     @ApiOperation("获取数据字典值")
-    @ApiParam(value="数据字典key")
     @GetMapping("/dict-types/{type}")
-    public List<DictEntryDTO> getDictionEntryByType(@PathVariable String type) {
+    public List<DictEntryDTO> getDictionEntryByType(@PathVariable  @ApiParam(value="数据字典key") String type) {
         log.debug("REST request to get DictType : {}", type);
         return dictTypeService.getDictEntriesByType(type);
     }

@@ -5,6 +5,7 @@ import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,7 +22,7 @@ public interface UserService {
 
     Optional<User> requestPasswordReset(Long userId);
 
-    Optional<User> registerUserEmail(UserDTO userDTO);
+    Optional<User> registerUserEmail(UserRegisterVM userDTO);
 
     User createUser(UserDTO userDTO);
 

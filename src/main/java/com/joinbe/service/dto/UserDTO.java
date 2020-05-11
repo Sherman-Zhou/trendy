@@ -4,6 +4,7 @@ import com.joinbe.config.Constants;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.Sex;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.util.CollectionUtils;
@@ -30,36 +31,48 @@ public class UserDTO implements Serializable {
     @NotBlank
     @Pattern(regexp = Constants.LOGIN_REGEX)
     @Size(min = 1, max = 50)
+    @ApiModelProperty(value = "用户登陆id")
     private String login;
 
     @Size(max = 50)
+    @ApiModelProperty(value = "用户姓名")
     private String name;
 
     @Email
     @Size(min = 5, max = 254)
+    @ApiModelProperty(value = "用户邮件（不能重复）")
     private String email;
 
     @Size(max = 256)
+    @ApiModelProperty(value = "用户图片地址")
     private String avatar;
 
     @Size(max = 2000)
+    @ApiModelProperty(value = "备注")
     private String remark;
 
+    @ApiModelProperty(value = "性别", example = "M -男， F-女， U-未知")
+    @Size( max = 1)
     private String sex;
 
     @Size(max = 500)
+    @ApiModelProperty(value = "用户地址")
     private String address;
 
     @Size(min = 2, max = 10)
+    @ApiModelProperty(value = "用户语言", example = "zh-cn")
     private String langKey;
 
     private String status;
 
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
+    @ApiModelProperty(value = "用户密码")
     private String password;
 
+    @ApiModelProperty(value = "用户角色名（,分隔）")
     private String roleName;
 
+    @ApiModelProperty(value = "用户角色id列表")
     private List<Long> roleIds;
 
     public UserDTO() {

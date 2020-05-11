@@ -1,5 +1,6 @@
 package com.joinbe.service.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -11,18 +12,23 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 public class RoleDTO implements Serializable {
 
+    @ApiModelProperty(value = "id", hidden = true)
     private Long id;
 
     @NotNull
     @Size(max = 100)
+    @ApiModelProperty(value = "角色名")
     private String name;
 
     @Size(max = 200)
+    @ApiModelProperty(value = "角色描述")
     private String description;
 
     @Size(max = 20)
+    @ApiModelProperty(value = "角色代码")
     private String code;
 
+    @ApiModelProperty(value = "状态",  hidden = true)
     private String status;
 
 }

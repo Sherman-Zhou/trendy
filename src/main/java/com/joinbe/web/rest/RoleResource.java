@@ -10,6 +10,8 @@ import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.RoleVM;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -53,6 +55,7 @@ public class RoleResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/roles")
+    @ApiOperation("创建角色")
     public ResponseEntity<RoleDTO> createRole(@Valid @RequestBody RoleDTO roleDTO) throws URISyntaxException {
         log.debug("REST request to save Role : {}", roleDTO);
         if (roleDTO.getId() != null) {
@@ -73,6 +76,7 @@ public class RoleResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/roles")
+    @ApiOperation("更新角色")
     public ResponseEntity<RoleDTO> updateRole(@Valid @RequestBody RoleDTO roleDTO) throws URISyntaxException {
         log.debug("REST request to update Role : {}", roleDTO);
         if (roleDTO.getId() == null) {
@@ -90,10 +94,10 @@ public class RoleResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of roles in body.
      */
     @GetMapping("/roles")
+    @ApiOperation("搜索角色")
     public ResponseEntity<PageData<RoleDTO>> getAllRoles(Pageable pageable, RoleVM roleVM) {
         log.debug("REST request to get a page of Roles");
-        Page<RoleDTO> page;
-        page = roleService.findAll(pageable, roleVM);
+        Page<RoleDTO>  page = roleService.findAll(pageable, roleVM);
 
         return ResponseUtil.toPageData(page);
     }
@@ -105,7 +109,8 @@ public class RoleResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the roleDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/roles/{id}")
-    public ResponseEntity<RoleDetailsDTO> getRole(@PathVariable Long id) {
+    @ApiOperation("获取角色详情")
+    public ResponseEntity<RoleDetailsDTO> getRole(@PathVariable @ApiParam("角色主键") Long id) {
         log.debug("REST request to get Role : {}", id);
         Optional<RoleDetailsDTO> roleDTO = roleService.findOne(id);
         return ResponseUtil.wrapOrNotFound(roleDTO);
@@ -117,8 +122,9 @@ public class RoleResource {
      * @param id the id of the roleDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
+    @ApiOperation("删除角色")
     @DeleteMapping("/roles/{id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteRole(@PathVariable @ApiParam("角色主键") Long id) {
         log.debug("REST request to delete Role : {}", id);
         roleService.delete(id);
         return ResponseEntity.noContent().build();
@@ -131,7 +137,8 @@ public class RoleResource {
      * @return the ResponseEntity with status 200 (OK) and the list of Permissions in body
      */
     @GetMapping("/roles/active-perms/{roleId}")
-    public List<PermissionSummaryDTO> getAllActivePerms(@PathVariable Long roleId) {
+    @ApiOperation("获取角色权限")
+    public List<PermissionSummaryDTO> getAllActivePerms(@PathVariable @ApiParam("角色主键")  Long roleId) {
         log.debug("REST request to get all active perms, roleId = {} ", roleId);
         return permissionService.findAllActivePerms(roleId);
     }
@@ -142,6 +149,7 @@ public class RoleResource {
      * @return the ResponseEntity with status 200 (OK) and the list of Permissions in body
      */
     @GetMapping("/roles/active-perms")
+    @ApiOperation("获取所有权限")
     public List<PermissionSummaryDTO> getAllActivePerms() {
         log.debug("REST request to get all active perms ");
         return permissionService.findAllActivePerms(null);
@@ -157,7 +165,9 @@ public class RoleResource {
      * or with status {@code 500 (Internal Server Error)} if the roleDTO couldn't be updated.
      */
     @PutMapping("/roles/{roleId}/assign")
-    public ResponseEntity<RoleDTO> assignPermission(@PathVariable Long roleId, @Valid @RequestBody List<Long> permissionIds) {
+    @ApiOperation("分配权限")
+    public ResponseEntity<RoleDTO> assignPermission(@PathVariable @ApiParam("角色主键") Long roleId,
+                                                    @Valid @RequestBody @ApiParam("权限主键列表") List<Long> permissionIds) {
         log.debug("REST request to assign permission: {} to role : {}", permissionIds, roleId);
 
         RoleDTO result = roleService.assignPermission(roleId, permissionIds);

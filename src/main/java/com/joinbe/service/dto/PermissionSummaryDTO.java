@@ -1,6 +1,7 @@
 package com.joinbe.service.dto;
 
 import com.joinbe.domain.Permission;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -11,18 +12,25 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 public class PermissionSummaryDTO implements Serializable {
 
+    @ApiModelProperty(value = "id", hidden = true)
     private Long id;
 
+    @ApiModelProperty(value = "权限i18键")
     private String titleKey;
 
+    @ApiModelProperty(value = "权限描述")
     private String description;
 
+    @ApiModelProperty(value = "父权限主键")
     private Long parentId;
 
+    @ApiModelProperty(value = "子权限列表")
     private List<PermissionSummaryDTO> children;
 
+    @ApiModelProperty(value = "当前角色是否选中该权限")
     private boolean checked;
 
+    @ApiModelProperty(value = "是否展开")
     private boolean expand;
 
     public PermissionSummaryDTO(Long id, String titleKey, String description) {

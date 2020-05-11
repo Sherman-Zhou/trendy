@@ -1,12 +1,16 @@
 package com.joinbe.web.rest.vm;
 
+import io.swagger.annotations.ApiModelProperty;
+
 /**
  * View Model object for storing the user's key and password.
  */
 public class KeyAndPasswordVM {
 
+    @ApiModelProperty(value = "重置密匙")
     private String key;
 
+    @ApiModelProperty(value = "新密码")
     private String newPassword;
 
     public String getKey() {

@@ -21,6 +21,7 @@ import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
+import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -128,9 +129,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> registerUserEmail(UserDTO userDTO) {
+    public Optional<User> registerUserEmail(UserRegisterVM userDTO) {
         userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
-            if (!existingUser.getId().equals(userDTO.getId()) && existingUser.getActivated()) {
+            if (!existingUser.getId().equals(userDTO.getLogin()) && existingUser.getActivated()) {
                 throw new EmailAlreadyUsedException();
             }
         });

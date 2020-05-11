@@ -13,11 +13,15 @@ import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
 import com.joinbe.web.rest.vm.KeyAndPasswordVM;
+import com.joinbe.web.rest.vm.UserRegisterVM;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -58,19 +62,19 @@ public class AccountResource {
         this.permissionService = permissionService;
     }
 
-    /**
-     * {@code GET  /activate} : activate the registered user.
-     *
-     * @param key the activation key.
-     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
-     */
-    @GetMapping("/activate")
-    public void activateAccount(@RequestParam(value = "key") String key) {
-        Optional<User> user = userService.activateRegistration(key);
-        if (!user.isPresent()) {
-            throw new AccountResourceException("No user was found for this activation key");
-        }
-    }
+//    /**
+//     * {@code GET  /activate} : activate the registered user.
+//     *
+//     * @param key the activation key.
+//     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
+//     */
+//    @GetMapping("/activate")
+//    public void activateAccount(@RequestParam(value = "key") String key) {
+//        Optional<User> user = userService.activateRegistration(key);
+//        if (!user.isPresent()) {
+//            throw new AccountResourceException("No user was found for this activation key");
+//        }
+//    }
 
     /**
      * {@code GET  /authenticate} : check if the user is authenticated, and return its login.
@@ -79,6 +83,7 @@ public class AccountResource {
      * @return the login if the user is authenticated.
      */
     @GetMapping("/authenticate")
+    @ApiOperation("查看用户是否登陆")
     public String isAuthenticated(HttpServletRequest request) {
         log.debug("REST request to check if the current user is authenticated");
         return request.getRemoteUser();
@@ -91,6 +96,7 @@ public class AccountResource {
      * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be returned.
      */
     @GetMapping("/account")
+    @ApiOperation("获取当前登陆用户信息")
     public UserDetailsDTO getAccount() {
         return userService.getUserWithAuthorities()
             .map(user -> {
@@ -125,6 +131,7 @@ public class AccountResource {
      * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
+    @ApiOperation("跟新当前登陆用户部分信息")
     public void saveAccount(@Valid @RequestBody UserDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
         Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
@@ -146,6 +153,7 @@ public class AccountResource {
      * @throws InvalidPasswordException {@code 400 (Bad Request)} if the new password is incorrect.
      */
     @PostMapping(path = "/account/change-password")
+    @ApiOperation("更改当前登陆用户密码")
     public void changePassword(@RequestBody PasswordChangeDTO passwordChangeDto) {
         if (!checkPasswordLength(passwordChangeDto.getNewPassword())) {
             throw new InvalidPasswordException();
@@ -159,7 +167,8 @@ public class AccountResource {
      * @param mail the mail of the user.
      */
     @PostMapping(path = "/account/reset-password/init")
-    public void requestPasswordReset(@RequestBody String mail) {
+    @ApiOperation("申请重置用户密码")
+    public void requestPasswordReset(@RequestBody @ApiParam("用户邮件") String mail) {
         Optional<User> user = userService.requestPasswordReset(mail);
         if (user.isPresent()) {
             mailService.sendPasswordResetMail(user.get());
@@ -177,6 +186,7 @@ public class AccountResource {
      * @throws InvalidPasswordException {@code 400 (Bad Request)} if the password is incorrect.
      * @throws RuntimeException         {@code 500 (Internal Server Error)} if the password could not be reset.
      */
+    @ApiOperation("使用重置密匙重置用户密码")
     @PostMapping(path = "/account/reset-password/finish")
     public void finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
         if (!checkPasswordLength(keyAndPassword.getNewPassword())) {
@@ -188,6 +198,22 @@ public class AccountResource {
         if (!user.isPresent()) {
             throw new AccountResourceException("No user was found for this reset key");
         }
+    }
+
+    /**
+     * {@code POST  /account/register} : register email for the user.
+     *
+     * @param managedUserVM the managed user View Model.
+     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
+     */
+    @PostMapping("/account/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    @ApiOperation("注册用户邮件")
+    public void registerEmail(@Valid @RequestBody UserRegisterVM managedUserVM) {
+
+        Optional<User> userOptional = userService.registerUserEmail(managedUserVM);
+        userOptional.ifPresent(user -> log.debug("user is registered with email: {}", user.getEmail()));
+        // mailService.sendActivationEmail(user);
     }
 
     private static boolean checkPasswordLength(String password) {

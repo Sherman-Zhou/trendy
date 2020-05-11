@@ -37,6 +37,7 @@ public class DictEntryDTO implements Serializable {
     @ApiModelProperty(value = "字典键值")
     private String value;
 
+    @ApiModelProperty(value = "是否默认选中")
     private Boolean isDefault;
 
     /**

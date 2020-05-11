@@ -13,6 +13,7 @@ import com.joinbe.service.UserRoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -144,7 +145,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public Optional<User> registerUserEmail(UserDTO userDTO) {
+    public Optional<User> registerUserEmail(UserRegisterVM userDTO) {
         return Optional.empty();
     }
 

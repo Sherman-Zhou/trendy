@@ -4,6 +4,7 @@ import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.RoleService;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -19,22 +20,31 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = false)
 public class UserDetailsDTO extends UserDTO {
 
+    @ApiModelProperty(value = "用户角色名",hidden = true)
     private Set<String> authorities;
 
+    @ApiModelProperty(value = "用户角色")
     private Set<RoleDTO> roles;
 
+    @ApiModelProperty(value = "版本")
     private Integer version;
 
+    @ApiModelProperty(value = "创建者")
     private String createdBy;
 
+    @ApiModelProperty(value = "创建时间")
     private Instant createdDate;
 
+    @ApiModelProperty(value = "最好更新者")
     private String lastModifiedBy;
 
+    @ApiModelProperty(value = "最后更新时间")
     private Instant lastModifiedDate;
 
+    @ApiModelProperty(value = "用户权限菜单")
     private List<PermissionDTO> menus;
 
+    @ApiModelProperty(value = "用户权限")
     private List<PermissionDTO> permissions;
 
     public UserDetailsDTO() {
