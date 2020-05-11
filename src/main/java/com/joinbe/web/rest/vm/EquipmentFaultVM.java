@@ -1,6 +1,7 @@
 package com.joinbe.web.rest.vm;
 
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.annotations.ApiParam;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -36,9 +37,10 @@ public class EquipmentFaultVM implements Serializable {
     private String equipmentId;
 
     @ApiModelProperty(value = "开始时间", notes = "日期格式： yyyy-MM-dd")
+    @ApiParam(value = "开始时间", example = "日期格式： yyyy-MM-dd")
     private String startDate;
 
-    @ApiModelProperty(value = "结束时间", notes = "日期格式： yyyy-MM-dd")
+    @ApiModelProperty(value = "结束时间", example = "日期格式： yyyy-MM-dd")
     private String endDate;
 
 
