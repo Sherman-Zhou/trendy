@@ -56,7 +56,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
             .filter(Optional::isPresent)
             .map(Optional::get)
             .map(equipmentFault -> {
-                log.debug("isRead: {}", equipmentFault.isIsRead());
+                log.debug("isRead: {}", equipmentFault.getIsRead());
                 equipmentFault.setIsRead(true);
                 return equipmentFault;
             })
@@ -67,7 +67,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
     public void batchRead(List<Long> ids) {
        List<EquipmentFault> faults = equipmentFaultRepository.findAllById(ids);
        faults.forEach(equipmentFault -> {
-           log.debug("isRead:{} of {}", equipmentFault.isIsRead(), equipmentFault.getId());
+           log.debug("isRead:{} of {}", equipmentFault.getIsRead(), equipmentFault.getId());
            equipmentFault.setIsRead(true);
        });
     }
@@ -95,11 +95,11 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
         }
         if (StringUtils.isNotEmpty(vm.getStartDate())) {
             Date startDate = DateUtils.parseDate(vm.getStartDate(), DateUtils.PATTERN_DATE);
-            queryParams.and("createdDate", Filter.Operator.ge, startDate);
+            queryParams.and("createdDate", Filter.Operator.greaterThanOrEqualTo, startDate);
         }
         if (StringUtils.isNotEmpty(vm.getEndDate())) {
             Date endDate = DateUtils.parseDate(vm.getEndDate() + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME);
-            queryParams.and("createdDate", Filter.Operator.le, endDate);
+            queryParams.and("createdDate", Filter.Operator.lessThanOrEqualTo, endDate);
         }
         return equipmentFaultRepository.findAll(queryParams, pageable)
             .map(EquipmentFaultService::toDto);

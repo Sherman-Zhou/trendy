@@ -39,7 +39,7 @@ public class EquipmentFaultResource {
     }
 
 
-    @GetMapping("/equipment-faults/:id/read")
+    @GetMapping("/equipment-faults/{id}/read")
     @ApiOperation("设置设备异常已读")
     public ResponseEntity<EquipmentFaultDTO> readEquipmentFault(@PathVariable @ApiParam(value = "设备异常主键", required = true) Long id) {
         log.debug("REST request to update read status of EquipmentFault : {}", id);
@@ -47,7 +47,7 @@ public class EquipmentFaultResource {
         return ResponseUtil.wrapOrNotFound(equipmentFaultDTO);
     }
 
-    @GetMapping("/equipment-faults/batch-read/:ids")
+    @GetMapping("/equipment-faults/batch-read/{ids}")
     @ApiOperation("批量设置设备异常已读")
     public ResponseEntity<Void> batchReadEquipmentFault(@PathVariable @ApiParam(value = "设备异常主键列表,逗号分隔",
         example = "123,234,567", required = true) List<Long> ids) {

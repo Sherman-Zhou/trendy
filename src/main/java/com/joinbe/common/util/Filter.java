@@ -69,7 +69,16 @@ public class Filter implements Serializable {
          */
         isNotNull(" is not NULL "),
 
-        between(" Between");
+        between(" Between"),
+
+        lessThan("less than"),
+
+        lessThanOrEqualTo("lessThanOrEqualTo"),
+
+        greaterThanOrEqualTo("Greater than or Equal to"),
+
+        greaterThan(" Greater than");
+
 
         Operator(String operator) {
             this.operator = operator;

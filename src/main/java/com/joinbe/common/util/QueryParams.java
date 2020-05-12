@@ -13,6 +13,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.*;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,7 +60,7 @@ public class QueryParams<T> implements Specification<T> {
     private void toFilters(String params) {
         ObjectMapper mapper = new ObjectMapper();
         try {
-            String decodedParams = URLDecoder.decode(new String(Base64.getDecoder().decode(params), ENCODING_UTF8), ENCODING_UTF8);
+            String decodedParams = URLDecoder.decode(new String(Base64.getDecoder().decode(params), StandardCharsets.UTF_8), ENCODING_UTF8);
             log.debug("filter params: {}", decodedParams);
             List<Filter> filters = (mapper.readValue(decodedParams, new TypeReference<List<Filter>>() {
             }));
@@ -162,6 +163,34 @@ public class QueryParams<T> implements Specification<T> {
                     break;
                 case isNotNull:
                     restrictions = criteriaBuilder.and(restrictions, path.isNotNull());
+                    break;
+                case lessThan:
+                    if (Instant.class.isAssignableFrom(path.getJavaType()) && value instanceof Instant) {
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.lessThan((Expression<Instant>) path, (Instant) value));
+                    } else if (Date.class.isAssignableFrom(path.getJavaType()) && value instanceof Date) {
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.lessThan((Expression<Instant>) path, ((Date) value).toInstant()));
+                    }
+                    break;
+                case lessThanOrEqualTo:
+                    if (Instant.class.isAssignableFrom(path.getJavaType()) && value instanceof Instant) {
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.lessThanOrEqualTo((Expression<Instant>) path, (Instant) value));
+                    } else if (Date.class.isAssignableFrom(path.getJavaType()) && value instanceof Date) {
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.lessThanOrEqualTo((Expression<Instant>) path, ((Date) value).toInstant()));
+                    }
+                    break;
+                case greaterThan:
+                    if (Instant.class.isAssignableFrom(path.getJavaType()) && value instanceof Instant) {
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.greaterThan((Expression<Instant>) path, (Instant) value));
+                    } else if (Date.class.isAssignableFrom(path.getJavaType()) && value instanceof Date) {
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.greaterThan((Expression<Instant>) path, ((Date) value).toInstant()));
+                    }
+                    break;
+                case greaterThanOrEqualTo:
+                    if (Instant.class.isAssignableFrom(path.getJavaType()) && value instanceof Instant) {
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.greaterThanOrEqualTo((Expression<Instant>) path, (Instant) value));
+                    } else if (Date.class.isAssignableFrom(path.getJavaType()) && value instanceof Date) {
+                        restrictions = criteriaBuilder.and(restrictions, criteriaBuilder.greaterThanOrEqualTo((Expression<Instant>) path, ((Date) value).toInstant()));
+                    }
                     break;
                 case between:
                     if (Instant.class.isAssignableFrom(path.getJavaType()) && value instanceof List && ((List) value).size() >= 2) {

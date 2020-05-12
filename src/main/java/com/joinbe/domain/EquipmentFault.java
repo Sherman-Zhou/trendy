@@ -86,7 +86,7 @@ public class EquipmentFault extends AbstractAuditingEntity {
         return this;
     }
 
-    public Boolean isIsRead() {
+    public Boolean getIsRead() {
         return isRead;
     }
 
@@ -131,7 +131,7 @@ public class EquipmentFault extends AbstractAuditingEntity {
             "id=" + getId() +
             ", alertType='" + getAlertType() + "'" +
             ", alertContent='" + getAlertContent() + "'" +
-            ", isRead='" + isIsRead() + "'" +
+            ", isRead='" + getIsRead() + "'" +
             ", createdBy='" + getCreatedBy() + "'" +
             ", createdDate='" + getCreatedDate() + "'" +
             ", lastModifiedBy='" + getLastModifiedBy() + "'" +

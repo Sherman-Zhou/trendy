@@ -111,7 +111,7 @@ public class DictEntry extends AbstractAuditingEntity {
         this.value = value;
     }
 
-    public Boolean isIsDefault() {
+    public Boolean getIsDefault() {
         return isDefault;
     }
 
@@ -188,7 +188,7 @@ public class DictEntry extends AbstractAuditingEntity {
             ", sortOrder=" + getSortOrder() +
             ", label='" + getLabel() + "'" +
             ", value='" + getValue() + "'" +
-            ", isDefault='" + isIsDefault() + "'" +
+            ", isDefault='" + getIsDefault() + "'" +
             ", remark='" + getRemark() + "'" +
             ", status='" + getStatus() + "'" +
             ", lastModifiedBy='" + getLastModifiedBy() + "'" +
