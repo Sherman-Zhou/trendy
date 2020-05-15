@@ -324,6 +324,15 @@
             <artifactId>jasypt-spring-boot-starter</artifactId>
             <version>${jasypt-spring-boot-starter.version}</version>
         </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>4.5.11</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+        </dependency>
         <!-- jhipster-needle-maven-add-dependency -->
     </dependencies>
 
