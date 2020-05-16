@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/api/equipment")
+@RequestMapping("/api/external/equipment")
 @Api(value ="设备相关接口", tags={"设备相关接口"}, produces = "application/json" )
 public class EquipmentController {
     private final Logger logger = LoggerFactory.getLogger(EquipmentController.class);
@@ -29,6 +29,11 @@ public class EquipmentController {
     @Autowired
     CmdRegisterFactory factory;
 
+    /**
+     *
+     * @param deviceId
+     * @return
+     */
     @GetMapping("/setUserEvent")
     public String detail(@RequestParam String deviceId) {
         HashMap<String, String> params = new HashMap<>(16);
@@ -52,6 +57,12 @@ public class EquipmentController {
         return str;
     }
 
+    /**
+     *
+     * @param deviceId
+     * @param mode
+     * @return
+     */
     @GetMapping("/setBatteryEvent")
     public String detail(@RequestParam String deviceId, @RequestParam String mode) {
         HashMap<String, String> params = new HashMap<>(8);
@@ -67,6 +78,12 @@ public class EquipmentController {
         return str;
     }
 
+    /**
+     *
+     * @param deviceId
+     * @param mode
+     * @return
+     */
     @GetMapping("/lock")
     public String lock(@RequestParam String deviceId, @RequestParam String mode) {
         HashMap<String, String> params = new HashMap<>(8);
@@ -81,7 +98,25 @@ public class EquipmentController {
         params.put(LockCmd.KEY_OUTPUT_TIMES, "2");
         Cmd cmd = factory.createInstance(EventEnum.SGPO.getEvent());
         if (cmd == null) {
-            return "未实现的命令";
+            return "Unimplemented command.";
+        }
+        String str = cmd.initCmd(params);
+        logger.info(str);
+        serverHandler.sendMessage(deviceId, str);
+        return str;
+    }
+
+    /**
+     *
+     * @param deviceId
+     * @return
+     */
+    @GetMapping("/location")
+    public String getLocation(@RequestParam String deviceId) {
+        HashMap<String, String> params = new HashMap<>(8);
+        Cmd cmd = factory.createInstance(EventEnum.GPOS.getEvent());
+        if (cmd == null) {
+            return "Unimplemented command.";
         }
         String str = cmd.initCmd(params);
         logger.info(str);

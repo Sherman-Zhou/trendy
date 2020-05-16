@@ -37,7 +37,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         String deviceNo = msg.getUnitId();
         Channel c = channelMap.get(deviceNo);
         if (c == null) {
-            log.debug("客户端首次加入，Ip: {}, Id:{}，deviceNo:{}" + channel.remoteAddress(), channel.id().asLongText(),deviceNo);
+            log.debug("客户端首次加入，Ip: {}, Id:{}，deviceNo:{}", channel.remoteAddress(), channel.id().asLongText(),deviceNo);
             channelMap.put(deviceNo, channel);
         } else if (c == channel) {
         } else {
@@ -56,7 +56,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         InetSocketAddress insocket = (InetSocketAddress) ctx.channel().remoteAddress();
         String clientIp = insocket.getAddress().getHostAddress();
-        log.debug("客户端开始连接：clientIp：{}" ,clientIp);
+        log.debug("客户端通道激活：clientIp：{}" ,clientIp);
     }
     /**
      * triggered while client is accepted
