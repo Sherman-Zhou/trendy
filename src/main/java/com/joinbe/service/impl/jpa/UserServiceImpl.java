@@ -20,6 +20,7 @@ import com.joinbe.service.RoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
@@ -371,8 +372,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> getUserWithAuthorities() {
-        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithRolesByLogin);
+    public Optional<UserDetailsDTO> getUserWithAuthorities() {
+        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithRolesByLogin).map(UserDetailsDTO::new);
     }
 
     /**

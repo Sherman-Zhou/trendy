@@ -99,8 +99,7 @@ public class AccountResource {
     @ApiOperation("获取当前登陆用户信息")
     public UserDetailsDTO getAccount() {
         return userService.getUserWithAuthorities()
-            .map(user -> {
-                UserDetailsDTO userDTO = new UserDetailsDTO(user);
+            .map(userDTO -> {
                 List<PermissionDTO> permissionAndMenu = userService.findAllUserPermissionsByLogin(userDTO.getLogin()).stream()
                     .map(permissionService::toDto).collect(Collectors.toList());
                 Map<Long, List<PermissionDTO>> children = permissionAndMenu.stream()
