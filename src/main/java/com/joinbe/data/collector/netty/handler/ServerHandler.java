@@ -21,9 +21,9 @@ import java.util.HashMap;
 @ChannelHandler.Sharable
 public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol> {
     private static final Logger log = LoggerFactory.getLogger(ServerHandler.class);
+
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private static HashMap<String, Channel> channelMap = new HashMap<>();
-    private static String MSG = "";
 
     /**
      * triggered while have message in channel

@@ -1,0 +1,91 @@
+package com.joinbe.data.collector;
+
+import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
+import com.joinbe.data.collector.cmd.register.Cmd;
+import com.joinbe.data.collector.cmd.register.impl.LockCmd;
+import com.joinbe.data.collector.cmd.register.impl.SetBatteryCmd;
+import com.joinbe.data.collector.cmd.register.impl.SetUserEventCmd;
+import com.joinbe.data.collector.netty.handler.ServerHandler;
+import com.joinbe.data.collector.netty.protocol.code.EventEnum;
+import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+
+@RestController
+@RequestMapping("/api/equipment")
+@Api(value ="设备相关接口", tags={"设备相关接口"}, produces = "application/json" )
+public class EquipmentController {
+    private final Logger logger = LoggerFactory.getLogger(EquipmentController.class);
+    @Autowired
+    ServerHandler serverHandler;
+
+    @Autowired
+    CmdRegisterFactory factory;
+
+    @GetMapping("/setUserEvent")
+    public String detail(@RequestParam String deviceId) {
+        HashMap<String, String> params = new HashMap<>(16);
+        params.put(SetUserEventCmd.KEY_USER_ID, "100");
+        params.put(SetUserEventCmd.KEY_ACTION, "3");
+        params.put(SetUserEventCmd.KEY_SMS_VIP_MASK, "1");
+        params.put(SetUserEventCmd.KEY_OUTPUT_CTRL_ID, "8");
+        params.put(SetUserEventCmd.KEY_INPUT_MASK, "2");
+        params.put(SetUserEventCmd.KEY_INPUT_CTRL, "2");
+        params.put(SetUserEventCmd.KEY_SCHEDULE_ID, "0");
+        params.put(SetUserEventCmd.KEY_ZONE_CTRL_ID, "0");
+        params.put(SetUserEventCmd.KEY_EVENT_ID, "0");
+
+        Cmd cmd = factory.createInstance(EventEnum.SEVT.getEvent());
+        if (cmd == null) {
+            return "";
+        }
+        String str = cmd.initCmd(params);
+        logger.info(str);
+        serverHandler.sendMessage(deviceId, str);
+        return str;
+    }
+
+    @GetMapping("/setBatteryEvent")
+    public String detail(@RequestParam String deviceId, @RequestParam String mode) {
+        HashMap<String, String> params = new HashMap<>(8);
+        params.put(SetBatteryCmd.KEY_MODE, mode);
+
+        Cmd cmd = factory.createInstance(EventEnum.SBAT.getEvent());
+        if (cmd == null) {
+            return "";
+        }
+        String str = cmd.initCmd(params);
+        logger.info(str);
+        serverHandler.sendMessage(deviceId, str);
+        return str;
+    }
+
+    @GetMapping("/lock")
+    public String lock(@RequestParam String deviceId, @RequestParam String mode) {
+        HashMap<String, String> params = new HashMap<>(8);
+        if ("open".equalsIgnoreCase(mode)) {
+            params.put(LockCmd.KEY_OUTPUT_NUM, "2");
+        } else {
+            params.put(LockCmd.KEY_OUTPUT_NUM, "3");
+        }
+        params.put(LockCmd.KEY_OUTPUT_STATUS, "1");
+        params.put(LockCmd.KEY_OUTPUT_ON_DURATION, "10");
+        params.put(LockCmd.KEY_OUTPUT_OFF_DURATION, "10");
+        params.put(LockCmd.KEY_OUTPUT_TIMES, "2");
+        Cmd cmd = factory.createInstance(EventEnum.SGPO.getEvent());
+        if (cmd == null) {
+            return "未实现的命令";
+        }
+        String str = cmd.initCmd(params);
+        logger.info(str);
+        serverHandler.sendMessage(deviceId, str);
+        return str;
+    }
+}
