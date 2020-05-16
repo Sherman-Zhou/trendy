@@ -45,10 +45,10 @@ public class DivisionServiceImpl implements DivisionService {
     @Override
     public DivisionDTO save(DivisionDTO divisionDTO) {
         log.debug("Request to save Division : {}", divisionDTO);
-        Division division = toEntity(divisionDTO);
+        Division division = DivisionService.toEntity(divisionDTO);
         division = divisionRepository.save(division);
         divisionRepository.flush();
-        return this.toDto(division);
+        return DivisionService.toDto(division);
     }
 
     /**
@@ -76,7 +76,7 @@ public class DivisionServiceImpl implements DivisionService {
             queryParams.and("status", Filter.Operator.eq, RecordStatus.resolve(vm.getStatus()));
         }
         return divisionRepository.findAll(queryParams, pageable)
-            .map(this::toDto);
+            .map(DivisionService::toDto);
     }
 
     /**
@@ -90,7 +90,7 @@ public class DivisionServiceImpl implements DivisionService {
     public Optional<DivisionDTO> findOne(Long id) {
         log.debug("Request to get Division : {}", id);
         return divisionRepository.findById(id)
-            .map(this::toDto);
+            .map(DivisionService::toDto);
     }
 
     /**
@@ -114,6 +114,6 @@ public class DivisionServiceImpl implements DivisionService {
         }
 
         return divisions.stream().filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
-            .map(this::toDto).collect(Collectors.toList());
+            .map(DivisionService::toDto).collect(Collectors.toList());
     }
 }

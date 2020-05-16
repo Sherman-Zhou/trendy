@@ -32,19 +32,19 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findOneByLoginAndStatusNot(String login, RecordStatus status);
 
 
-    @EntityGraph(attributePaths = "roles")
+    @EntityGraph(attributePaths = {"roles", "divisions"})
     Optional<User> findOneWithRolesById(Long id);
 
-    @EntityGraph(attributePaths = "roles")
+    @EntityGraph(attributePaths = {"roles", "divisions"})
         //@Cacheable(cacheNames = USERS_BY_LOGIN_CACHE)
     Optional<User> findOneWithRolesByLogin(String login);
 
-    @EntityGraph(attributePaths = "roles")
+    @EntityGraph(attributePaths = {"roles", "divisions"})
         //@Cacheable(cacheNames = USERS_BY_EMAIL_CACHE)
     Optional<User> findOneWithRolesByEmailIgnoreCase(String email);
 
     Page<User> findAllByLoginNot(Pageable pageable, String login);
 
-    @EntityGraph(attributePaths = "roles")
+    @EntityGraph(attributePaths = {"roles", "divisions"})
     Optional<User> findOneWithRolesByLoginAndStatus(String login, RecordStatus recordStatus);
 }

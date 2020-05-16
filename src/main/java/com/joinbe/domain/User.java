@@ -96,10 +96,16 @@ public class User extends AbstractAuditingEntity implements Serializable {
     //@com.baomidou.mybatisplus.annotation.Version
     private Integer version;
 
-    @ManyToOne
-    @JsonIgnoreProperties("")
+
+    @JsonIgnore
+    @ManyToMany
+//    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @JoinTable(name = "user_division",
+        joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name = "division_id", referencedColumnName = "id"))
+    @BatchSize(size = 20)
     @TableField(exist = false)
-    private Division division;
+    private Set<Division> divisions = new HashSet<>();
 
     @JsonIgnore
     @ManyToMany
@@ -219,12 +225,16 @@ public class User extends AbstractAuditingEntity implements Serializable {
         this.status = status;
     }
 
-    public Division getDivision() {
-        return division;
+    public Set<Division> getDivisions() {
+        return divisions;
     }
 
-    public void setDivision(Division division) {
-        this.division = division;
+    public void setDivisions(Set<Division> divisions) {
+        this.divisions = divisions;
+    }
+
+    public void addDivision(Division division) {
+        this.getDivisions().add(division);
     }
 
     public Set<Role> getRoles() {

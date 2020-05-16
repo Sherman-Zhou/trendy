@@ -183,9 +183,9 @@ public class UserResource {
     }
 
     /**
-     * Gets a list of all roles.
+     * Gets all available roles.
      *
-     * @return a list of all roles.
+     * @return all available roles.
      */
     @GetMapping("/users/roles")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
@@ -199,16 +199,16 @@ public class UserResource {
      * {@code PUT  /users/{userId}/assign} : assign division to role.
      *
      * @param userId     the id of the user to update.
-     * @param divisionId the id  of division to assign.
+     * @param divisionIds the id  of division to assign.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated userDto,
      * or with status {@code 500 (Internal Server Error)} if the userDto couldn't be updated.
      */
     @PutMapping("/users/{userId}/assign")
     @ApiOperation("分配用户城市/部门")
     public ResponseEntity<UserDTO> assignDivision(@PathVariable @ApiParam(value ="用户主键", required = true ) Long userId,
-                                                  @Valid @RequestBody @ApiParam(value ="城市/部门主键", required = true ) Long divisionId) {
-        log.debug("REST request to assign division: {} to user : {}", divisionId, userId);
-        UserDTO result = userService.assignDivision(userId, divisionId);
+                                                  @Valid @RequestBody @ApiParam(value ="城市/部门主键列表", required = true ) List<Long>  divisionIds) {
+        log.debug("REST request to assign division: {} to user : {}", divisionIds, userId);
+        UserDTO result = userService.assignDivision(userId, divisionIds);
         return ResponseEntity.ok()
             .body(result);
     }
@@ -219,7 +219,7 @@ public class UserResource {
      * @param parentId the parentId
      * @return the ResponseEntity with status 200 (OK) and the list of divisions in body
      */
-    @GetMapping("/users/division/:parentId/children")
+    @GetMapping("/users/division/{parentId}/children")
     @ApiOperation(value = "获取子部门", notes = "若要获取顶级部门parentId设置为0")
     public List<DivisionDTO> getAllSubDivisions(@PathVariable @ApiParam(value ="父城市/部门主键", required = true )  Long parentId) {
         log.debug("REST request to get a List of children divisions for parent:{}", parentId);
