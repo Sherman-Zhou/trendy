@@ -3,6 +3,8 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.service.dto.VehicleDTO;
+import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
+import com.joinbe.web.rest.vm.VehicleVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -37,7 +39,7 @@ public interface VehicleService {
      * @param pageable the pagination information.
      * @return the list of entities.
      */
-    Page<VehicleDTO> findAll(Pageable pageable);
+    Page<VehicleDTO> findAll(Pageable pageable, VehicleVM vm);
 
     /**
      * Get the "id" vehicle.
@@ -46,6 +48,9 @@ public interface VehicleService {
      * @return the entity.
      */
     Optional<VehicleDTO> findOne(Long id);
+
+
+    void binding(EquipmentVehicleBindingVM vm);
 
     /**
      * Delete the "id" vehicle.

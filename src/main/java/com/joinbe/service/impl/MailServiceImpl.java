@@ -98,7 +98,14 @@ public class MailServiceImpl implements MailService {
     @Async
     public void sendEmailChangeEmail(User user) {
         log.debug("Sending change email notification to '{}'", user.getEmail());
-        sendEmailFromTemplate(user, "mail/changeEmail", "email.change.title");
+
+        Locale locale = Locale.forLanguageTag(user.getLangKey());
+        Context context = new Context(locale);
+        context.setVariable(USER, user);
+        context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
+        String content = templateEngine.process("mail/changeEmail", context);
+        String subject = messageSource.getMessage("email.change.title", null, locale);
+        sendEmail(user.getOldEmail(), subject, content, false, true);
     }
 
     @Override

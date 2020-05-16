@@ -3,6 +3,7 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Equipment;
 import com.joinbe.service.dto.EquipmentDTO;
+import com.joinbe.web.rest.vm.EquipmentVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -37,7 +38,7 @@ public interface EquipmentService {
      * @param pageable the pagination information.
      * @return the list of entities.
      */
-    Page<EquipmentDTO> findAll(Pageable pageable);
+    Page<EquipmentDTO> findAll(Pageable pageable, EquipmentVM vm);
 
     /**
      * Get the "id" equipment.
