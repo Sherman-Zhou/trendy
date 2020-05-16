@@ -52,7 +52,7 @@ public class EquipmentController {
             return "";
         }
         String str = cmd.initCmd(params);
-        logger.info(str);
+        logger.debug("REST request for setUserEvent, command: {}", str);
         serverHandler.sendMessage(deviceId, str);
         return str;
     }
@@ -73,7 +73,7 @@ public class EquipmentController {
             return "";
         }
         String str = cmd.initCmd(params);
-        logger.info(str);
+        logger.debug("REST request for setBatteryEvent, command: {}", str);
         serverHandler.sendMessage(deviceId, str);
         return str;
     }
@@ -101,7 +101,7 @@ public class EquipmentController {
             return "Unimplemented command.";
         }
         String str = cmd.initCmd(params);
-        logger.info(str);
+        logger.debug("REST request for lock/unlock, command: {}", str);
         serverHandler.sendMessage(deviceId, str);
         return str;
     }
@@ -119,7 +119,7 @@ public class EquipmentController {
             return "Unimplemented command.";
         }
         String str = cmd.initCmd(params);
-        logger.info(str);
+        logger.debug("REST request for get location, command: {}", str);
         serverHandler.sendMessage(deviceId, str);
         return str;
     }
