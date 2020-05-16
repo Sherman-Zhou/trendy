@@ -5,12 +5,10 @@ import cn.hutool.core.util.ReflectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.joinbe.data.collector.netty.protocol.annotation.DataOrder;
-import lombok.Data;
 
 import java.lang.reflect.Field;
 import java.util.List;
 
-@Data
 public class PositionProtocol {
 
     private static final Integer DEFAULT_DATA_LENGTH = 22;
@@ -211,4 +209,195 @@ public class PositionProtocol {
         System.out.println(JSONUtil.toJsonStr(p));
     }
 
+    public String getUnitId() {
+        return unitId;
+    }
+
+    public void setUnitId(String unitId) {
+        this.unitId = unitId;
+    }
+
+    public String getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(String dateTime) {
+        this.dateTime = dateTime;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Integer getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(Integer speed) {
+        this.speed = speed;
+    }
+
+    public Integer getHeading() {
+        return heading;
+    }
+
+    public void setHeading(Integer heading) {
+        this.heading = heading;
+    }
+
+    public Integer getAltitude() {
+        return altitude;
+    }
+
+    public void setAltitude(Integer altitude) {
+        this.altitude = altitude;
+    }
+
+    public Integer getSatellites() {
+        return satellites;
+    }
+
+    public void setSatellites(Integer satellites) {
+        this.satellites = satellites;
+    }
+
+    public Integer getEventId() {
+        return eventId;
+    }
+
+    public void setEventId(Integer eventId) {
+        this.eventId = eventId;
+    }
+
+    public Float getMileage() {
+        return mileage;
+    }
+
+    public void setMileage(Float mileage) {
+        this.mileage = mileage;
+    }
+
+    public Integer getInputStatus() {
+        return inputStatus;
+    }
+
+    public void setInputStatus(Integer inputStatus) {
+        this.inputStatus = inputStatus;
+    }
+
+    public Float getAnalogInput1() {
+        return analogInput1;
+    }
+
+    public void setAnalogInput1(Float analogInput1) {
+        this.analogInput1 = analogInput1;
+    }
+
+    public Float getAnalogInput2() {
+        return analogInput2;
+    }
+
+    public void setAnalogInput2(Float analogInput2) {
+        this.analogInput2 = analogInput2;
+    }
+
+    public Integer getOutputStatus() {
+        return outputStatus;
+    }
+
+    public void setOutputStatus(Integer outputStatus) {
+        this.outputStatus = outputStatus;
+    }
+
+    public Integer getRoamingStatus() {
+        return roamingStatus;
+    }
+
+    public void setRoamingStatus(Integer roamingStatus) {
+        this.roamingStatus = roamingStatus;
+    }
+
+    public Integer getCsq() {
+        return csq;
+    }
+
+    public void setCsq(Integer csq) {
+        this.csq = csq;
+    }
+
+    public Integer getCommSys() {
+        return commSys;
+    }
+
+    public void setCommSys(Integer commSys) {
+        this.commSys = commSys;
+    }
+
+    public String getMccMnc() {
+        return mccMnc;
+    }
+
+    public void setMccMnc(String mccMnc) {
+        this.mccMnc = mccMnc;
+    }
+
+    public String getLac() {
+        return lac;
+    }
+
+    public void setLac(String lac) {
+        this.lac = lac;
+    }
+
+    public String getCid() {
+        return cid;
+    }
+
+    public void setCid(String cid) {
+        this.cid = cid;
+    }
+
+    public Float getVoltageBB() {
+        return voltageBB;
+    }
+
+    public void setVoltageBB(Float voltageBB) {
+        this.voltageBB = voltageBB;
+    }
+
+    public String getData() {
+        return data;
+    }
+
+    public void setData(String data) {
+        this.data = data;
+    }
+
+    public String getMcc() {
+        return mcc;
+    }
+
+    public void setMcc(String mcc) {
+        this.mcc = mcc;
+    }
+
+    public String getMnc() {
+        return mnc;
+    }
+
+    public void setMnc(String mnc) {
+        this.mnc = mnc;
+    }
 }
