@@ -25,6 +25,20 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private static HashMap<String, Channel> channelMap = new HashMap<>();
 
+    @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        Channel channel = ctx.channel();
+        log.debug("Channel registered, Ip: {}, Id:{}", channel.remoteAddress(), channel.id().asLongText());
+        super.channelRegistered(ctx);
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        Channel channel = ctx.channel();
+        log.debug("Channel unregistered, Ip: {}, Id:{}", channel.remoteAddress(), channel.id().asLongText());
+        super.channelUnregistered(ctx);
+    }
+
     /**
      * triggered while have message in channel
      * @param ctx
@@ -57,6 +71,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         InetSocketAddress insocket = (InetSocketAddress) ctx.channel().remoteAddress();
         String clientIp = insocket.getAddress().getHostAddress();
         log.debug("客户端通道激活：clientIp：{}" ,clientIp);
+        super.channelActive(ctx);
     }
     /**
      * triggered while client is accepted
@@ -69,8 +84,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         Channel channel = ctx.channel();
         channelGroup.writeAndFlush("服务器 - " + channel.remoteAddress() + "加入\n");
         channelGroup.add(channel);
-        log.info("客户端连接成功, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
-        log.info("客户端总数：{}", channelGroup.size());
+        log.debug("客户端连接成功, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
+        log.debug("客户端总数：{}", channelGroup.size());
+        super.handlerAdded(ctx);
     }
     /**
      * triggered while client is inactive
@@ -82,6 +98,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
         log.debug("客户端开始下线, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
+        super.channelInactive(ctx);
     }
     /**
      * triggered while client left
@@ -92,11 +109,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
-        log.info("客户端已经下线, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
+        log.debug("客户端已经下线, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
         channelGroup.writeAndFlush("服务器 - " + channel.remoteAddress() + "离开\n");
         // 移出(netty会自动执行，不写也行)
         channelGroup.remove(channel);
-        log.info("客户端总数：{}", channelGroup.size());
+        log.debug("客户端总数：{}", channelGroup.size());
+        super.handlerRemoved(ctx);
     }
     /**
      * triggered while exception is happened.
@@ -106,7 +124,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         // 当出现异常就关闭连接
-        cause.printStackTrace();
+        Channel channel = ctx.channel();
+        log.error("客户端异常:{}，关闭连接, Ip: {}, Id:{}",cause.getMessage(),channel.remoteAddress(), channel.id().asLongText());
         ctx.close();
     }
     /**
@@ -114,12 +133,17 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
      * @param deviceId
      * @param event
      */
-    public void sendMessage(String deviceId, String event) {
+    public String sendMessage(String deviceId, String event) {
         Channel c = channelMap.get(deviceId);
         if (c == null) {
-            log.warn("未找到发送通道, deviceId: {}", deviceId);
-            return;
+            String strInfo= "未找到发送通道, deviceId: " + deviceId;
+            log.warn(strInfo);
+            return strInfo;
         }
+        log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         c.writeAndFlush(event);
+        return "success";
     }
+
+
 }

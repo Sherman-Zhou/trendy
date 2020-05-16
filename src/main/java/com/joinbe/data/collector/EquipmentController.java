@@ -1,5 +1,6 @@
 package com.joinbe.data.collector;
 
+import cn.hutool.core.util.StrUtil;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.cmd.register.impl.LockCmd;
@@ -20,7 +21,7 @@ import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/external/equipment")
-@Api(value ="设备相关接口", tags={"设备相关接口"}, produces = "application/json" )
+@Api(value ="设备控制相关接口", tags={"设备控制相关接口"}, produces = "application/json" )
 public class EquipmentController {
     private final Logger logger = LoggerFactory.getLogger(EquipmentController.class);
     @Autowired
@@ -35,7 +36,7 @@ public class EquipmentController {
      * @return
      */
     @GetMapping("/setUserEvent")
-    public String detail(@RequestParam String deviceId) {
+    public String setUserEvent(@RequestParam String deviceId) {
         HashMap<String, String> params = new HashMap<>(16);
         params.put(SetUserEventCmd.KEY_USER_ID, "100");
         params.put(SetUserEventCmd.KEY_ACTION, "3");
@@ -64,7 +65,7 @@ public class EquipmentController {
      * @return
      */
     @GetMapping("/setBatteryEvent")
-    public String detail(@RequestParam String deviceId, @RequestParam String mode) {
+    public String setBatteryEvent(@RequestParam String deviceId, @RequestParam String mode) {
         HashMap<String, String> params = new HashMap<>(8);
         params.put(SetBatteryCmd.KEY_MODE, mode);
 
@@ -118,9 +119,9 @@ public class EquipmentController {
         if (cmd == null) {
             return "Unimplemented command.";
         }
-        String str = cmd.initCmd(params);
-        logger.debug("REST request for get location, command: {}", str);
-        serverHandler.sendMessage(deviceId, str);
-        return str;
+        StringBuffer str = new StringBuffer(cmd.initCmd(params));
+        logger.debug("REST request for get location, command: {}", str.toString());
+        String returnStr = serverHandler.sendMessage(deviceId, str.toString());
+        return str.append(StrUtil.CRLF).append(returnStr).toString();
     }
 }
