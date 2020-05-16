@@ -96,6 +96,13 @@ public class MailServiceImpl implements MailService {
 
     @Override
     @Async
+    public void sendEmailChangeEmail(User user) {
+        log.debug("Sending change email notification to '{}'", user.getEmail());
+        sendEmailFromTemplate(user, "mail/changeEmail", "email.change.title");
+    }
+
+    @Override
+    @Async
     public void sendCreationEmail(User user) {
         log.debug("Sending creation email to '{}'", user.getEmail());
         sendEmailFromTemplate(user, "mail/creationEmail", "email.activation.title");

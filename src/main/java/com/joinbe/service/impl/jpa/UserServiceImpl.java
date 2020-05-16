@@ -145,14 +145,50 @@ public class UserServiceImpl implements UserService {
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 user.setEmail(userDTO.getEmail().toLowerCase());
-                user.setStatus(RecordStatus.ACTIVE);
-                user.setActivationKey(null);
+               // user.setStatus(RecordStatus.ACTIVE);
+               // user.setActivationKey(null);
                 userRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Created Information for User: {}", user);
                 return user;
             });
     }
+
+    @Override
+    public Optional<User> changeUserEmail(UserRegisterVM userDTO) {
+
+        userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
+            if (!existingUser.getId().equals(userDTO.getLogin()) && existingUser.getActivated()) {
+                throw new EmailAlreadyUsedException();
+            }
+        });
+        Optional <User> userInDb = userRepository.findOneWithRolesByLogin(userDTO.getLogin())
+            //not allow to update deleted user
+            .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()));
+        if(!userInDb.isPresent()) {
+            throw new InvalidPasswordException();
+        }
+
+        return Optional.of(userInDb)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
+            .map(user -> {
+                String currentEncryptedPassword = user.getPassword();
+                if (!passwordEncoder.matches(userDTO.getPassword(), currentEncryptedPassword)) {
+                    throw new InvalidPasswordException();
+                }
+                user.setOldEmail(user.getEmail());
+                user.setEmail(userDTO.getEmail().toLowerCase());
+                // user.setStatus(RecordStatus.ACTIVE);
+                // user.setActivationKey(null);
+                userRepository.save(user);
+                this.clearUserCaches(user);
+                log.debug("Created Information for User: {}", user);
+                return user;
+            });
+    }
+
 
     private boolean removeNonActivatedUser(User existingUser) {
         if (existingUser.getActivated()) {

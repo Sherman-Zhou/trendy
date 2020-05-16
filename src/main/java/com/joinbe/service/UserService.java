@@ -25,6 +25,8 @@ public interface UserService {
 
     Optional<User> registerUserEmail(UserRegisterVM userDTO);
 
+    Optional<User> changeUserEmail(UserRegisterVM userDTO);
+
     User createUser(UserDTO userDTO);
 
     void updateUser(String name, String email, String langKey, String imageUrl);

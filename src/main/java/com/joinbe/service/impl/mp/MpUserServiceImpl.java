@@ -150,6 +150,11 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
         return Optional.empty();
     }
 
+    @Override
+    public Optional<User> changeUserEmail(UserRegisterVM userDTO) {
+        return Optional.empty();
+    }
+
 
     @Override
     public void changePassword(String currentClearTextPassword, String newPassword) {
