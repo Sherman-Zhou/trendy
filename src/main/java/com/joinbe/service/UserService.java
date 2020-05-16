@@ -5,6 +5,7 @@ import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,8 @@ public interface UserService {
     Optional<User> requestPasswordReset(Long userId);
 
     Optional<User> registerUserEmail(UserRegisterVM userDTO);
+
+    Optional<User> changeUserEmail(UserRegisterVM userDTO);
 
     User createUser(UserDTO userDTO);
 
@@ -44,7 +47,7 @@ public interface UserService {
 
     Optional<User> getUserWithAuthorities(Long id);
 
-    Optional<User> getUserWithAuthorities();
+    Optional<UserDetailsDTO> getUserWithAuthorities();
 
     List<RoleDTO> getRoles();
 

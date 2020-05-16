@@ -57,6 +57,9 @@ public class User extends AbstractAuditingEntity implements Serializable {
     @Column(length = 200, unique = true)
     private String email;
 
+
+    private  transient String oldEmail;
+
     @Size(max = 200)
     @Column(name = "remark", length = 200)
     private String remark;
@@ -259,5 +262,13 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     public void setSex(Sex sex) {
         this.sex = sex;
+    }
+
+    public String getOldEmail() {
+        return oldEmail;
+    }
+
+    public void setOldEmail(String oldEmail) {
+        this.oldEmail = oldEmail;
     }
 }

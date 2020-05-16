@@ -99,8 +99,7 @@ public class AccountResource {
     @ApiOperation("获取当前登陆用户信息")
     public UserDetailsDTO getAccount() {
         return userService.getUserWithAuthorities()
-            .map(user -> {
-                UserDetailsDTO userDTO = new UserDetailsDTO(user);
+            .map(userDTO -> {
                 List<PermissionDTO> permissionAndMenu = userService.findAllUserPermissionsByLogin(userDTO.getLogin()).stream()
                     .map(permissionService::toDto).collect(Collectors.toList());
                 Map<Long, List<PermissionDTO>> children = permissionAndMenu.stream()
@@ -212,8 +211,42 @@ public class AccountResource {
     public void registerEmail(@Valid @RequestBody UserRegisterVM managedUserVM) {
 
         Optional<User> userOptional = userService.registerUserEmail(managedUserVM);
-        userOptional.ifPresent(user -> log.debug("user is registered with email: {}", user.getEmail()));
-        // mailService.sendActivationEmail(user);
+        userOptional.ifPresent(user -> {
+            log.debug("user is registered with email: {}", user.getEmail());
+            mailService.sendActivationEmail(user);
+        });
+
+    }
+
+    /**
+     * {@code GET  /account/activate} : activate the registered user.
+     *
+     * @param key the activation key.
+     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
+     */
+    @GetMapping("/account/activate")
+    @ApiOperation("激活邮件")
+    public void activateAccount(@RequestParam(value = "key") String key) {
+        Optional<User> user = userService.activateRegistration(key);
+        if (!user.isPresent()) {
+            throw new AccountResourceException("No user was found for this activation key");
+        }
+    }
+
+    /**
+     * {@code POST  /account/change-email} : changes the current user's email.
+     *
+     * @param registerVM current userId, password and new Email.
+     * @throws InvalidPasswordException {@code 400 (Bad Request)} if the new password is incorrect.
+     */
+    @PostMapping(path = "/account/change-email")
+    @ApiOperation("修改绑定邮箱")
+    public void changeEmail(@RequestBody UserRegisterVM registerVM) {
+        Optional<User> userOptional =  userService.changeUserEmail(registerVM);
+        userOptional.ifPresent(user -> {
+            log.debug("user is changed email: {}", user.getEmail());
+            mailService.sendEmailChangeEmail(user);
+        });
     }
 
     private static boolean checkPasswordLength(String password) {

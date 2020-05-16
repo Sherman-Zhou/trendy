@@ -13,6 +13,7 @@ import com.joinbe.service.UserRoleService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
@@ -149,6 +150,11 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
         return Optional.empty();
     }
 
+    @Override
+    public Optional<User> changeUserEmail(UserRegisterVM userDTO) {
+        return Optional.empty();
+    }
+
 
     @Override
     public void changePassword(String currentClearTextPassword, String newPassword) {
@@ -167,7 +173,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public Optional<User> getUserWithAuthorities() {
+    public Optional<UserDetailsDTO> getUserWithAuthorities() {
         return Optional.empty();
     }
 

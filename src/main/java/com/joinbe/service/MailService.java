@@ -10,6 +10,8 @@ public interface MailService {
 
     void sendActivationEmail(User user);
 
+    void sendEmailChangeEmail(User user);
+
     void sendCreationEmail(User user);
 
     void sendPasswordResetMail(User user);
