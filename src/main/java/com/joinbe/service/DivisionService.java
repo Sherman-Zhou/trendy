@@ -48,13 +48,14 @@ public interface DivisionService {
 
     List<DivisionDTO> findAllByParentId(Long parentId);
 
-    default DivisionDTO toDto(Division division) {
+    static DivisionDTO toDto(Division division) {
         DivisionDTO dto = BeanConverter.toDto(division, DivisionDTO.class);
         // dto.setParentId(division.getParentId());
+        dto.setHasChildren(!division.getChildren().isEmpty());
         return dto;
     }
 
-    default Division toEntity(DivisionDTO divisionDTO) {
+    static Division toEntity(DivisionDTO divisionDTO) {
 
         Division division = BeanConverter.toEntity(divisionDTO, Division.class);
         if (divisionDTO.getParentId() != null) {

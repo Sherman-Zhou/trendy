@@ -192,7 +192,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public UserDTO assignDivision(Long userId, Long divisionId) {
+    public UserDTO assignDivision(Long userId, List<Long> divisionIds) {
         return null;
     }
 }

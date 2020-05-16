@@ -419,15 +419,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO assignDivision(Long userId, Long divisionId) {
+    public UserDTO assignDivision(Long userId, List<Long> divisionIds) {
         UserDTO userDTO;
         Optional<User> userOptional = userRepository.findById(userId);
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            Division division = new Division();
-            division.setId(divisionId);
-            user.setDivision(division);
+            divisionIds.forEach(divisionId -> {
+                Division division = new Division();
+                 division.setId(divisionId);
+                    user.addDivision(division);
+            });
             this.clearUserCaches(user);
             userDTO = new UserDTO(user);
         } else {

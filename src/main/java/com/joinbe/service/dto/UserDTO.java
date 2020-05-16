@@ -76,6 +76,9 @@ public class UserDTO implements Serializable {
     @ApiModelProperty(value = "用户角色id列表")
     private List<Long> roleIds;
 
+    @ApiModelProperty("部门id列表")
+    private List<Long> divisionIds;
+
     public UserDTO() {
     }
 
