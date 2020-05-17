@@ -1,9 +1,13 @@
 package com.joinbe.service.impl.jpa;
 
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Equipment;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
+import com.joinbe.web.rest.vm.EquipmentVM;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -51,9 +55,23 @@ public class EquipmentServiceImpl implements EquipmentService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<EquipmentDTO> findAll(Pageable pageable) {
+    public Page<EquipmentDTO> findAll(Pageable pageable, EquipmentVM vm) {
         log.debug("Request to get all Equipment");
-        return equipmentRepository.findAll(pageable)
+        QueryParams<Equipment> queryParams = new QueryParams<>();
+        if (StringUtils.isNotEmpty(vm.getIdentifyNumber())) {
+            queryParams.and("identifyNumber", Filter.Operator.eq, vm.getIdentifyNumber());
+        }
+        if (StringUtils.isNotEmpty(vm.getImei())) {
+            queryParams.and("imei", Filter.Operator.eq, vm.getImei());
+        }
+        if (StringUtils.isNotEmpty(vm.getSimCardNum())) {
+            queryParams.and("simCardNum", Filter.Operator.eq, vm.getSimCardNum());
+        }
+
+        if (vm.getIsBounded() != null) {
+            queryParams.and("vehicle", vm.getIsBounded() ? Filter.Operator.isNotNull : Filter.Operator.isNull, null);
+        }
+        return equipmentRepository.findAll(queryParams, pageable)
             .map(EquipmentService::toDto);
     }
 

@@ -44,6 +44,13 @@ public class Vehicle extends AbstractAuditingEntity {
     private String brand;
 
     /**
+     * 名称
+     */
+    @Size(max = 50)
+    @Column(name = "name", length = 50)
+    private String name;
+
+    /**
      * 车型
      */
     @Size(max = 50)
@@ -56,6 +63,13 @@ public class Vehicle extends AbstractAuditingEntity {
     @Size(max = 20)
     @Column(name = "style", length = 20)
     private String style;
+
+    /**
+     * 年份
+     */
+    @Size(max = 10)
+    @Column(name = "prod_year", length = 10)
+    private String prodYear;
 
     /**
      * 颜色
@@ -99,6 +113,9 @@ public class Vehicle extends AbstractAuditingEntity {
     @Size(max = 1)
     @Column(name = "status", length = 1)
     private String status;
+
+    @OneToOne(mappedBy = "vehicle")
+    private Equipment equipment;
 
 
     @OneToMany(mappedBy = "vehicle")
@@ -195,6 +212,14 @@ public class Vehicle extends AbstractAuditingEntity {
         return this;
     }
 
+    public String getProdYear() {
+        return prodYear;
+    }
+
+    public void setProdYear(String prodYear) {
+        this.prodYear = prodYear;
+    }
+
     public BigDecimal getTankVolume() {
         return tankVolume;
     }
@@ -273,6 +298,14 @@ public class Vehicle extends AbstractAuditingEntity {
         return this;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public Set<VehicleTrajectory> getTrajectories() {
         return trajectories;
     }
@@ -309,6 +342,14 @@ public class Vehicle extends AbstractAuditingEntity {
     public Vehicle division(Division division) {
         this.division = division;
         return this;
+    }
+
+    public Equipment getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(Equipment equipment) {
+        this.equipment = equipment;
     }
 
     @Override

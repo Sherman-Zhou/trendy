@@ -63,6 +63,9 @@ public class Equipment extends AbstractAuditingEntity {
     @Column(name = "status", length = 1)
     private String status;
 
+    @Column(name = "is_online")
+    private Boolean isOnline;
+
 
     @OneToOne
     @JoinColumn(unique = true)
@@ -194,6 +197,14 @@ public class Equipment extends AbstractAuditingEntity {
         this.trajectories.remove(vehicleTrajectory);
         vehicleTrajectory.setEquipment(null);
         return this;
+    }
+
+    public Boolean getOnline() {
+        return isOnline;
+    }
+
+    public void setOnline(Boolean online) {
+        isOnline = online;
     }
 
     @Override

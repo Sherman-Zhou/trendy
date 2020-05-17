@@ -1,9 +1,18 @@
 package com.joinbe.service.impl.jpa;
 
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
+import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
+import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.service.VehicleService;
 import com.joinbe.service.dto.VehicleDTO;
+import com.joinbe.web.rest.errors.BadRequestAlertException;
+import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
+import com.joinbe.web.rest.vm.VehicleBindingVM;
+import com.joinbe.web.rest.vm.VehicleVM;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -24,9 +33,12 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final VehicleRepository vehicleRepository;
 
+    private final EquipmentRepository equipmentRepository;
 
-    public VehicleServiceImpl(VehicleRepository vehicleRepository) {
+
+    public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository) {
         this.vehicleRepository = vehicleRepository;
+        this.equipmentRepository = equipmentRepository;
     }
 
     /**
@@ -51,9 +63,32 @@ public class VehicleServiceImpl implements VehicleService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<VehicleDTO> findAll(Pageable pageable) {
+    public Page<VehicleDTO> findAll(Pageable pageable, VehicleVM vm) {
         log.debug("Request to get all Vehicles");
-        return vehicleRepository.findAll(pageable)
+        QueryParams<Vehicle> queryParams = new QueryParams<>();
+
+        if (StringUtils.isNotEmpty(vm.getBrand())) {
+            queryParams.and("brand", Filter.Operator.eq, vm.getBrand());
+        }
+        if (StringUtils.isNotEmpty(vm.getName())) {
+            queryParams.and("name", Filter.Operator.eq, vm.getName());
+        }
+        if (vm.getIsBounded() != null) {
+            queryParams.and("equipment", vm.getIsBounded() ? Filter.Operator.isNotNull : Filter.Operator.isNull, null);
+        }
+
+        if (vm.getIsOnline()) {
+            queryParams.and("equipment.isOnline", Filter.Operator.eq, Boolean.TRUE);
+        }
+
+        if (vm instanceof VehicleBindingVM) {
+            VehicleBindingVM bindingVM = (VehicleBindingVM) vm;
+            if (StringUtils.isNotEmpty(bindingVM.getIdentifyNumber())) {
+                queryParams.and("equipment.identifyNumber", Filter.Operator.eq, bindingVM.getIdentifyNumber());
+            }
+        }
+
+        return vehicleRepository.findAll(queryParams, pageable)
             .map(VehicleService::toDto);
     }
 
@@ -69,6 +104,23 @@ public class VehicleServiceImpl implements VehicleService {
         log.debug("Request to get Vehicle : {}", id);
         return vehicleRepository.findById(id)
             .map(VehicleService::toDto);
+    }
+
+    @Override
+    public void binding(EquipmentVehicleBindingVM vm) {
+        log.debug("Request to binding equipment and vehicle: {}", vm);
+        Optional<Vehicle> vehicle = vehicleRepository.findById(vm.getVehicleId());
+        Optional<Equipment> equipment = equipmentRepository.findById(vm.getEquipmentId());
+        if (!vehicle.isPresent()) {
+            throw new BadRequestAlertException("Invalid vehicle id", "Vehicle", "vehicle.notexist");
+        }
+        if (!equipment.isPresent()) {
+            throw new BadRequestAlertException("Invalid equipment id", "Equipment", "equipment.notexist");
+        }
+        if (equipment.get().getVehicle() != null || vehicle.get().getEquipment() != null) {
+            throw new BadRequestAlertException("Bound already", "Binding", "binding.boundalready");
+        }
+        equipment.get().setVehicle(vehicle.get());
     }
 
     /**
