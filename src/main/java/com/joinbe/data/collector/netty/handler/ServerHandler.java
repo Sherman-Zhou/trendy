@@ -138,6 +138,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
             String strInfo= "未找到发送通道, deviceId: " + deviceId;
             log.warn(strInfo);
             deferredResult.setErrorResult(strInfo);
+            return strInfo;
         }
         log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         c.writeAndFlush(event).addListener(future -> {
@@ -160,6 +161,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         if (c == null) {
             String strInfo= "未找到发送通道, deviceId: " + deviceId;
             log.warn(strInfo);
+            return strInfo;
         }
         log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         c.writeAndFlush(event).addListener(future -> {
