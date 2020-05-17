@@ -2,17 +2,16 @@ package com.joinbe.data.collector.netty.handler;
 
 import cn.hutool.json.JSONUtil;
 import com.joinbe.data.collector.netty.protocol.PositionProtocol;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
@@ -133,17 +132,46 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
      * @param deviceId
      * @param event
      */
+    public String sendMessage(String deviceId, String event, DeferredResult<Object> deferredResult) {
+        Channel c = channelMap.get(deviceId);
+        if (c == null) {
+            String strInfo= "未找到发送通道, deviceId: " + deviceId;
+            log.warn(strInfo);
+            deferredResult.setErrorResult(strInfo);
+        }
+        log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
+        c.writeAndFlush(event).addListener(future -> {
+            if(future.isSuccess()){
+                deferredResult.setResult("Success");
+            }else{
+                deferredResult.setResult("Equipment is not on line, deviceId: " + deviceId);
+            }
+        });
+        return "success";
+    }
+
+    /**
+     * Interface call， to send message
+     * @param deviceId
+     * @param event
+     */
     public String sendMessage(String deviceId, String event) {
         Channel c = channelMap.get(deviceId);
         if (c == null) {
             String strInfo= "未找到发送通道, deviceId: " + deviceId;
             log.warn(strInfo);
-            return strInfo;
         }
         log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
-        c.writeAndFlush(event);
+        c.writeAndFlush(event).addListener(future -> {
+            if(future.isSuccess()){
+                log.debug("send command success.");
+            }else{
+                log.warn("send command failed : deviceId: {}, Ip: {}, Id:{} " + deviceId,c.remoteAddress(), c.id().asLongText());
+                log.warn("disconnect device : deviceId: {}, Ip: {}, Id:{} " + deviceId,c.remoteAddress(), c.id().asLongText());
+                c.close();
+                log.debug("客户端总数：{}", channelGroup.size());
+            }
+        });
         return "success";
     }
-
-
 }
