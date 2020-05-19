@@ -99,6 +99,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         String clientIp = insocket.getAddress().getHostAddress();
         log.debug("客户端通道激活：clientIp：{}" ,clientIp);
         //send first command.
+        log.debug("发送初始消息：{}", locationCommand);
         ctx.channel().writeAndFlush(locationCommand);
         super.channelActive(ctx);
     }
