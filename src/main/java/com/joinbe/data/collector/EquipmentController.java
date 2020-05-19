@@ -125,7 +125,7 @@ public class EquipmentController {
         DeferredResult<Object> deferredResult = new DeferredResult<>(3000L, "Get Location time out");
         String str = cmd.initCmd(params);
         logger.debug("REST request for get location, command: {}", str);
-        serverHandler.sendMessage(deviceId, str.toString(), deferredResult);
+        serverHandler.sendMessage(deviceId, str, deferredResult);
 
         return deferredResult;
     }

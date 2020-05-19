@@ -1,7 +1,10 @@
 package com.joinbe.data.collector.netty.handler;
 
 import cn.hutool.json.JSONUtil;
+import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
+import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.netty.protocol.PositionProtocol;
+import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -9,13 +12,19 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
+import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 
+/**
+ * handlerAdded -> channelRegistered -> channelActive -> read
+ * channelInactive -> channelUnregistered -> handlerRemoved
+ */
 @Component
 @ChannelHandler.Sharable
 public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol> {
@@ -23,6 +32,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
 
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private static HashMap<String, Channel> channelMap = new HashMap<>();
+    private String locationCommand;
+
+    @Autowired
+    CmdRegisterFactory factory;
+
+    @PostConstruct
+    public void initSendPos(){
+        Cmd cmd = factory.createInstance(EventEnum.GPOS.getEvent());
+        if(cmd != null){
+            locationCommand = cmd.initCmd(new HashMap<>());
+        }
+    }
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
@@ -77,6 +98,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         InetSocketAddress insocket = (InetSocketAddress) ctx.channel().remoteAddress();
         String clientIp = insocket.getAddress().getHostAddress();
         log.debug("客户端通道激活：clientIp：{}" ,clientIp);
+        //send first command.
+        ctx.channel().writeAndFlush(locationCommand);
         super.channelActive(ctx);
     }
     /**
@@ -90,7 +113,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         Channel channel = ctx.channel();
         channelGroup.writeAndFlush("服务器 - " + channel.remoteAddress() + "加入\n");
         channelGroup.add(channel);
-        log.debug("客户端连接成功, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
+        log.debug("客户端连接初始化成功, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
         log.debug("客户端总数：{}", channelGroup.size());
         super.handlerAdded(ctx);
     }
