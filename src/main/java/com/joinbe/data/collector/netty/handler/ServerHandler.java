@@ -59,6 +59,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
             log.debug("通道发生变化，关闭原通道: Ip: {}, Id:{}", c.remoteAddress(),c.id().asLongText());
             c.close();
         }
+        //save message
+        channel.eventLoop().execute(new Runnable() {
+            @Override
+            public void run() {
+                //insert msg, TODO
+            }
+        });
     }
     /**
      *  triggered while channel is ready
