@@ -41,7 +41,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     public void initSendPos(){
         Cmd cmd = factory.createInstance(EventEnum.GPOS.getEvent());
         if(cmd != null){
-            locationCommand = cmd.initCmd(new HashMap<>());
+            this.locationCommand = cmd.initCmd(new HashMap<>());
         }
     }
 
@@ -99,8 +99,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         String clientIp = insocket.getAddress().getHostAddress();
         log.debug("客户端通道激活：clientIp：{}" ,clientIp);
         //send first command.
-        log.debug("发送初始消息：{}", locationCommand);
-        ctx.channel().writeAndFlush(locationCommand);
+        log.debug("发送初始消息：{},{}", this.locationCommand,this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
+        ctx.channel().writeAndFlush(this.locationCommand);
         super.channelActive(ctx);
     }
     /**
