@@ -1,5 +1,6 @@
 package com.joinbe.data.collector.netty.handler;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -7,6 +8,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import org.springframework.stereotype.Component;
 
 @Component
+@ChannelHandler.Sharable
 public class ServerIdleStateTrigger extends ChannelInboundHandlerAdapter {
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
