@@ -32,7 +32,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
 
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private static HashMap<String, Channel> channelMap = new HashMap<>();
-    private String locationCommand;
 
     @Autowired
     CmdRegisterFactory factory;
@@ -91,8 +90,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         String clientIp = insocket.getAddress().getHostAddress();
         log.debug("客户端通道激活：clientIp：{}" ,clientIp);
         //send first command.
-        log.debug("发送初始消息：{},{}", this.locationCommand,this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
-        ctx.channel().writeAndFlush(this.locationCommand);
+        log.debug("发送初始消息：{}", this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
+        ctx.channel().writeAndFlush(this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
         super.channelActive(ctx);
     }
     /**
