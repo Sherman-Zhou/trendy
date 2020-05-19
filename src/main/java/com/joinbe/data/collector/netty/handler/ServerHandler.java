@@ -37,14 +37,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     @Autowired
     CmdRegisterFactory factory;
 
-    @PostConstruct
-    public void initSendPos(){
-        Cmd cmd = factory.createInstance(EventEnum.GPOS.getEvent());
-        if(cmd != null){
-            this.locationCommand = cmd.initCmd(new HashMap<>());
-        }
-    }
-
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
