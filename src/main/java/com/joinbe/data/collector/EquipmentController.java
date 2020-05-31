@@ -8,6 +8,7 @@ import com.joinbe.data.collector.cmd.register.impl.SetBatteryCmd;
 import com.joinbe.data.collector.cmd.register.impl.SetUserEventCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
+import com.joinbe.web.rest.errors.BadRequestAlertException;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.HashMap;
 
@@ -113,15 +115,18 @@ public class EquipmentController {
      * @return
      */
     @GetMapping("/location")
-    public String getLocation(@RequestParam String deviceId) {
+    public DeferredResult<Object> getLocation(@RequestParam String deviceId) {
         HashMap<String, String> params = new HashMap<>(8);
         Cmd cmd = factory.createInstance(EventEnum.GPOS.getEvent());
         if (cmd == null) {
-            return "Unimplemented command.";
+            throw new BadRequestAlertException("Unimplemented command", "equipmentCmd", "invalidCmd");
         }
-        StringBuffer str = new StringBuffer(cmd.initCmd(params));
-        logger.debug("REST request for get location, command: {}", str.toString());
-        String returnStr = serverHandler.sendMessage(deviceId, str.toString());
-        return str.append(StrUtil.CRLF).append(returnStr).toString();
+
+        DeferredResult<Object> deferredResult = new DeferredResult<>(3000L, "Get Location time out");
+        String str = cmd.initCmd(params);
+        logger.debug("REST request for get location, command: {}", str);
+        serverHandler.sendMessage(deviceId, str, deferredResult);
+
+        return deferredResult;
     }
 }

@@ -1,22 +1,30 @@
 package com.joinbe.data.collector.netty.handler;
 
 import cn.hutool.json.JSONUtil;
+import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
+import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.netty.protocol.PositionProtocol;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
+import com.joinbe.data.collector.netty.protocol.code.EventEnum;
+import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.async.DeferredResult;
 
+import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 
+/**
+ * handlerAdded -> channelRegistered -> channelActive -> read
+ * channelInactive -> channelUnregistered -> handlerRemoved
+ */
 @Component
 @ChannelHandler.Sharable
 public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol> {
@@ -24,6 +32,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
 
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private static HashMap<String, Channel> channelMap = new HashMap<>();
+
+    @Autowired
+    CmdRegisterFactory factory;
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
@@ -60,6 +71,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
             log.debug("通道发生变化，关闭原通道: Ip: {}, Id:{}", c.remoteAddress(),c.id().asLongText());
             c.close();
         }
+        //save message
+        channel.eventLoop().execute(new Runnable() {
+            @Override
+            public void run() {
+                //insert msg, TODO
+            }
+        });
     }
     /**
      *  triggered while channel is ready
@@ -71,6 +89,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         InetSocketAddress insocket = (InetSocketAddress) ctx.channel().remoteAddress();
         String clientIp = insocket.getAddress().getHostAddress();
         log.debug("客户端通道激活：clientIp：{}" ,clientIp);
+        //send first command.
+        log.debug("发送初始消息：{}", this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
+        ctx.channel().writeAndFlush(this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
         super.channelActive(ctx);
     }
     /**
@@ -84,7 +105,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         Channel channel = ctx.channel();
         channelGroup.writeAndFlush("服务器 - " + channel.remoteAddress() + "加入\n");
         channelGroup.add(channel);
-        log.debug("客户端连接成功, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
+        log.debug("客户端连接初始化成功, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
         log.debug("客户端总数：{}", channelGroup.size());
         super.handlerAdded(ctx);
     }
@@ -133,6 +154,30 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
      * @param deviceId
      * @param event
      */
+    public String sendMessage(String deviceId, String event, DeferredResult<Object> deferredResult) {
+        Channel c = channelMap.get(deviceId);
+        if (c == null) {
+            String strInfo= "未找到发送通道, deviceId: " + deviceId;
+            log.warn(strInfo);
+            deferredResult.setErrorResult(strInfo);
+            return strInfo;
+        }
+        log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
+        c.writeAndFlush(event).addListener(future -> {
+            if(future.isSuccess()){
+                deferredResult.setResult("Success");
+            }else{
+                deferredResult.setResult("Equipment is not on line, deviceId: " + deviceId);
+            }
+        });
+        return "success";
+    }
+
+    /**
+     * Interface call， to send message
+     * @param deviceId
+     * @param event
+     */
     public String sendMessage(String deviceId, String event) {
         Channel c = channelMap.get(deviceId);
         if (c == null) {
@@ -141,9 +186,16 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
             return strInfo;
         }
         log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
-        c.writeAndFlush(event);
+        c.writeAndFlush(event).addListener(future -> {
+            if(future.isSuccess()){
+                log.debug("send command success.");
+            }else{
+                log.warn("send command failed : deviceId: {}, Ip: {}, Id:{} " + deviceId,c.remoteAddress(), c.id().asLongText());
+                log.warn("disconnect device : deviceId: {}, Ip: {}, Id:{} " + deviceId,c.remoteAddress(), c.id().asLongText());
+                c.close();
+                log.debug("客户端总数：{}", channelGroup.size());
+            }
+        });
         return "success";
     }
-
-
 }
