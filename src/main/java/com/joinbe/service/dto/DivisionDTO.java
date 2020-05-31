@@ -8,6 +8,7 @@ import lombok.EqualsAndHashCode;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -36,6 +37,10 @@ public class DivisionDTO implements Serializable {
 
     @ApiModelProperty(value = "是否有子部门")
     private boolean hasChildren;
+
+    @ApiModelProperty(value = "子部门")
+    private List<DivisionDTO> children;
+
 
 
 }

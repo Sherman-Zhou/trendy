@@ -43,6 +43,7 @@ public class Division extends AbstractAuditingEntity {
 
     @Column(name = "status")
     private RecordStatus status;
+
     @Column(name = "parent_id", updatable = false, insertable = false)
     private Long parentId;
 

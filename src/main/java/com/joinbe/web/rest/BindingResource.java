@@ -1,7 +1,12 @@
 package com.joinbe.web.rest;
 
 import com.joinbe.domain.Vehicle;
+import com.joinbe.domain.enumeration.PermissionType;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.service.DivisionService;
 import com.joinbe.service.VehicleService;
+import com.joinbe.service.dto.DivisionDTO;
+import com.joinbe.service.dto.PermissionDTO;
 import com.joinbe.service.dto.VehicleDTO;
 import com.joinbe.web.rest.vm.*;
 import io.swagger.annotations.Api;
@@ -20,6 +25,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing {@link Vehicle}.
@@ -33,9 +42,12 @@ public class BindingResource {
 
     private final VehicleService vehicleService;
 
+    private final DivisionService divisionService;
 
-    public BindingResource(VehicleService vehicleService) {
+
+    public BindingResource(VehicleService vehicleService, DivisionService divisionService) {
         this.vehicleService = vehicleService;
+        this.divisionService = divisionService;
     }
 
 
@@ -79,6 +91,24 @@ public class BindingResource {
         log.debug("Connection testing with equipment: {}", equipmentId); //TODO: to implement...
         return ResponseEntity.ok().body("Successful");
     }
+
+    @GetMapping("/binding/user/divisions")
+    @ApiOperation("获取当前用户部门")
+    public  List<DivisionDTO> getUserDivisions() {
+        List<DivisionDTO> divisionDTOS = divisionService.findUserDivision(SecurityUtils.getCurrentUserLogin().get());
+
+        Map<Long, List<DivisionDTO>> children = divisionDTOS.stream().filter(DivisionDTO::isHasChildren)
+            .collect(Collectors.groupingBy(DivisionDTO::getParentId));
+        for (DivisionDTO divisionDTO : divisionDTOS) {
+            if (children.get(divisionDTO.getId()) != null) {
+                divisionDTO.setChildren(children.get(divisionDTO.getId()));
+            }
+        }
+        List<DivisionDTO> parents = divisionDTOS.stream().filter(menu -> menu.getParentId() == null).collect(Collectors.toList());
+        return parents;
+    }
+
+
 
     @PostMapping("/binding/upload")
     @ApiOperation("导入绑定信息")

@@ -116,4 +116,10 @@ public class DivisionServiceImpl implements DivisionService {
         return divisions.stream().filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
             .map(DivisionService::toDto).collect(Collectors.toList());
     }
+
+    @Override
+    public List<DivisionDTO> findUserDivision(String login) {
+        List<Division> divisions = divisionRepository.findAllByUserLogin(login);
+        return divisions.stream().map(DivisionService::toDto).collect(Collectors.toList());
+    }
 }
