@@ -51,7 +51,7 @@ public interface DivisionService {
     List<DivisionDTO> findUserDivision(String login);
 
     static DivisionDTO toDto(Division division) {
-        DivisionDTO dto = BeanConverter.toDto(division, DivisionDTO.class);
+        DivisionDTO dto = BeanConverter.toDto(division, DivisionDTO.class, "children");
         dto.setParentId(division.getParentId());
         dto.setHasChildren(!division.getChildren().isEmpty());
         return dto;

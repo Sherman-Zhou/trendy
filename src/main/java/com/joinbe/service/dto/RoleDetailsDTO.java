@@ -25,6 +25,6 @@ public class RoleDetailsDTO extends RoleDTO {
     @ApiModelProperty(value = "最后更新时间")
     private Instant lastModifiedDate;
 
-    @ApiModelProperty(value = "用户菜单权限")
-    private Set<PermissionDTO> permissions = new HashSet<>();
+//    @ApiModelProperty(value = "用户菜单权限")
+//    private Set<PermissionDTO> permissions = new HashSet<>();
 }

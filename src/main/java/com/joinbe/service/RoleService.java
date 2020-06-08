@@ -2,6 +2,7 @@ package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Role;
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.RoleDetailsDTO;
 import com.joinbe.web.rest.vm.RoleVM;
@@ -52,15 +53,21 @@ public interface RoleService {
 
     static RoleDTO toDto(Role role) {
 
-        return BeanConverter.toDto(role, RoleDTO.class);
+        RoleDTO dto =  BeanConverter.toDto(role, RoleDTO.class);
+        dto.setStatus(role.getStatus().getCode());
+        return dto;
     }
 
     static RoleDetailsDTO toDetailDto(Role role) {
-        return BeanConverter.toDto(role, RoleDetailsDTO.class);
+        RoleDetailsDTO dto = BeanConverter.toDto(role, RoleDetailsDTO.class,"permissions");
+        dto.setStatus(role.getStatus().getCode());
+        return dto;
     }
 
     static Role toEntity(RoleDTO roleDTO) {
 
-        return BeanConverter.toEntity(roleDTO, Role.class);
+        Role role = BeanConverter.toEntity(roleDTO, Role.class);
+        role.setStatus(RecordStatus.resolve(roleDTO.getStatus()));
+        return role;
     }
 }

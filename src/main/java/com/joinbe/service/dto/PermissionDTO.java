@@ -24,7 +24,7 @@ public class PermissionDTO implements Serializable {
 
     private Integer lvl;
 
-    @JsonIgnore
+//    @JsonIgnore
     private PermissionType permissionType;
 
     private String titleKey;

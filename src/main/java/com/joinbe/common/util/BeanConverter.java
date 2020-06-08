@@ -7,7 +7,7 @@ public class BeanConverter {
     private static final String[] DEFAULT_IGNORE_PROPERTIES = new String[]{"createdBy", "createdDate", "lastModifiedBy", "lastModifiedDate"};
 
     public static <T, U> void copyProperties(T t, U u) {
-        copyProperties(t, u, false);
+        BeanUtils.copyProperties(t, u);
     }
 
     public static <T, U> void copyProperties(T t, U u, boolean ignoreAuditingFields) {
@@ -16,6 +16,20 @@ public class BeanConverter {
         } else {
             BeanUtils.copyProperties(t, u);
         }
+    }
+
+
+
+
+    public static <T, U> U toDto(T t, Class<U> clazz,  String... ignoreProperties) {
+        U u = null;
+        try {
+            u = clazz.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        BeanUtils.copyProperties(t, u, ignoreProperties);
+        return u;
     }
 
     public static <T, U> U toDto(T t, Class<U> clazz) {

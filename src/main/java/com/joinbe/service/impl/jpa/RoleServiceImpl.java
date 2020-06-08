@@ -47,7 +47,17 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleDTO save(RoleDTO roleDTO) {
         log.debug("Request to save Role : {}", roleDTO);
-        Role role = RoleService.toEntity(roleDTO);
+        Role role;
+        if(roleDTO.getId()!=null) {
+             role = roleRepository.getOne(roleDTO.getId());
+             role.setStatus(RecordStatus.resolve(roleDTO.getStatus()));
+             role.setCode(roleDTO.getCode());
+             role.setDescription(roleDTO.getDescription());
+             role.setName(role.getName());
+        }else {
+              role = RoleService.toEntity(roleDTO);
+        }
+
         role = roleRepository.save(role);
         return RoleService.toDto(role);
     }

@@ -1,6 +1,7 @@
 package com.joinbe.service.dto;
 
 import com.joinbe.domain.Permission;
+import com.joinbe.domain.enumeration.PermissionType;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,6 +25,9 @@ public class PermissionSummaryDTO implements Serializable {
     @ApiModelProperty(value = "父权限主键")
     private Long parentId;
 
+    @ApiModelProperty(value = "权限类型: FOLDER-目录， MENU-菜单， OPERATION-操作 ")
+    private PermissionType permissionType;
+
     @ApiModelProperty(value = "子权限列表")
     private List<PermissionSummaryDTO> children;
 
@@ -46,6 +50,7 @@ public class PermissionSummaryDTO implements Serializable {
         this.id = permission.getId();
         this.description = permission.getDescription();
         this.titleKey = permission.getTitleKey();
+        this.permissionType = permission.getPermissionType();
         this.parentId = permission.getParent() != null ? permission.getParent().getId() : null;
 
     }

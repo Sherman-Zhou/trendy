@@ -4,7 +4,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 
@@ -28,7 +30,9 @@ public class RoleDTO implements Serializable {
     @ApiModelProperty(value = "角色代码")
     private String code;
 
-    @ApiModelProperty(value = "状态",  hidden = true)
+    @NotNull
+    @Pattern(regexp = "[ADI]")
+    @ApiModelProperty(value = "状态", example = "A-已启用，I-已停用， D-已删除")
     private String status;
 
 }
