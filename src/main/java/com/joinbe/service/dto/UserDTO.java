@@ -59,6 +59,10 @@ public class UserDTO implements Serializable {
     @ApiModelProperty(value = "用户地址")
     private String address;
 
+    @Size(max = 50)
+    @ApiModelProperty(value = "手机号码")
+    private String mobileNo;
+
     @Size(min = 2, max = 10)
     @ApiModelProperty(value = "用户语言", example = "zh-cn")
     private String langKey;
@@ -87,6 +91,7 @@ public class UserDTO implements Serializable {
         this.setLogin(user.getLogin());
         this.setName(user.getName());
         this.setEmail(user.getEmail());
+        this.setMobileNo(user.getMobileNo());
         this.setStatus(user.getStatus() != null ? user.getStatus().getCode() : null);
         this.setAvatar(user.getAvatar());
         this.setSex(Sex.getCode(user.getSex()));

@@ -3,10 +3,12 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Division;
+import com.joinbe.domain.Permission;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.DivisionRepository;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.dto.DivisionDTO;
+import com.joinbe.service.dto.PermissionSummaryDTO;
 import com.joinbe.web.rest.vm.DivisionVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -15,8 +17,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -105,16 +110,37 @@ public class DivisionServiceImpl implements DivisionService {
     }
 
     @Override
-    public List<DivisionDTO> findAllByParentId(Long parentId) {
-        List<Division> divisions;
-        if (parentId == null || parentId == 0) {
-            divisions = divisionRepository.findAllRootDeptByParentIsNull();
-        } else {
-            divisions = divisionRepository.findAllByParentId(parentId);
+    public List<DivisionDTO> findAllActiveDivisions() {
+        List<DivisionDTO> divisions = divisionRepository.findAll().stream()
+                .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+                .map(DivisionService::toDto)
+                .collect(Collectors.toList());;
+
+
+        //group by parentId
+
+       List<DivisionDTO> children = divisions.stream()
+           // .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+            .filter(division -> division.getParentId() != null)
+            .sorted(Comparator.comparing(DivisionDTO::getName))
+            .collect(Collectors.toList());
+
+
+        Map<Long, List<DivisionDTO>> childMenusMap = children.stream().collect(Collectors.groupingBy(DivisionDTO::getParentId));
+        //establish relationship for child menu
+        for (DivisionDTO divisionDTO : divisions) {
+            if (!CollectionUtils.isEmpty(childMenusMap.get(divisionDTO.getId()))) {
+                divisionDTO.setChildren(childMenusMap.get(divisionDTO.getId()));
+//                permissionDTO.setExpand(true);
+            }
         }
 
-        return divisions.stream().filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
-            .map(DivisionService::toDto).collect(Collectors.toList());
+        //get Root Menus
+        List<DivisionDTO> rootDivision = divisions.stream()
+            .filter(menu -> menu.getParentId() == null)
+            .collect(Collectors.toList());
+
+        return rootDivision;
     }
 
     @Override

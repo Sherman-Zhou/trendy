@@ -63,6 +63,16 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public Optional<Role> findOneByCode(String code) {
+        return roleRepository.findByCodeAndStatusNot(code, RecordStatus.DELETED);
+    }
+
+    @Override
+    public Optional<Role> findOneByName(String name) {
+        return roleRepository.findByNameAndStatusNot(name, RecordStatus.DELETED);
+    }
+
+    @Override
     public RoleDetailsDTO assignPermission(Long roleId, List<Long> permissionIds) {
         RoleDetailsDTO roleDTO;
         Optional<Role> roleOptional = roleRepository.findById(roleId);

@@ -54,9 +54,12 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     @Email
     @Size(min = 5, max = 200)
-    @Column(length = 200, unique = true)
+    @Column(length = 200)
     private String email;
 
+    @Size(max = 50)
+    @Column(length = 50)
+    private String mobileNo;
 
     private  transient String oldEmail;
 
@@ -270,5 +273,13 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     public void setOldEmail(String oldEmail) {
         this.oldEmail = oldEmail;
+    }
+
+    public String getMobileNo() {
+        return mobileNo;
+    }
+
+    public void setMobileNo(String mobileNo) {
+        this.mobileNo = mobileNo;
     }
 }

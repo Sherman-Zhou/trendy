@@ -93,11 +93,13 @@ public class DivisionResource {
      * @param parentId the parentId
      * @return the ResponseEntity with status 200 (OK) and the list of divisions in body
      */
+/*
     @GetMapping("/divisions/{parentId}/children")
     public List<DivisionDTO> getAllSubDepartments(@PathVariable Long parentId) {
         log.debug("REST request to get a List of child DivisionDTO for parent:{}", parentId);
         return divisionService.findAllByParentId(parentId);
     }
+*/
 
     /**
      * {@code GET  /divisions/:id} : get the "id" division.

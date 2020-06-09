@@ -40,10 +40,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.Predicate;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -218,6 +215,7 @@ public class UserServiceImpl implements UserService {
         }
         user.setSex(Sex.resolve(userDTO.getSex()));
 //        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
+        user.setMobileNo(userDTO.getMobileNo());
         String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
         user.setPassword(encryptedPassword);
         user.setResetKey(RandomUtil.generateResetKey());
@@ -294,6 +292,7 @@ public class UserServiceImpl implements UserService {
                 user.setStatus(RecordStatus.resolve(userDTO.getStatus()));
                 user.setLangKey(userDTO.getLangKey());
                 user.setSex(Sex.resolve(userDTO.getSex()));
+                user.setMobileNo(userDTO.getMobileNo());
                 // user.setVersion(userDTO.getVersion());
                 Set<Role> managedAuthorities = user.getRoles();
                 managedAuthorities.clear();
@@ -379,6 +378,9 @@ public class UserServiceImpl implements UserService {
 
         if (StringUtils.isNotEmpty(vm.getAddress())) {
             queryParams.and("address", Filter.Operator.like, vm.getAddress());
+        }
+        if (StringUtils.isNotEmpty(vm.getMobileNo())) {
+            queryParams.and("mobileNo", Filter.Operator.like, vm.getMobileNo());
         }
 
         Specification<User> specification = Specification.where(queryParams);
@@ -473,6 +475,16 @@ public class UserServiceImpl implements UserService {
             throw new BadRequestAlertException("Invalid id", "User", "idnull");
         }
         return userDTO;
+    }
+
+    @Override
+    public List<Long> findAllUserDivisionIds(Long userId) {
+        Optional<User> user = userRepository.findOneWithDivisionsById(userId);
+        if(user.isPresent()){
+            List<Long > ids = user.get().getDivisions().stream().map(Division::getId).sorted().collect(Collectors.toList());
+            return ids;
+        }
+        return new ArrayList<>();
     }
 
 

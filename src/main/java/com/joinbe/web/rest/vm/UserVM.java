@@ -25,7 +25,7 @@ public class UserVM implements Serializable {
     @NotBlank
     @Pattern(regexp = Constants.LOGIN_REGEX)
     @Size(min = 1, max = 50)
-    @ApiModelProperty(value = "用户登陆id（必须唯一）")
+    @ApiModelProperty(value = "用户登陆id")
     private String login;
 
     @Size(max = 50)
@@ -34,8 +34,11 @@ public class UserVM implements Serializable {
 
     @Email
     @Size(min = 5, max = 254)
-    @ApiModelProperty(value = "用户邮件（必须唯一）")
+    @ApiModelProperty(value = "用户邮件")
     private String email;
+
+    @ApiModelProperty(value = "手机号码")
+    private String mobileNo;
 //
 //    @Size(max = 256)
 //    private String avatar;

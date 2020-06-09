@@ -25,6 +25,10 @@ public interface RoleService {
      */
     RoleDTO save(RoleDTO roleDTO);
 
+    Optional<Role> findOneByCode(String code);
+
+    Optional<Role> findOneByName(String name);
+
     RoleDetailsDTO assignPermission(Long roleId, List<Long> permissionIds);
 
 

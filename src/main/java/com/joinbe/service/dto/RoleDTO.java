@@ -14,7 +14,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 public class RoleDTO implements Serializable {
 
-    @ApiModelProperty(value = "id", hidden = true)
+    @ApiModelProperty(value = "id")
     private Long id;
 
     @NotNull
@@ -32,7 +32,7 @@ public class RoleDTO implements Serializable {
 
     @NotNull
     @Pattern(regexp = "[ADI]")
-    @ApiModelProperty(value = "状态", example = "A-已启用，I-已停用， D-已删除")
+    @ApiModelProperty(value = "状态", example = "A-已启用，I-已停用， D-已删除",  required = true)
     private String status;
 
 }

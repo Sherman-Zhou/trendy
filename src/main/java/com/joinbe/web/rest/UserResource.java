@@ -214,17 +214,32 @@ public class UserResource {
     }
 
     /**
-     * GET  /users/division/:parentId/children: get all the children departments.
+     * GET  /users/divisions: get all departments.
      *
-     * @param parentId the parentId
+
      * @return the ResponseEntity with status 200 (OK) and the list of divisions in body
      */
-    @GetMapping("/users/division/{parentId}/children")
-    @ApiOperation(value = "获取子部门", notes = "若要获取顶级部门parentId设置为0")
-    public List<DivisionDTO> getAllSubDivisions(@PathVariable @ApiParam(value ="父城市/部门主键", required = true )  Long parentId) {
-        log.debug("REST request to get a List of children divisions for parent:{}", parentId);
-        return divisionService.findAllByParentId(parentId);
+    @GetMapping("/users/divisions")
+    @ApiOperation(value = "获取所有可用部门")
+    public List<DivisionDTO> getAllSubDivisions() {
+        log.debug("REST request to get all divisions");
+        return divisionService.findAllActiveDivisions();
     }
+
+    /**
+     * GET  /api/users/:userId/divisions: get all the user's division ids
+     *
+     * @param userId the user id
+     * @return the ResponseEntity with status 200 (OK) and the list of division ids in body
+     */
+    @GetMapping("/users/{userId}/divisions")
+    @ApiOperation(value = "获取用户部门主键列表")
+    public List<Long> getAllUserDivisionIds(@PathVariable @ApiParam(value ="用户主键", required = true )  Long userId) {
+        log.debug("REST request to get a List of children divisions for parent:{}", userId);
+        return userService.findAllUserDivisionIds(userId);
+    }
+
+
 
     /**
      * {@code GET /users/:login} : get the "login" user.

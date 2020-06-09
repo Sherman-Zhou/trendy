@@ -59,4 +59,6 @@ public interface UserService {
 
     UserDTO assignDivision(Long userId, List<Long> divisionIds);
 
+    List<Long> findAllUserDivisionIds(Long userId);
+
 }

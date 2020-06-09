@@ -46,7 +46,7 @@ public interface DivisionService {
      */
     void delete(Long id);
 
-    List<DivisionDTO> findAllByParentId(Long parentId);
+    List<DivisionDTO> findAllActiveDivisions();
 
     List<DivisionDTO> findUserDivision(String login);
 

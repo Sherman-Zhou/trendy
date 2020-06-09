@@ -30,7 +30,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api")
-@Api(value ="角色管理相关接口", tags={"角色管理相关接口"}, produces = "application/json" )
+@Api(value = "角色管理相关接口", tags = {"角色管理相关接口"}, produces = "application/json")
 public class RoleResource {
 
     private final Logger log = LoggerFactory.getLogger(RoleResource.class);
@@ -60,6 +60,10 @@ public class RoleResource {
         log.debug("REST request to save Role : {}", roleDTO);
         if (roleDTO.getId() != null) {
             throw new BadRequestAlertException("A new role cannot already have an ID", ENTITY_NAME, "idexists");
+        } else if (roleService.findOneByCode(roleDTO.getCode()).isPresent()) {
+            throw new BadRequestAlertException("role code already used!", ENTITY_NAME, "codeexists");
+        } else if (roleService.findOneByName(roleDTO.getName()).isPresent()) {
+            throw new BadRequestAlertException("role name already used!", ENTITY_NAME, "nameexists");
         }
         RoleDTO result = roleService.save(roleDTO);
         return ResponseEntity.created(new URI("/api/roles/" + result.getId()))
@@ -81,6 +85,10 @@ public class RoleResource {
         log.debug("REST request to update Role : {}", roleDTO);
         if (roleDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        } else if (roleService.findOneByCode(roleDTO.getCode()).isPresent()) {
+            throw new BadRequestAlertException("role code already used!", ENTITY_NAME, "codeexists");
+        } else if (roleService.findOneByName(roleDTO.getName()).isPresent()) {
+            throw new BadRequestAlertException("role name already used!", ENTITY_NAME, "nameexists");
         }
         RoleDTO result = roleService.save(roleDTO);
         return ResponseEntity.ok()
@@ -97,7 +105,7 @@ public class RoleResource {
     @ApiOperation("搜索角色")
     public ResponseEntity<PageData<RoleDTO>> getAllRoles(Pageable pageable, RoleVM roleVM) {
         log.debug("REST request to get a page of Roles");
-        Page<RoleDTO>  page = roleService.findAll(pageable, roleVM);
+        Page<RoleDTO> page = roleService.findAll(pageable, roleVM);
 
         return ResponseUtil.toPageData(page);
     }
@@ -124,7 +132,7 @@ public class RoleResource {
      */
     @ApiOperation("删除角色")
     @DeleteMapping("/roles/{id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable @ApiParam(value ="角色主键", required = true ) Long id) {
+    public ResponseEntity<Void> deleteRole(@PathVariable @ApiParam(value = "角色主键", required = true) Long id) {
         log.debug("REST request to delete Role : {}", id);
         roleService.delete(id);
         return ResponseEntity.noContent().build();
@@ -136,11 +144,11 @@ public class RoleResource {
      * @param roleId the id of the roleDTO to set the initial status of menus.
      * @return the ResponseEntity with status 200 (OK) and the list of Permissions in body
      */
-    @GetMapping("/roles/active-perms/{roleId}")
-    @ApiOperation( value = "获取所有权限", notes = "该角色拥有的权限的checked会设为true")
-    public List<PermissionSummaryDTO> getAllActivePerms(@PathVariable @ApiParam(value = "角色主键", required = true)  Long roleId) {
+    @GetMapping("/roles/{roleId}/perms")
+    @ApiOperation(value = "获取角色拥有的权限主键列表", notes = "获取角色拥有的权限主键列表")
+    public List<Long> getRolePermIds(@PathVariable @ApiParam(value = "角色主键", required = true) Long roleId) {
         log.debug("REST request to get all active perms, roleId = {} ", roleId);
-        return permissionService.findAllActivePerms(roleId);
+        return permissionService.getRolePermIds(roleId);
     }
 
     /**
@@ -167,7 +175,7 @@ public class RoleResource {
     @PutMapping("/roles/{roleId}/assign")
     @ApiOperation("分配权限")
     public ResponseEntity<RoleDetailsDTO> assignPermission(@PathVariable @ApiParam(value = "角色主键", required = true) Long roleId,
-                                                    @Valid @RequestBody @ApiParam(value = "权限主键列表", required = true) List<Long> permissionIds) {
+                                                           @Valid @RequestBody @ApiParam(value = "权限主键列表", required = true) List<Long> permissionIds) {
         log.debug("REST request to assign permission: {} to role : {}", permissionIds, roleId);
 
         RoleDetailsDTO result = roleService.assignPermission(roleId, permissionIds);

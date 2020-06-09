@@ -51,6 +51,8 @@ public interface PermissionService {
 
     List<PermissionSummaryDTO> findAllActivePerms(Long roleId);
 
+    List<Long> getRolePermIds(Long roleId);
+
 
     default PermissionDTO toDto(Permission permission) {
         PermissionDTO dto = BeanConverter.toDto(permission, PermissionDTO.class);

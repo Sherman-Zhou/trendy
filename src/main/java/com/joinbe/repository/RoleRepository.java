@@ -29,6 +29,10 @@ public interface RoleRepository extends JpaRepository<Role, Long>, JpaSpecificat
 
     Optional<Role> findByCodeAndStatusIs(String code, RecordStatus recordStatus);
 
+    Optional<Role> findByNameAndStatusNot(String name, RecordStatus status);
+
+    Optional<Role> findByCodeAndStatusNot(String code, RecordStatus recordStatus);
+
     List<Role> findAllByStatus(RecordStatus status);
 
     @EntityGraph(attributePaths = {"permissions"})

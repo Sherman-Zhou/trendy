@@ -47,4 +47,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     @EntityGraph(attributePaths = {"roles", "divisions"})
     Optional<User> findOneWithRolesByLoginAndStatus(String login, RecordStatus recordStatus);
+
+    @EntityGraph(attributePaths = {"divisions"})
+    Optional<User> findOneWithDivisionsById(Long id);
 }

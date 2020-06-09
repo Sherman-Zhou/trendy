@@ -17,10 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -111,6 +108,7 @@ public class PermissionServiceImpl implements PermissionService {
         //group by parentId
         List<PermissionSummaryDTO> childPerms = allActivePerms.stream()
             .filter(permission -> permission.getParent() != null)
+            .sorted(Comparator.comparing(Permission::getSortOrder))
             .map(PermissionSummaryDTO::new)
             .map(summaryDTO -> {
                 if (isPermissionInRole(permIdsInRole, summaryDTO.getId())) {
@@ -146,6 +144,11 @@ public class PermissionServiceImpl implements PermissionService {
         return rootMenus;
     }
 
+    @Override
+    public List<Long> getRolePermIds(Long roleId) {
+        return getPermissionIdsInRole(roleId);
+    }
+
     private boolean isPermissionInRole(List<Long> permIdsInRole, Long permissionId) {
         log.debug("permIdsInRole: {}: permissionId={}", permIdsInRole, permissionId);
         return permIdsInRole.contains(permissionId);
@@ -161,6 +164,7 @@ public class PermissionServiceImpl implements PermissionService {
                 return permissions.stream();
             })
             .map(Permission::getId)
+            .sorted( )
             .collect(Collectors.toList());
     }
 
