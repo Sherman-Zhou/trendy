@@ -80,7 +80,7 @@ public class RedissonEquipmentStore {
      *
      * @param deviceId
      */
-    public void removeFromRedis(String deviceId) {
+    public void removeFromRedisForServer(String deviceId) {
         RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_SERVER_KEY);
         deviceServerMap.remove(DEVICE_SERVER_KEY_PREFIX + deviceId);
     }
