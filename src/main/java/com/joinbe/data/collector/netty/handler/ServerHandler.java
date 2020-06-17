@@ -2,27 +2,28 @@ package com.joinbe.data.collector.netty.handler;
 
 import cn.hutool.json.JSONUtil;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
-import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.netty.protocol.PositionProtocol;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
-import io.netty.channel.*;
+import com.joinbe.data.collector.redistore.RedissonEquipmentStore;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import lombok.val;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
-import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 
 /**
- * handlerAdded -> channelRegistered -> channelActive -> read
+ * handlerAdded -> channelRegistered -> channelActive -> channelRead -> channelReadComplete
  * channelInactive -> channelUnregistered -> handlerRemoved
  */
 @Component
@@ -31,7 +32,14 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     private static final Logger log = LoggerFactory.getLogger(ServerHandler.class);
 
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-    private static HashMap<String, Channel> channelMap = new HashMap<>();
+    private static HashMap<String, Channel> deviceIdAndChannelMap = new HashMap<>();
+    private static HashMap<String,String> channelIdAndDeviceIdMap = new HashMap<>();
+
+    @Value("${netty.server-ip}")
+    private String serverIp;
+
+    @Autowired
+    private RedissonEquipmentStore redissonEquipmentStore;
 
     @Autowired
     CmdRegisterFactory factory;
@@ -47,6 +55,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
         log.debug("Channel unregistered, Ip: {}, Id:{}", channel.remoteAddress(), channel.id().asLongText());
+        String deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
+        deviceIdAndChannelMap.remove(deviceNo);
+        channelIdAndDeviceIdMap.remove(channel.id().asLongText());
+        redissonEquipmentStore.removeFromRedisForServer(deviceNo);
         super.channelUnregistered(ctx);
     }
 
@@ -60,16 +72,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         Channel channel = ctx.channel();
         log.debug("收到客户端消息,Ip: {}, Id:{}, 消息：{}", channel.remoteAddress(), channel.id().asLongText(),JSONUtil.toJsonStr(msg));
         String deviceNo = msg.getUnitId();
-        Channel c = channelMap.get(deviceNo);
-        if (c == null) {
+
+        if(!channelIdAndDeviceIdMap.containsKey(channel.id().asLongText())){
             log.debug("客户端首次加入，Ip: {}, Id:{}，deviceNo:{}", channel.remoteAddress(), channel.id().asLongText(),deviceNo);
-            channelMap.put(deviceNo, channel);
-        } else if (c == channel) {
-        } else {
-            channelMap.put(deviceNo, channel);
-            //关闭通道
-            log.debug("通道发生变化，关闭原通道: Ip: {}, Id:{}", c.remoteAddress(),c.id().asLongText());
-            c.close();
+            channelIdAndDeviceIdMap.put(channel.id().asLongText(), deviceNo);
+            deviceIdAndChannelMap.put(deviceNo, channel);
+            redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
         }
         //save message
         channel.eventLoop().execute(new Runnable() {
@@ -95,6 +103,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         super.channelActive(ctx);
     }
     /**
+     * triggered while client is inactive
+     *
+     * @param ctx
+     * @throws Exception
+     */
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        Channel channel = ctx.channel();
+        log.debug("客户端开始下线, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
+        super.channelInactive(ctx);
+    }
+    /**
      * triggered while client is accepted
      *
      * @param ctx
@@ -108,18 +128,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         log.debug("客户端连接初始化成功, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
         log.debug("客户端总数：{}", channelGroup.size());
         super.handlerAdded(ctx);
-    }
-    /**
-     * triggered while client is inactive
-     *
-     * @param ctx
-     * @throws Exception
-     */
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
-        log.debug("客户端开始下线, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
-        super.channelInactive(ctx);
     }
     /**
      * triggered while client left
@@ -155,7 +163,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
      * @param event
      */
     public String sendMessage(String deviceId, String event, DeferredResult<Object> deferredResult) {
-        Channel c = channelMap.get(deviceId);
+        Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
             String strInfo= "未找到发送通道, deviceId: " + deviceId;
             log.warn(strInfo);
@@ -179,7 +187,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
      * @param event
      */
     public String sendMessage(String deviceId, String event) {
-        Channel c = channelMap.get(deviceId);
+        Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
             String strInfo= "未找到发送通道, deviceId: " + deviceId;
             log.warn(strInfo);
