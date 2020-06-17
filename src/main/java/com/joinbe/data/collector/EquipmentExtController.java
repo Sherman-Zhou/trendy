@@ -86,7 +86,7 @@ public class EquipmentExtController {
         if(equipmentDto.isPresent()){
             deviceId = equipmentDto.get().getIdentifyNumber();
         }else{
-            String message = "No binding device found by the plate number: " + locationReq.getPlateNumber();
+            String message = "No binding device found for the plate number: " + locationReq.getPlateNumber();
             logger.warn("In /api/external/equipment/location/vehicle validate error: {}", message);
             deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
@@ -126,7 +126,7 @@ public class EquipmentExtController {
             deviceResponseItem.setVersion(equipmentDto.get().getVersion());
             deviceResponseDTO.setData(deviceResponseItem);
         }else{
-            deviceResponseDTO.setMessage("Not found the bidding device by the plate number: " + deviceInfo.getPlateNumber() );
+            deviceResponseDTO.setMessage("No binding device found for the plate number: " + deviceInfo.getPlateNumber() );
         }
         return new ResponseEntity<>(deviceResponseDTO, HttpStatus.OK);
     }
@@ -148,7 +148,7 @@ public class EquipmentExtController {
         if(equipmentDto.isPresent()){
             deviceId = equipmentDto.get().getIdentifyNumber();
         }else{
-            tokenResponseDTO.setMessage("Not found the binding device by the plate number: " + deviceInfo.getPlateNumber());
+            tokenResponseDTO.setMessage("No binding device found for the plate number: " + deviceInfo.getPlateNumber());
             return new ResponseEntity<>(tokenResponseDTO, HttpStatus.OK);
         }
 
