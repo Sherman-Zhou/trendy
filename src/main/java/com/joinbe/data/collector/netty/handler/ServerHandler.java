@@ -5,6 +5,8 @@ import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.netty.protocol.PositionProtocol;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.redistore.RedissonEquipmentStore;
+import com.joinbe.data.collector.service.dto.LocationResponseDTO;
+import com.joinbe.data.collector.service.dto.ResponseDTO;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -16,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -162,20 +166,20 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
      * @param deviceId
      * @param event
      */
-    public String sendMessage(String deviceId, String event, DeferredResult<Object> deferredResult) {
+    public String sendMessage(String deviceId, String event, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
             String strInfo= "未找到发送通道, deviceId: " + deviceId;
             log.warn(strInfo);
-            deferredResult.setErrorResult(strInfo);
+            deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
             return strInfo;
         }
         log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         c.writeAndFlush(event).addListener(future -> {
             if(future.isSuccess()){
-                deferredResult.setResult("Success");
+                deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Success" + deviceId), HttpStatus.OK));
             }else{
-                deferredResult.setResult("Equipment is not on line, deviceId: " + deviceId);
+                deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is not on line, deviceId: " + deviceId), HttpStatus.OK));
             }
         });
         return "success";

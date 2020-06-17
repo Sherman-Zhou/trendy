@@ -99,4 +99,18 @@ public class EquipmentServiceImpl implements EquipmentService {
         log.debug("Request to delete Equipment : {}", id);
         equipmentRepository.deleteById(id);
     }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<EquipmentDTO> findByLicensePlateNumber(String plateNumber) {
+        log.debug("Request to get all Equipment by plateNumber: {}", plateNumber);
+        if(StringUtils.isBlank(plateNumber)){
+            return Optional.empty();
+        }
+        QueryParams<Equipment> queryParams = new QueryParams<>();
+        queryParams.and("vehicle.licensePlateNumber", Filter.Operator.eq, plateNumber);
+        return equipmentRepository.findOne(queryParams).map(EquipmentService::toDto);
+    }
+
 }

@@ -133,4 +133,5 @@ public class VehicleServiceImpl implements VehicleService {
         log.debug("Request to delete Vehicle : {}", id);
         vehicleRepository.deleteById(id);
     }
+
 }

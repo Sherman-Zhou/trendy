@@ -54,4 +54,11 @@ public interface EquipmentService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    /***
+     * get equipment by plate number
+     * @param plateNumber
+     * @return
+     */
+    Optional<EquipmentDTO> findByLicensePlateNumber(String plateNumber);
 }
