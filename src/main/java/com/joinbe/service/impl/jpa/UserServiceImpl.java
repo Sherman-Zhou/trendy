@@ -22,6 +22,7 @@ import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
+import com.joinbe.web.rest.vm.ChangeEmailVM;
 import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
@@ -152,7 +153,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> changeUserEmail(UserRegisterVM userDTO) {
+    public Optional<User> changeUserEmail(ChangeEmailVM userDTO) {
 
         userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
             if (!existingUser.getId().equals(userDTO.getLogin()) && existingUser.getActivated()) {

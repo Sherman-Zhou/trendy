@@ -12,6 +12,7 @@ import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
+import com.joinbe.web.rest.vm.ChangeEmailVM;
 import com.joinbe.web.rest.vm.KeyAndPasswordVM;
 import com.joinbe.web.rest.vm.UserRegisterVM;
 import io.swagger.annotations.Api;
@@ -241,7 +242,7 @@ public class AccountResource {
      */
     @PostMapping(path = "/account/change-email")
     @ApiOperation("修改绑定邮箱")
-    public void changeEmail(@RequestBody UserRegisterVM registerVM) {
+    public void changeEmail(@RequestBody ChangeEmailVM registerVM) {
         Optional<User> userOptional =  userService.changeUserEmail(registerVM);
         userOptional.ifPresent(user -> {
             log.debug("user is changed email: {}", user.getEmail());

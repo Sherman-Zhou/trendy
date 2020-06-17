@@ -14,6 +14,7 @@ import com.joinbe.service.UserService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
+import com.joinbe.web.rest.vm.ChangeEmailVM;
 import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
 import io.github.jhipster.security.RandomUtil;
@@ -151,7 +152,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public Optional<User> changeUserEmail(UserRegisterVM userDTO) {
+    public Optional<User> changeUserEmail(ChangeEmailVM userDTO) {
         return Optional.empty();
     }
 

@@ -6,6 +6,7 @@ import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
+import com.joinbe.web.rest.vm.ChangeEmailVM;
 import com.joinbe.web.rest.vm.UserRegisterVM;
 import com.joinbe.web.rest.vm.UserVM;
 import org.springframework.data.domain.Page;
@@ -25,7 +26,7 @@ public interface UserService {
 
     Optional<User> registerUserEmail(UserRegisterVM userDTO);
 
-    Optional<User> changeUserEmail(UserRegisterVM userDTO);
+    Optional<User> changeUserEmail(ChangeEmailVM userDTO);
 
     User createUser(UserDTO userDTO);
 
