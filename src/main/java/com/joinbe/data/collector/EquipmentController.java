@@ -22,8 +22,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 import java.util.HashMap;
 
 @RestController
-@RequestMapping("/api/external/equipment")
-@Api(value ="设备控制相关接口", tags={"设备控制相关接口"}, produces = "application/json" )
+@RequestMapping("/api/internal/equipment")
 public class EquipmentController {
     private final Logger logger = LoggerFactory.getLogger(EquipmentController.class);
     @Autowired
@@ -114,7 +113,7 @@ public class EquipmentController {
      * @param deviceId
      * @return
      */
-    @GetMapping("/location")
+    /*@GetMapping("/location")
     public DeferredResult<Object> getLocation(@RequestParam String deviceId) {
         HashMap<String, String> params = new HashMap<>(8);
         Cmd cmd = factory.createInstance(EventEnum.GPOS.getEvent());
@@ -128,5 +127,5 @@ public class EquipmentController {
         serverHandler.sendMessage(deviceId, str, deferredResult);
 
         return deferredResult;
-    }
+    }*/
 }
