@@ -9,10 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.util.CollectionUtils;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
@@ -78,6 +75,7 @@ public class UserDTO implements Serializable {
     private String roleName;
 
     @ApiModelProperty(value = "用户角色id列表")
+    @NotEmpty
     private List<Long> roleIds;
 
     @ApiModelProperty("部门id列表")

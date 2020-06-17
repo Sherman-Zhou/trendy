@@ -61,8 +61,8 @@ spring:
   mail:
     host: smtp.qq.com
     port: 465
-    username: 108405718@qq.com
-    password: tjskwrjubwntbibc
+    username: 511070261@qq.com
+    password: cirmcyntedzhbigd
     default-encoding: utf-8
     properties:
       mail.smtp.ssl.enable: true
@@ -112,7 +112,7 @@ jhipster:
         token-validity-in-seconds-for-remember-me: 2592000
   mail: # specific JHipster mail property, for standard properties see MailProperties
     base-url: http://127.0.0.1:8080
-    from: 108405718@qq.com
+    from: 511070261@qq.com
   metrics:
     logs: # Reports metrics in the logs
       enabled: false

@@ -1,5 +1,6 @@
 package com.joinbe.repository;
 
+import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
 import org.springframework.data.domain.Page;
@@ -7,8 +8,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -50,4 +54,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     @EntityGraph(attributePaths = {"divisions"})
     Optional<User> findOneWithDivisionsById(Long id);
+
+    @Query("select user from User user join user.roles roles where roles.id =:roleId and user.status <> 'D'")
+    List<User> findUsersByRoleId(@Param("roleId") Long roleId);
 }
