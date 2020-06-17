@@ -14,51 +14,18 @@ public class DeviceResponseDTO extends ResponseDTO implements Serializable {
         super(code, message);
     }
 
-    public DeviceResponseDTO(int code, String message, @Size(max = 100) String identifyNumber, @Size(max = 100) String imei, @Size(max = 50) String version) {
+    public DeviceResponseDTO(int code, String message, DeviceResponseItem data) {
         super(code, message);
-        this.identifyNumber = identifyNumber;
-        this.imei = imei;
-        this.version = version;
-    }
-    /**
-     * 设备ID
-     */
-    @ApiModelProperty(value = "设备ID")
-    private String identifyNumber;
-
-    /**
-     * 设备IMEI
-     */
-    @ApiModelProperty(value = "设备IMEI")
-    private String imei;
-
-    /**
-     * 固件版本
-     */
-    @ApiModelProperty(value = "固件版本")
-    private String version;
-
-    public String getIdentifyNumber() {
-        return identifyNumber;
+        this.data = data;
     }
 
-    public void setIdentifyNumber(String identifyNumber) {
-        this.identifyNumber = identifyNumber;
+    private DeviceResponseItem data;
+
+    public DeviceResponseItem getData() {
+        return data;
     }
 
-    public String getImei() {
-        return imei;
-    }
-
-    public void setImei(String imei) {
-        this.imei = imei;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
+    public void setData(DeviceResponseItem data) {
+        this.data = data;
     }
 }
