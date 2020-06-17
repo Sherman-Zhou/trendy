@@ -3,6 +3,7 @@ package com.joinbe.service.impl;
 import com.joinbe.domain.User;
 import com.joinbe.service.MailService;
 import io.github.jhipster.config.JHipsterProperties;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -55,7 +56,10 @@ public class MailServiceImpl implements MailService {
     public void sendEmail(String to, String subject, String content, boolean isMultipart, boolean isHtml) {
         log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
             isMultipart, isHtml, to, subject, content);
-
+        if(StringUtils.isEmpty(to)){
+            log.warn("the mail to is blank: {}", to);
+            return;
+        }
         // Prepare message using a Spring helper
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         try {
