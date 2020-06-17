@@ -18,7 +18,7 @@ public class UserRegisterVM {
     @Email
     private String email;
 
-    @ApiModelProperty(value = "用户密码")
-    @NotNull
-    private String password;
+//    @ApiModelProperty(value = "用户密码")
+//    @NotNull
+//    private String password;
 }

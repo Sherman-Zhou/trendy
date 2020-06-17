@@ -68,6 +68,7 @@ public class UserDTO implements Serializable {
     private String status;
 
     @Size(min = PASSWORD_MIN_LENGTH, max = PASSWORD_MAX_LENGTH)
+    @NotBlank
     @ApiModelProperty(value = "用户密码")
     private String password;
 
