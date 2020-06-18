@@ -11,6 +11,7 @@ import com.joinbe.service.dto.VehicleDTO;
 import com.joinbe.web.rest.vm.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,7 +88,7 @@ public class BindingResource {
      */
     @GetMapping("/binding/{equipmentId}/conn-testing")
     @ApiOperation("连通测试")
-    public ResponseEntity<String> connTesting(Long equipmentId) {
+    public ResponseEntity<String> connTesting(@PathVariable @ApiParam(value = "设备主键", required = true)  Long equipmentId) {
         log.debug("Connection testing with equipment: {}", equipmentId); //TODO: to implement...
         return ResponseEntity.ok().body("Successful");
     }
@@ -97,7 +98,7 @@ public class BindingResource {
     public  List<DivisionDTO> getUserDivisions() {
         List<DivisionDTO> divisionDTOS = divisionService.findUserDivision(SecurityUtils.getCurrentUserLogin().get());
 
-        Map<Long, List<DivisionDTO>> children = divisionDTOS.stream().filter(DivisionDTO::isHasChildren)
+        Map<Long, List<DivisionDTO>> children = divisionDTOS.stream().filter(divisionDTO ->  divisionDTO.getParentId()!=null)
             .collect(Collectors.groupingBy(DivisionDTO::getParentId));
         for (DivisionDTO divisionDTO : divisionDTOS) {
             if (children.get(divisionDTO.getId()) != null) {

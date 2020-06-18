@@ -90,6 +90,11 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
         if (StringUtils.isNotEmpty(vm.getEquipmentId())) {
             queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentId());
         }
+
+        if (StringUtils.isNotEmpty(vm.getAlertType())) {
+            queryParams.and("alertType", Filter.Operator.like, vm.getAlertType());
+        }
+
         if (StringUtils.isNotEmpty(vm.getAlertContent())) {
             queryParams.and("alertContent", Filter.Operator.like, vm.getAlertContent());
         }

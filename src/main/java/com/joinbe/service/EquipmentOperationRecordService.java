@@ -3,6 +3,7 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.service.dto.EquipmentOperationRecordDTO;
+import com.joinbe.web.rest.vm.EquipmentOpRecordVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,7 +16,15 @@ public interface EquipmentOperationRecordService {
 
     static EquipmentOperationRecordDTO toDto(EquipmentOperationRecord equipmentOperationRecord) {
 
-        return BeanConverter.toDto(equipmentOperationRecord, EquipmentOperationRecordDTO.class);
+        EquipmentOperationRecordDTO dto = BeanConverter.toDto(equipmentOperationRecord, EquipmentOperationRecordDTO.class);
+        if(equipmentOperationRecord.getEquipment()!=null){
+            dto.setIdentifyNumber(equipmentOperationRecord.getEquipment().getIdentifyNumber());
+        }
+        if(equipmentOperationRecord.getVehicle()!=null) {
+            dto.setLicensePlateNumber(equipmentOperationRecord.getVehicle().getLicensePlateNumber());
+        }
+
+        return dto;
     }
 
     static EquipmentOperationRecord toEntity(EquipmentOperationRecordDTO equipmentOperationRecordDTO) {
@@ -37,7 +46,7 @@ public interface EquipmentOperationRecordService {
      * @param pageable the pagination information.
      * @return the list of entities.
      */
-    Page<EquipmentOperationRecordDTO> findAll(Pageable pageable);
+    Page<EquipmentOperationRecordDTO> findAll(Pageable pageable, EquipmentOpRecordVM vm);
 
     /**
      * Get the "id" equipmentOperationRecord.

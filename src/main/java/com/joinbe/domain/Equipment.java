@@ -56,8 +56,8 @@ public class Equipment extends AbstractAuditingEntity {
 
     /**
      * 设备状态 - 枚举类型
-     * 绑定
-     * 未绑定
+     * 绑定 B
+     * 未绑定 U
      */
     @Size(max = 1)
     @Column(name = "status", length = 1)

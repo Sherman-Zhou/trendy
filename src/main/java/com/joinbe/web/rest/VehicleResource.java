@@ -60,7 +60,7 @@ public class VehicleResource {
      */
     @GetMapping("/vehicles/{id}")
     @ApiOperation("获取车辆详情")
-    public ResponseEntity<VehicleDTO> getVehicle(@PathVariable @ApiParam(value = "角色主键", required = true) Long id) {
+    public ResponseEntity<VehicleDTO> getVehicle(@PathVariable @ApiParam(value = "车辆主键", required = true) Long id) {
         log.debug("REST request to get Vehicle : {}", id);
         Optional<VehicleDTO> vehicleDTO = vehicleService.findOne(id);
         return ResponseUtil.wrapOrNotFound(vehicleDTO);

@@ -4,6 +4,7 @@ import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.service.VehicleService;
@@ -66,27 +67,36 @@ public class VehicleServiceImpl implements VehicleService {
     public Page<VehicleDTO> findAll(Pageable pageable, VehicleVM vm) {
         log.debug("Request to get all Vehicles");
         QueryParams<Vehicle> queryParams = new QueryParams<>();
-
+        queryParams.and("status", Filter.Operator.eq, "A");
         if (StringUtils.isNotEmpty(vm.getBrand())) {
-            queryParams.and("brand", Filter.Operator.eq, vm.getBrand());
+            queryParams.and("brand", Filter.Operator.like, vm.getBrand());
         }
         if (StringUtils.isNotEmpty(vm.getName())) {
-            queryParams.and("name", Filter.Operator.eq, vm.getName());
-        }
-        if (vm.getIsBounded() != null) {
-            queryParams.and("equipment", vm.getIsBounded() ? Filter.Operator.isNotNull : Filter.Operator.isNull, null);
+            queryParams.and("name", Filter.Operator.like, vm.getName());
         }
 
-        if (vm.getIsOnline()) {
-            queryParams.and("equipment.isOnline", Filter.Operator.eq, Boolean.TRUE);
+        if (StringUtils.isNotEmpty(vm.getLicensePlateNumber())) {
+            queryParams.and("licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
+        }
+        if (vm.getIsBounded() != null) {
+            if(vm.getIsBounded()){
+                queryParams.and("equipment.status", Filter.Operator.eq, "B");
+            } else {
+                //todo ??
+            }
+        }
+
+        if (vm.getIsOnline()!= null){
+            queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getIsOnline());
         }
 
         if (vm instanceof VehicleBindingVM) {
             VehicleBindingVM bindingVM = (VehicleBindingVM) vm;
             if (StringUtils.isNotEmpty(bindingVM.getIdentifyNumber())) {
-                queryParams.and("equipment.identifyNumber", Filter.Operator.eq, bindingVM.getIdentifyNumber());
+                queryParams.and("equipment.identifyNumber", Filter.Operator.like, bindingVM.getIdentifyNumber());
             }
         }
+
 
         return vehicleRepository.findAll(queryParams, pageable)
             .map(VehicleService::toDto);
