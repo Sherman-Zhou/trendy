@@ -79,11 +79,7 @@ public class VehicleServiceImpl implements VehicleService {
             queryParams.and("licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
         }
         if (vm.getIsBounded() != null) {
-            if(vm.getIsBounded()){
-                queryParams.and("equipment.status", Filter.Operator.eq, "B");
-            } else {
-                //todo ??
-            }
+            queryParams.and("bounded", Filter.Operator.eq, vm.getIsBounded());
         }
 
         if (vm.getIsOnline()!= null){
