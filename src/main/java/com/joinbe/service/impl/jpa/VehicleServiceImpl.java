@@ -2,11 +2,15 @@ package com.joinbe.service.impl.jpa;
 
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
+import com.joinbe.domain.Division;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
+import com.joinbe.repository.DivisionRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
+import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.VehicleService;
+import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.service.dto.VehicleDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
@@ -20,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -35,10 +40,14 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final EquipmentRepository equipmentRepository;
 
+    private final DivisionRepository divisionRepository;
 
-    public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository) {
+
+    public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
+                              DivisionRepository divisionRepository) {
         this.vehicleRepository = vehicleRepository;
         this.equipmentRepository = equipmentRepository;
+        this.divisionRepository = divisionRepository;
     }
 
     /**
@@ -51,6 +60,13 @@ public class VehicleServiceImpl implements VehicleService {
     public VehicleDTO save(VehicleDTO vehicleDTO) {
         log.debug("Request to save Vehicle : {}", vehicleDTO);
         Vehicle vehicle = VehicleService.toEntity(vehicleDTO);
+        Optional<Division> division = divisionRepository.findById(vehicleDTO.getDivisionId());
+        if(division.isPresent()){
+            SecurityUtils.checkDataPermission(division.get());
+            vehicle.setDivision(division.get());
+        }else {
+            throw new BadRequestAlertException("Division does not exist", "Vehicle", "divnotexists");
+        }
         vehicle = vehicleRepository.save(vehicle);
         return VehicleService.toDto(vehicle);
     }
@@ -66,27 +82,42 @@ public class VehicleServiceImpl implements VehicleService {
     public Page<VehicleDTO> findAll(Pageable pageable, VehicleVM vm) {
         log.debug("Request to get all Vehicles");
         QueryParams<Vehicle> queryParams = new QueryParams<>();
+        if(vm.getDivisionId() != null) {
+            SecurityUtils.checkDataPermission(vm.getDivisionId());
+            queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
+        }else {
+            // add user's division condition
+            List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+            queryParams.and("division.id", Filter.Operator.in, userDivisionIds);
+        }
 
+
+        queryParams.and("status", Filter.Operator.eq, "A");
         if (StringUtils.isNotEmpty(vm.getBrand())) {
-            queryParams.and("brand", Filter.Operator.eq, vm.getBrand());
+            queryParams.and("brand", Filter.Operator.like, vm.getBrand());
         }
         if (StringUtils.isNotEmpty(vm.getName())) {
-            queryParams.and("name", Filter.Operator.eq, vm.getName());
-        }
-        if (vm.getIsBounded() != null) {
-            queryParams.and("equipment", vm.getIsBounded() ? Filter.Operator.isNotNull : Filter.Operator.isNull, null);
+            queryParams.and("name", Filter.Operator.like, vm.getName());
         }
 
-        if (vm.getIsOnline()) {
-            queryParams.and("equipment.isOnline", Filter.Operator.eq, Boolean.TRUE);
+        if (StringUtils.isNotEmpty(vm.getLicensePlateNumber())) {
+            queryParams.and("licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
+        }
+        if (vm.getIsBounded() != null) {
+            queryParams.and("bounded", Filter.Operator.eq, vm.getIsBounded());
+        }
+
+        if (vm.getIsOnline()!= null){
+            queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getIsOnline());
         }
 
         if (vm instanceof VehicleBindingVM) {
             VehicleBindingVM bindingVM = (VehicleBindingVM) vm;
             if (StringUtils.isNotEmpty(bindingVM.getIdentifyNumber())) {
-                queryParams.and("equipment.identifyNumber", Filter.Operator.eq, bindingVM.getIdentifyNumber());
+                queryParams.and("equipment.identifyNumber", Filter.Operator.like, bindingVM.getIdentifyNumber());
             }
         }
+
 
         return vehicleRepository.findAll(queryParams, pageable)
             .map(VehicleService::toDto);
@@ -131,7 +162,13 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     public void delete(Long id) {
         log.debug("Request to delete Vehicle : {}", id);
-        vehicleRepository.deleteById(id);
+        Optional<Vehicle> vehicleOptional = vehicleRepository.findById(id);
+        if(vehicleOptional.isPresent()){
+            Vehicle vehicle = vehicleOptional.get();
+            SecurityUtils.checkDataPermission(vehicle.getDivision());
+            vehicle.setStatus("D");
+        }
+       // vehicleRepository.deleteById(id);
     }
 
 }

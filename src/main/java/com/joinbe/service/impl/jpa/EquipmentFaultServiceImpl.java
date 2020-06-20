@@ -5,6 +5,7 @@ import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.EquipmentFault;
 import com.joinbe.repository.EquipmentFaultRepository;
+import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentFaultService;
 import com.joinbe.service.dto.EquipmentFaultDTO;
 import com.joinbe.web.rest.vm.EquipmentFaultVM;
@@ -83,6 +84,9 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
     public Page<EquipmentFaultDTO> findAll(Pageable pageable, EquipmentFaultVM vm) {
         log.debug("Request to get all EquipmentFaults");
         QueryParams<EquipmentFault> queryParams = new QueryParams<>();
+        List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+
+        queryParams.and("vehicle.division.id", Filter.Operator.in, userDivisionIds);
 
         if (vm.getIsRead() != null) {
             queryParams.and("isRead", Filter.Operator.eq, vm.getIsRead());
@@ -90,6 +94,11 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
         if (StringUtils.isNotEmpty(vm.getEquipmentId())) {
             queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentId());
         }
+
+        if (StringUtils.isNotEmpty(vm.getAlertType())) {
+            queryParams.and("alertType", Filter.Operator.like, vm.getAlertType());
+        }
+
         if (StringUtils.isNotEmpty(vm.getAlertContent())) {
             queryParams.and("alertContent", Filter.Operator.like, vm.getAlertContent());
         }

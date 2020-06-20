@@ -1,16 +1,17 @@
 package com.joinbe.web.rest;
 
 import com.joinbe.domain.Vehicle;
-import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.DivisionService;
+import com.joinbe.service.EquipmentService;
 import com.joinbe.service.VehicleService;
 import com.joinbe.service.dto.DivisionDTO;
-import com.joinbe.service.dto.PermissionDTO;
+import com.joinbe.service.dto.EquipmentDTO;
 import com.joinbe.service.dto.VehicleDTO;
 import com.joinbe.web.rest.vm.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URLEncoder;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -44,20 +44,24 @@ public class BindingResource {
 
     private final DivisionService divisionService;
 
+    private final EquipmentService equipmentService;
 
-    public BindingResource(VehicleService vehicleService, DivisionService divisionService) {
+
+    public BindingResource(VehicleService vehicleService, DivisionService divisionService,
+                           EquipmentService equipmentService) {
         this.vehicleService = vehicleService;
         this.divisionService = divisionService;
+        this.equipmentService = equipmentService;
     }
 
 
     /**
-     * {@code GET  /binding/search} : get all the vehicles.
+     * {@code GET  /binding/car/search} : get all the vehicles.
      *
      * @param pageable the pagination information.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of vehicles in body.
      */
-    @GetMapping("/binding/search")
+    @GetMapping("/binding/car/search")
     @ApiOperation("搜索车辆")
     public ResponseEntity<PageData<VehicleDTO>> getAllVehicles(Pageable pageable, VehicleBindingVM vm) {
         log.debug("REST request to get a page of Vehicles");
@@ -65,14 +69,23 @@ public class BindingResource {
         return ResponseUtil.toPageData(page);
     }
 
+
+    @GetMapping("/binding/equipment/to-bound")
+    @ApiOperation("待绑定设备")
+    public List<EquipmentDTO> getAllEquipments( ) {
+        log.debug("REST request to get a page of Vehicles");
+        List<EquipmentDTO> list = equipmentService.findAllUnboundEquipments();
+        return  list;
+    }
+
     /**
-     * {@code Post  /vehicles/:id} : get the "id" vehicle.
+     * {@code Post  /binding} :bind vehicle and equipment.
      *
      * @param vm the id of the vehicle and equipment for binding.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the vehicleDTO, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)}  or with status {@code 404 (Not Found)}.
      */
     @PostMapping("/binding")
-    @ApiOperation("绑定设备")
+    @ApiOperation("绑定车辆设备")
     public ResponseEntity<Void> getVehicle(@RequestBody EquipmentVehicleBindingVM vm) {
         log.debug("REST request to bind Vehicle  {} and Equipment: {}", vm.getVehicleId(), vm.getEquipmentId());
         vehicleService.binding(vm);
@@ -87,7 +100,7 @@ public class BindingResource {
      */
     @GetMapping("/binding/{equipmentId}/conn-testing")
     @ApiOperation("连通测试")
-    public ResponseEntity<String> connTesting(Long equipmentId) {
+    public ResponseEntity<String> connTesting(@PathVariable @ApiParam(value = "设备主键", required = true)  Long equipmentId) {
         log.debug("Connection testing with equipment: {}", equipmentId); //TODO: to implement...
         return ResponseEntity.ok().body("Successful");
     }
@@ -97,7 +110,7 @@ public class BindingResource {
     public  List<DivisionDTO> getUserDivisions() {
         List<DivisionDTO> divisionDTOS = divisionService.findUserDivision(SecurityUtils.getCurrentUserLogin().get());
 
-        Map<Long, List<DivisionDTO>> children = divisionDTOS.stream().filter(DivisionDTO::isHasChildren)
+        Map<Long, List<DivisionDTO>> children = divisionDTOS.stream().filter(divisionDTO ->  divisionDTO.getParentId()!=null)
             .collect(Collectors.groupingBy(DivisionDTO::getParentId));
         for (DivisionDTO divisionDTO : divisionDTOS) {
             if (children.get(divisionDTO.getId()) != null) {

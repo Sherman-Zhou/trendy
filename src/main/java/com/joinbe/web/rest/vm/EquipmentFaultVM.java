@@ -17,7 +17,7 @@ public class EquipmentFaultVM implements Serializable {
      *                     Error
      */
     @Size(max = 50)
-    @ApiModelProperty(value = "报警类型：", notes = "枚举类型: Event, Error")
+    @ApiModelProperty(value = "报警类型：", example = "枚举类型: Event, Error")
     private String alertType;
 
     /**
@@ -36,11 +36,10 @@ public class EquipmentFaultVM implements Serializable {
     @ApiModelProperty(value = "设备ID")
     private String equipmentId;
 
-    @ApiModelProperty(value = "开始时间", notes = "日期格式： yyyy-MM-dd")
-    @ApiParam(value = "开始时间", example = "日期格式： yyyy-MM-dd")
+    @ApiModelProperty(value = "开始时间", example = "2020-06-30")
     private String startDate;
 
-    @ApiModelProperty(value = "结束时间", example = "日期格式： yyyy-MM-dd")
+    @ApiModelProperty(value = "结束时间", example = "2020-06-30")
     private String endDate;
 
 

@@ -1,12 +1,16 @@
 package com.joinbe.security;
 
+import com.joinbe.domain.Division;
+import com.joinbe.service.util.SpringContextUtils;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -15,6 +19,7 @@ import java.util.stream.Stream;
 public final class SecurityUtils {
 
     private SecurityUtils() {
+
     }
 
     /**
@@ -37,6 +42,58 @@ public final class SecurityUtils {
             return (String) authentication.getPrincipal();
         }
         return null;
+    }
+
+    public static List<Long> getCurrentUserDivisionIds() {
+        Optional<String> currentUserLogin = getCurrentUserLogin();
+        if(!currentUserLogin.isPresent()){
+            return new ArrayList<>();
+        }
+        RedissonTokenStore redissonTokenStore = SpringContextUtils.getBean(RedissonTokenStore.class);
+        return redissonTokenStore.getUserDivisionIds(currentUserLogin.get());
+
+    }
+
+    /**
+     * to check if the user has the permission of Division
+     * @param division
+     */
+    public static void checkDataPermission(Division division) {
+        if(division == null) {
+            return;
+        }
+       checkDataPermission(division.getId());
+    }
+
+    /**
+     * to check if the user has the permission of Division
+     * @param divisionId
+     */
+    public static void checkDataPermission(Long divisionId) {
+        if(!getCurrentUserDivisionIds().contains(divisionId)) {
+            throw new AccessDeniedException("No Permission to view this record");
+        }
+    }
+
+
+    /**
+     * to check if the current user has the permission of all divisions
+     * @param divisions
+     */
+    public static void checkDataPermission(Set<Division> divisions) {
+        List<Long> userDivisionIds = getCurrentUserDivisionIds();
+       boolean hasAllPermission= divisions.stream().allMatch(division -> userDivisionIds.contains(division.getId()));
+       if(!hasAllPermission) {
+           throw new AccessDeniedException("No Permission to view this record");
+       }
+    }
+
+    public static void checkDataPermission(List<Long> divisionIds) {
+        List<Long> userDivisionIds = getCurrentUserDivisionIds();
+        boolean hasAllPermission= divisionIds.stream().allMatch(divisionId -> userDivisionIds.contains(divisionId));
+        if(!hasAllPermission) {
+            throw new AccessDeniedException("No Permission to view this record");
+        }
     }
 
 

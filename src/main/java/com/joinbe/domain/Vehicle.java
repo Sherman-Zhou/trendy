@@ -114,6 +114,9 @@ public class Vehicle extends AbstractAuditingEntity {
     @Column(name = "status", length = 1)
     private String status;
 
+    @Column(name = "bounded")
+    private Boolean bounded;
+
     @OneToOne(mappedBy = "vehicle")
     private Equipment equipment;
 
@@ -342,6 +345,14 @@ public class Vehicle extends AbstractAuditingEntity {
     public Vehicle division(Division division) {
         this.division = division;
         return this;
+    }
+
+    public Boolean getBounded() {
+        return bounded;
+    }
+
+    public void setBounded(Boolean bounded) {
+        this.bounded = bounded;
     }
 
     public Equipment getEquipment() {

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Component
@@ -19,6 +20,8 @@ public class RedissonTokenStore {
     private static final String TOKEN_KEY = "TOKEN_KEY";
 
     private static final String TOKEN_KEY_PREFIX = "USER_TOKEN:";
+
+    private static final String DIVISION_KEY="DIVISION_KEY";
 
     private final RedissonClient redissonClient;
 
@@ -46,6 +49,16 @@ public class RedissonTokenStore {
     public void removeFromRedis(String login) {
         RMapCache<String, String> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
         tokenMap.remove(TOKEN_KEY_PREFIX + login);
+    }
+
+    public void storeUserDivision(String login, List<Long> divisionIds) {
+        RMapCache<String, List<Long>> divisionMap =  redissonClient.getMapCache(DIVISION_KEY);
+        divisionMap.put(login, divisionIds);
+    }
+
+    public List<Long> getUserDivisionIds(String login) {
+        RMapCache<String, List<Long>> divisionMap =  redissonClient.getMapCache(DIVISION_KEY);
+        return divisionMap.get(login);
     }
 
     public boolean isTokenExisted(String login) {

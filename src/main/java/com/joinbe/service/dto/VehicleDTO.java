@@ -3,7 +3,9 @@ package com.joinbe.service.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -22,6 +24,7 @@ public class VehicleDTO implements Serializable {
      * 车牌
      */
     @Size(max = 10)
+    @NotBlank
     @ApiModelProperty(value = "车牌")
     private String licensePlateNumber;
 
@@ -30,6 +33,7 @@ public class VehicleDTO implements Serializable {
      */
     @Size(max = 50)
     @ApiModelProperty(value = "车架号")
+    @NotBlank
     private String vehicleIdNum;
 
     /**
@@ -107,21 +111,33 @@ public class VehicleDTO implements Serializable {
     private String contactNumber;
 
     @Size(max = 1)
+    @Pattern(regexp = "[AD]")
+    @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除",  required = true)
     private String status;
 
-    @NotNull
     @Size(max = 20)
+    @ApiModelProperty(value = "创建者",hidden = true )
     private String createdBy;
 
-    @NotNull
+    @ApiModelProperty(value = "创建时间",hidden = true )
     private Instant createdDate;
 
     @Size(max = 20)
+    @ApiModelProperty(value = "更新者",hidden = true )
     private String lastModifiedBy;
 
+    @ApiModelProperty(value = "更新时间",hidden = true )
     private Instant lastModifiedDate;
 
+    @ApiModelProperty(value = "部门主键")
+    @NotBlank
     private Long divisionId;
+
+    @ApiModelProperty(value = "组织", hidden = true)
+    private String orgName;
+
+    @ApiModelProperty(value = "区域", hidden = true)
+    private String divName;
 
 
 }

@@ -96,8 +96,8 @@ public class LoggingAspect {
     public Object logAround(ProceedingJoinPoint joinPoint) throws Throwable {
         Logger log = logger(joinPoint);
         if (log.isDebugEnabled()) {
-            //log.debug("Enter: {}() with argument[s] = {}", joinPoint.getSignature().getName(), Arrays.toString(joinPoint.getArgs()));
-            log.debug("Enter: {}()", joinPoint.getSignature().getName());
+            log.debug("Enter: {}() with argument[s] = {}", joinPoint.getSignature().getName(), Arrays.toString(joinPoint.getArgs()));
+//            log.debug("Enter: {}()", joinPoint.getSignature().getName());
         }
         try {
             Object result = joinPoint.proceed();

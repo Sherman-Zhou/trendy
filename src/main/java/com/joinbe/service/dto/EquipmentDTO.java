@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
@@ -56,19 +57,23 @@ public class EquipmentDTO implements Serializable {
      * 设备状态 - 枚举类型\n绑定\n未绑定\"
      */
     @Size(max = 1)
-    @ApiModelProperty(value = "设备状态 - 枚举类型\n绑定\n未绑定\"")
+    @ApiModelProperty(value = "设备状态 - 枚举类型- B:绑定 U:未绑定 D: 已删除"  )
+    @Pattern(regexp = "[BU]")
     private String status;
 
-    @NotNull
+
     @Size(max = 20)
+    @ApiModelProperty(value = "创建者",hidden = true )
     private String createdBy;
 
-    @NotNull
+    @ApiModelProperty(value = "创建时间",hidden = true )
     private Instant createdDate;
 
     @Size(max = 20)
+    @ApiModelProperty(value = "更新者",hidden = true )
     private String lastModifiedBy;
 
+    @ApiModelProperty(value = "更新时间",hidden = true )
     private Instant lastModifiedDate;
 
 }

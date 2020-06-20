@@ -156,7 +156,7 @@ public class QueryParams<T> implements Specification<T> {
                     }
                     break;
                 case in:
-                    restrictions = criteriaBuilder.and(restrictions, path.in(value));
+                    restrictions = criteriaBuilder.and(restrictions, path.in((Collection<?>) value));
                     break;
                 case isNull:
                     restrictions = criteriaBuilder.and(restrictions, path.isNull());
@@ -270,7 +270,7 @@ public class QueryParams<T> implements Specification<T> {
     private Object convertToJPAType(Object value, Class type) {
 
         FormattingConversionService conversionService = SpringContextUtils.getBean(FormattingConversionService.class);
-        if (value instanceof Collection) {
+        if (value instanceof Collection ){
             Collection values = (Collection) value;
             List<Object> newValues = new ArrayList<>(values.size());
             for (Object item : values) {
