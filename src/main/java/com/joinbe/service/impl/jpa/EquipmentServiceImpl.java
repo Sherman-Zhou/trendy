@@ -12,9 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -59,13 +62,16 @@ public class EquipmentServiceImpl implements EquipmentService {
         log.debug("Request to get all Equipment");
         QueryParams<Equipment> queryParams = new QueryParams<>();
         if (StringUtils.isNotEmpty(vm.getIdentifyNumber())) {
-            queryParams.and("identifyNumber", Filter.Operator.eq, vm.getIdentifyNumber());
+            queryParams.and("identifyNumber", Filter.Operator.like, vm.getIdentifyNumber());
         }
         if (StringUtils.isNotEmpty(vm.getImei())) {
-            queryParams.and("imei", Filter.Operator.eq, vm.getImei());
+            queryParams.and("imei", Filter.Operator.like, vm.getImei());
         }
         if (StringUtils.isNotEmpty(vm.getSimCardNum())) {
-            queryParams.and("simCardNum", Filter.Operator.eq, vm.getSimCardNum());
+            queryParams.and("simCardNum", Filter.Operator.like, vm.getSimCardNum());
+        }
+        if(vm.getIsOnline() != null){
+            queryParams.and("isOnline", Filter.Operator.eq, vm.getIsOnline());
         }
 
         if (vm.getIsBounded() != null) {
@@ -97,7 +103,11 @@ public class EquipmentServiceImpl implements EquipmentService {
     @Override
     public void delete(Long id) {
         log.debug("Request to delete Equipment : {}", id);
-        equipmentRepository.deleteById(id);
+        Optional<Equipment> equipmentOptional = equipmentRepository.findById(id);
+        if(equipmentOptional.isPresent()){
+            equipmentOptional.get().setStatus("D");
+        }
+//        equipmentRepository.deleteById(id);
     }
 
 
@@ -111,6 +121,11 @@ public class EquipmentServiceImpl implements EquipmentService {
         QueryParams<Equipment> queryParams = new QueryParams<>();
         queryParams.and("vehicle.licensePlateNumber", Filter.Operator.eq, plateNumber);
         return equipmentRepository.findOne(queryParams).map(EquipmentService::toDto);
+    }
+
+    @Override
+    public List<EquipmentDTO> findAllUnboundEquipments() {
+        return null;
     }
 
 }

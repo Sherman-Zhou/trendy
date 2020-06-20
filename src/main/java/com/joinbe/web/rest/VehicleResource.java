@@ -1,7 +1,12 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.domain.Division;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.service.DivisionService;
 import com.joinbe.service.VehicleService;
+import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.service.dto.VehicleDTO;
+import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.VehicleVM;
@@ -13,11 +18,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Optional;
 
 /**
@@ -31,10 +36,12 @@ public class VehicleResource {
     private static final String ENTITY_NAME = "vehicle";
     private final Logger log = LoggerFactory.getLogger(VehicleResource.class);
     private final VehicleService vehicleService;
+    private final DivisionService divisionService;
 
 
-    public VehicleResource(VehicleService vehicleService) {
+    public VehicleResource(VehicleService vehicleService, DivisionService divisionService) {
         this.vehicleService = vehicleService;
+        this.divisionService = divisionService;
     }
 
 
@@ -80,5 +87,54 @@ public class VehicleResource {
     }
 
 
+    /**
+     * {@code POST  /vehicles} : Create a new vehicle.
+     *
+     * @param vehicleDTO the vehicleDTO to create.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new vehicleDTO, or with status {@code 400 (Bad Request)} if the vehicle has already an ID.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
+     */
+    @PostMapping("/vehicles")
+    public ResponseEntity<VehicleDTO> createVehicle(@Valid @RequestBody VehicleDTO vehicleDTO) throws URISyntaxException {
+        log.debug("REST request to save Vehicle : {}", vehicleDTO);
+        if (vehicleDTO.getId() != null) {
+            throw new BadRequestAlertException("A new vehicle cannot already have an ID", ENTITY_NAME, "idexists");
+        }
+        VehicleDTO result = vehicleService.save(vehicleDTO);
+        return ResponseEntity.created(new URI("/api/vehicles/" + result.getId()))
+            .body(result);
+    }
 
+    /**
+     * {@code PUT  /vehicles} : Updates an existing vehicle.
+     *
+     * @param vehicleDTO the vehicleDTO to update.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated vehicleDTO,
+     * or with status {@code 400 (Bad Request)} if the vehicleDTO is not valid,
+     * or with status {@code 500 (Internal Server Error)} if the vehicleDTO couldn't be updated.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
+     */
+    @PutMapping("/vehicles")
+    public ResponseEntity<VehicleDTO> updateVehicle(@Valid @RequestBody VehicleDTO vehicleDTO) throws URISyntaxException {
+        log.debug("REST request to update Vehicle : {}", vehicleDTO);
+        if (vehicleDTO.getId() == null) {
+            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+        }
+        VehicleDTO result = vehicleService.save(vehicleDTO);
+        return ResponseEntity.ok()
+            .body(result);
+    }
+
+    /**
+     * {@code DELETE  /vehicles/:id} : delete the "id" vehicle.
+     *
+     * @param id the id of the vehicleDTO to delete.
+     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
+     */
+    @DeleteMapping("/vehicles/{id}")
+    public ResponseEntity<Void> deleteVehicle(@PathVariable Long id) {
+        log.debug("REST request to delete Vehicle : {}", id);
+        vehicleService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

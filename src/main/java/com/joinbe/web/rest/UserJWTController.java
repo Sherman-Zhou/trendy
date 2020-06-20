@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -56,8 +57,9 @@ public class UserJWTController {
     @PostMapping("/authenticate")
     @ApiOperation("用户登陆")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
+        Optional<User> userOptional;
         if (new EmailValidator().isValid(loginVM.getUsername(), null)) {
-            Optional<User> userOptional = userService.findOneByEmailIgnoreCase(loginVM.getUsername());
+           userOptional = userService.findOneByEmailIgnoreCase(loginVM.getUsername());
             if (userOptional.isPresent()) {
                 if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
                     JWTToken token = new JWTToken();
@@ -67,7 +69,7 @@ public class UserJWTController {
             }
         }
         String lowercaseLogin = loginVM.getUsername().toLowerCase(Locale.ENGLISH);
-        Optional<User> userOptional = userService.findOneByLogin(lowercaseLogin);
+        userOptional = userService.findOneByLogin(lowercaseLogin);
         if (userOptional.isPresent()) {
             if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
                 JWTToken token = new JWTToken();
@@ -82,7 +84,12 @@ public class UserJWTController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         boolean rememberMe = (loginVM.isRememberMe() == null) ? false : loginVM.isRememberMe();
         String jwt = tokenProvider.createToken(authentication, rememberMe);
-        redissonTokenStore.putInRedis(loginVM.getUsername(), jwt);
+
+        String login = userOptional.get().getLogin();
+        redissonTokenStore.putInRedis(login, jwt);
+
+        List<Long> userDivisionIds = userService.findAllUserDivisionIds(login);
+        redissonTokenStore.storeUserDivision(login, userDivisionIds);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, "Bearer " + jwt);
         return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);

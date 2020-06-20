@@ -57,4 +57,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     @Query("select user from User user join user.roles roles where roles.id =:roleId and user.status <> 'D'")
     List<User> findUsersByRoleId(@Param("roleId") Long roleId);
+
+    @EntityGraph(attributePaths = {"divisions"})
+    Optional<User> findOneWithDivisionsByLogin(String login);
 }

@@ -15,6 +15,7 @@ import com.joinbe.repository.PermissionRepository;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.repository.UserRepository;
 import com.joinbe.security.AuthoritiesConstants;
+import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.RoleService;
 import com.joinbe.service.UserService;
@@ -34,6 +35,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,14 +67,18 @@ public class UserServiceImpl implements UserService {
 
     private final PermissionRepository permissionRepository;
 
+    private final RedissonTokenStore redissonTokenStore;
+
     public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository,
-                           CacheManager cacheManager, RoleService roleService, PermissionRepository permissionRepository) {
+                           CacheManager cacheManager, RoleService roleService, PermissionRepository permissionRepository,
+                           RedissonTokenStore redissonTokenStore) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.cacheManager = cacheManager;
         this.roleService = roleService;
         this.permissionRepository = permissionRepository;
+        this.redissonTokenStore = redissonTokenStore;
     }
 
     @Override
@@ -282,7 +288,7 @@ public class UserServiceImpl implements UserService {
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 this.clearUserCaches(user);
-
+                SecurityUtils.checkDataPermission(user.getDivisions());
                 user.setLogin(userDTO.getLogin().toLowerCase());
                 user.setName(userDTO.getName());
 
@@ -320,6 +326,7 @@ public class UserServiceImpl implements UserService {
             //not allow to update deleted user
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
+                SecurityUtils.checkDataPermission(user.getDivisions());
                 user.setStatus(status);
                 userRepository.save(user);
                 this.clearUserCaches(user);
@@ -342,6 +349,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long id) {
         userRepository.findById(id).ifPresent(user -> {
             // userRepository.delete(user);
+            SecurityUtils.checkDataPermission(user.getDivisions());
             user.setStatus(RecordStatus.DELETED);
             this.clearUserCaches(user);
             log.debug("Deleted User: {}", user);
@@ -368,7 +376,9 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM vm) {
         QueryParams<User> queryParams = new QueryParams<>();
-
+         Set<Division> userDivisions = SecurityUtils.getCurrentUserDivisionIds()
+             .stream().map(id -> new Division(id)).collect(Collectors.toSet());;
+         //queryParams.and("divisions", Filter.Operator.in, userDivisions);
         if (StringUtils.isNotEmpty(vm.getEmail())) {
             queryParams.and("email", Filter.Operator.eq, vm.getEmail());
         }
@@ -394,13 +404,24 @@ public class UserServiceImpl implements UserService {
             };
             specification = specification.and(itemSpecification);
         }
+
+        //Divisions Id
+        Specification<User> divisionSpecification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
+             return root.join("divisions").in(userDivisions);
+        };
+        specification = specification.and(divisionSpecification);
         return userRepository.findAll(specification, pageable).map(UserDTO::new);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<User> getUserWithAuthoritiesByLogin(String login) {
-        return userRepository.findOneWithRolesByLogin(login);
+
+        Optional<User> userOptional = userRepository.findOneWithRolesByLogin(login);
+        if(userOptional.isPresent()){
+            SecurityUtils.checkDataPermission(userOptional.get().getDivisions());
+        }
+        return userOptional;
     }
 
     @Override
@@ -465,6 +486,9 @@ public class UserServiceImpl implements UserService {
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
+            //to check if the admin user has the permission of the division Ids to be assign
+            SecurityUtils.checkDataPermission(divisionIds);
+            SecurityUtils.checkDataPermission(user.getDivisions());
             divisionIds.forEach(divisionId -> {
                 Division division = new Division();
                  division.setId(divisionId);
@@ -481,6 +505,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<Long> findAllUserDivisionIds(Long userId) {
         Optional<User> user = userRepository.findOneWithDivisionsById(userId);
+        if(user.isPresent()){
+            List<Long > ids = user.get().getDivisions().stream().map(Division::getId).sorted().collect(Collectors.toList());
+            return ids;
+        }
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<Long> findAllUserDivisionIds(String login) {
+        Optional<User> user = userRepository.findOneWithDivisionsByLogin(login);
         if(user.isPresent()){
             List<Long > ids = user.get().getDivisions().stream().map(Division::getId).sorted().collect(Collectors.toList());
             return ids;

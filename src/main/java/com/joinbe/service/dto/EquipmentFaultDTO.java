@@ -32,6 +32,15 @@ public class EquipmentFaultDTO implements Serializable {
     @ApiModelProperty(value = "报警内容")
     private String alertContent;
 
+    @ApiModelProperty(value = "设备ID")
+    private String identifyNumber;
+
+    @ApiModelProperty(value = "组织")
+    private String orgName;
+
+    @ApiModelProperty(value = "区域")
+    private String divName;
+
     /**
      * 是否已读
      */

@@ -1,7 +1,10 @@
 package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
+import com.joinbe.domain.Division;
 import com.joinbe.domain.EquipmentOperationRecord;
+import com.joinbe.domain.Vehicle;
+import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.EquipmentOperationRecordDTO;
 import com.joinbe.web.rest.vm.EquipmentOpRecordVM;
 import org.springframework.data.domain.Page;
@@ -20,10 +23,16 @@ public interface EquipmentOperationRecordService {
         if(equipmentOperationRecord.getEquipment()!=null){
             dto.setIdentifyNumber(equipmentOperationRecord.getEquipment().getIdentifyNumber());
         }
-        if(equipmentOperationRecord.getVehicle()!=null) {
-            dto.setLicensePlateNumber(equipmentOperationRecord.getVehicle().getLicensePlateNumber());
+        Vehicle vehicle = equipmentOperationRecord.getVehicle();
+        if(vehicle != null) {
+            dto.setLicensePlateNumber(vehicle.getLicensePlateNumber());
+            Division division = vehicle.getDivision();
+            SecurityUtils.checkDataPermission(division);
+            dto.setOrgName(division.getName());
+            if(division.getParent()!=null) {
+                dto.setDivName(division.getParent().getName());
+            }
         }
-
         return dto;
     }
 

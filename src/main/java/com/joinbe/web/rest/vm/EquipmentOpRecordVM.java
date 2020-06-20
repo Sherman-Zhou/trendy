@@ -23,9 +23,9 @@ public class EquipmentOpRecordVM implements Serializable {
     @ApiModelProperty(value = "描述")
     private String desc;
 
-    @ApiModelProperty(value = "开始时间", example = "2020-06-30")
+    @ApiModelProperty(value = "开始时间: yyyy-MM-dd")
     private String startDate;
 
-    @ApiModelProperty(value = "结束时间", example = "2020-06-30")
+    @ApiModelProperty(value = "结束时间: yyyy-MM-dd")
     private String endDate;
 }

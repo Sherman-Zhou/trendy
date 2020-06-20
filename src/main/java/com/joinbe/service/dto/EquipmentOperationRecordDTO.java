@@ -53,6 +53,12 @@ public class EquipmentOperationRecordDTO implements Serializable {
     @ApiModelProperty(value = "车牌")
     private String licensePlateNumber;
 
+    @ApiModelProperty(value = "组织")
+    private String orgName;
+
+    @ApiModelProperty(value = "区域")
+    private String divName;
+
     @NotNull
     @Size(max = 20)
     private String createdBy;

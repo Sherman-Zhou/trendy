@@ -62,4 +62,6 @@ public interface UserService {
 
     List<Long> findAllUserDivisionIds(Long userId);
 
+    List<Long> findAllUserDivisionIds(String login);
+
 }

@@ -47,6 +47,11 @@ public class Division extends AbstractAuditingEntity {
     @Column(name = "parent_id", updatable = false, insertable = false)
     private Long parentId;
 
+    public Division() {
+    }
+    public Division(Long id) {
+        this.id = id;
+    }
 
     @ManyToOne
     @JsonIgnoreProperties("divisions")

@@ -5,12 +5,16 @@ import javax.persistence.*;
 import javax.validation.constraints.Size;
 
 /**
- * A EquipmentConfig.
+ * A SystemConfig.
  */
 @Entity
-@Table(name = "equipment_config")
+@Table(name = "system_config")
 //@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-public class EquipmentConfig extends AbstractAuditingEntity {
+public class SystemConfig extends AbstractAuditingEntity {
+
+    public static final String TRAJECTORY_RESERVE_DAYS = "TRAJECTORY_RESERVE_DAYS";
+
+    public static final String LAST_BACKUP_TIME = "LAST_BACKUP_TIME";
 
     private static final long serialVersionUID = 1L;
 
@@ -21,8 +25,8 @@ public class EquipmentConfig extends AbstractAuditingEntity {
     /**
      * 参数key值
      */
-    @Size(max = 20)
-    @Column(name = "jhi_key", length = 20)
+    @Size(max = 50)
+    @Column(name = "key", length = 50)
     private String key;
 
     /**
@@ -53,7 +57,7 @@ public class EquipmentConfig extends AbstractAuditingEntity {
         this.key = key;
     }
 
-    public EquipmentConfig key(String key) {
+    public SystemConfig key(String key) {
         this.key = key;
         return this;
     }
@@ -66,7 +70,7 @@ public class EquipmentConfig extends AbstractAuditingEntity {
         this.value = value;
     }
 
-    public EquipmentConfig value(String value) {
+    public SystemConfig value(String value) {
         this.value = value;
         return this;
     }
@@ -79,14 +83,14 @@ public class EquipmentConfig extends AbstractAuditingEntity {
         this.status = status;
     }
 
-    public EquipmentConfig status(String status) {
+    public SystemConfig status(String status) {
         this.status = status;
         return this;
     }
 
     @Override
     public String toString() {
-        return "EquipmentConfig{" +
+        return "SystemConfig{" +
             "id=" + getId() +
             ", key='" + getKey() + "'" +
             ", value='" + getValue() + "'" +

@@ -207,4 +207,9 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     public List<Long> findAllUserDivisionIds(Long userId) {
         return null;
     }
+
+    @Override
+    public List<Long> findAllUserDivisionIds(String login) {
+        return null;
+    }
 }

@@ -1,7 +1,9 @@
 package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
+import com.joinbe.domain.Division;
 import com.joinbe.domain.Vehicle;
+import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.VehicleDTO;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
 import com.joinbe.web.rest.vm.VehicleVM;
@@ -17,7 +19,14 @@ public interface VehicleService {
 
     static VehicleDTO toDto(Vehicle vehicle) {
 
-        return BeanConverter.toDto(vehicle, VehicleDTO.class);
+        VehicleDTO dto =  BeanConverter.toDto(vehicle, VehicleDTO.class);
+        Division division = vehicle.getDivision();
+        SecurityUtils.checkDataPermission(division);
+        dto.setOrgName(division.getName());
+        if(division.getParent()!=null) {
+            dto.setDivName(division.getParent().getName());
+        }
+        return dto;
     }
 
     static Vehicle toEntity(VehicleDTO vehicleDTO) {

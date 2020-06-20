@@ -3,6 +3,7 @@ package com.joinbe.web.rest.vm;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 @Data
@@ -13,6 +14,9 @@ public class VehicleVM implements Serializable {
 
     @ApiModelProperty(value = "品牌")
     private String brand;
+
+    @ApiModelProperty(value = "部门主键")
+    private Long divisionId;
 
 //    @ApiModelProperty(value = "年份")
 //    private String prodYear;
