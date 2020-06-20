@@ -7,7 +7,6 @@ import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.dto.*;
-import com.joinbe.domain.VehicleTrajectory;
 import com.joinbe.domain.VehicleTrajectoryDetails;
 import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
 import com.joinbe.service.EquipmentService;
@@ -25,16 +24,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.validation.Valid;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
@@ -87,6 +88,7 @@ public class EquipmentExtController {
      */
     @PostMapping("/location/vehicle")
     @ApiOperation("根据车牌号获取设备的实时位置")
+    @Transactional(readOnly = true)
     public DeferredResult<ResponseEntity<ResponseDTO>> getLocation(@RequestBody @Valid LocationVehicleReq locationReq, BindingResult bindingResult) {
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(3000L, "Get Location time out");
 
@@ -125,6 +127,7 @@ public class EquipmentExtController {
      */
     @PostMapping("/device")
     @ApiOperation("根据车牌号获取设备的信息")
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> getDeviceInfo(@RequestBody @Valid DeviceReq deviceInfo, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
@@ -178,7 +181,6 @@ public class EquipmentExtController {
         tokenResponseItem.setToken(md5);
         tokenResponseItem.setExpireDate(expireDateTime);
         tokenResponseDTO.setData(tokenResponseItem);
-
         //TODO: write token to equipment
         return new ResponseEntity<>(tokenResponseDTO, HttpStatus.OK);
     }
@@ -191,6 +193,7 @@ public class EquipmentExtController {
      */
     @PostMapping("/trajectory")
     @ApiOperation("根据时间段查询车辆的轨迹列表")
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> getTrajectory(@RequestBody @Valid TrajectoryReq trajectoryReq, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
