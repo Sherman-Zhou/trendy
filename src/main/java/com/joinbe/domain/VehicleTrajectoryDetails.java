@@ -77,6 +77,9 @@ public class VehicleTrajectoryDetails implements Serializable {
     @JsonIgnoreProperties("details")
     private VehicleTrajectory vehicleTrajectory;
 
+    @Column(name = "mileage", precision = 21, scale = 2)
+    private BigDecimal mileage;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public Long getId() {
         return id;
@@ -216,19 +219,33 @@ public class VehicleTrajectoryDetails implements Serializable {
         return this;
     }
 
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public BigDecimal getMileage() {
+        return mileage;
+    }
+
+    public void setMileage(BigDecimal mileage) {
+        this.mileage = mileage;
+    }
+
     @Override
     public String toString() {
         return "VehicleTrajectoryDetails{" +
-            "id=" + getId() +
-            ", receivedTime='" + getReceivedTime() + "'" +
-            ", longitude='" + getLongitude() + "'" +
-            ", latitude='" + getLatitude() + "'" +
-            ", actualSpeed=" + getActualSpeed() +
-            ", limitedSpeed=" + getLimitedSpeed() +
-            ", tirePressureFrontLeft=" + getTirePressureFrontLeft() +
-            ", tirePressureFrontRight=" + getTirePressureFrontRight() +
-            ", tirePressureRearLeft=" + getTirePressureRearLeft() +
-            ", tirePressureRearRight=" + getTirePressureRearRight() +
-            "}";
+            "id=" + id +
+            ", receivedTime=" + receivedTime +
+            ", longitude=" + longitude +
+            ", latitude=" + latitude +
+            ", actualSpeed=" + actualSpeed +
+            ", limitedSpeed=" + limitedSpeed +
+            ", tirePressureFrontLeft=" + tirePressureFrontLeft +
+            ", tirePressureFrontRight=" + tirePressureFrontRight +
+            ", tirePressureRearLeft=" + tirePressureRearLeft +
+            ", tirePressureRearRight=" + tirePressureRearRight +
+            ", vehicleTrajectory=" + vehicleTrajectory +
+            ", mileage=" + mileage +
+            '}';
     }
 }
