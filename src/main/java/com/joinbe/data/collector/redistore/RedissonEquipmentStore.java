@@ -172,7 +172,7 @@ public class RedissonEquipmentStore {
     public Long getDeviceCalcStatus(String deviceId) {
         RMapCache<String, Long> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_CALC_STATUS_KEY);
         Long lastStopTime = deviceServerMap.get(DEVICE_REAL_TIME_CALC_STATUS_KEY_PREFIX + deviceId);
-        log.debug("lastStopTime in redis for deviceId {}:{}", deviceId, lastStopTime);
+        log.debug("lastRunningTime in redis for deviceId {}:{}", deviceId, lastStopTime);
         return lastStopTime;
     }
 
@@ -204,7 +204,7 @@ public class RedissonEquipmentStore {
     public String getDeviceTrajectory(String deviceId) {
         RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_TRAJECTORY_KEY);
         String trajectoryId = deviceServerMap.get(DEVICE_TRAJECTORY_KEY_PREFIX + deviceId);
-        log.debug("lastStopTime in redis for deviceId {}:{}", deviceId, trajectoryId);
+        log.debug("last trajectoryId in redis for deviceId {}:{}", deviceId, trajectoryId);
         return trajectoryId;
     }
 
