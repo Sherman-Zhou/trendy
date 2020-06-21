@@ -151,3 +151,4 @@ netty:
   so-keepalive: true
   so-backlog: 100
   server-ip: 192.168.11.101
+  idle-timeout-second: 70
