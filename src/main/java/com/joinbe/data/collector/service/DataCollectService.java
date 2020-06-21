@@ -123,8 +123,9 @@ public class DataCollectService {
         String unitId = msg.getUnitId();
         VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(unitId);
         if(speed > 0 && !VehicleStatusEnum.RUNNING.equals(currentDeviceStatus)){
-            //设置为运行中
+            //设置为运行中 & 记录不为0的时间
             redissonEquipmentStore.putInRedisForStatus(unitId,VehicleStatusEnum.RUNNING);
+            redissonEquipmentStore.putInRedisForCalcStatus(unitId, System.currentTimeMillis());
         }else if(speed > 0){
             //记录不为0的时间
             redissonEquipmentStore.putInRedisForCalcStatus(unitId, System.currentTimeMillis());
