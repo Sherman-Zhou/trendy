@@ -22,14 +22,14 @@ public class VehicleTrajectoryDetailsDTO implements Serializable {
     private Instant receivedTime;
 
     @Size(max = 50)
-    private String longitude;
+    private BigDecimal longitude;
 
     /**
      * 维度
      */
     @Size(max = 50)
     @ApiModelProperty(value = "维度")
-    private String latitude;
+    private BigDecimal latitude;
 
     /**
      * 实际速度
@@ -86,19 +86,19 @@ public class VehicleTrajectoryDetailsDTO implements Serializable {
         this.receivedTime = receivedTime;
     }
 
-    public String getLongitude() {
+    public BigDecimal getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(String longitude) {
+    public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
     }
 
-    public String getLatitude() {
+    public BigDecimal getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(String latitude) {
+    public void setLatitude(BigDecimal latitude) {
         this.latitude = latitude;
     }
 
