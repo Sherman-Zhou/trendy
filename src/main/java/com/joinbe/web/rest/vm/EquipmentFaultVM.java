@@ -1,13 +1,11 @@
 package com.joinbe.web.rest.vm;
 
 import io.swagger.annotations.ApiModelProperty;
-import io.swagger.annotations.ApiParam;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.time.Instant;
 
 @Data
 @EqualsAndHashCode(callSuper = false)

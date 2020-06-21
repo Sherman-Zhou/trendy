@@ -2,10 +2,14 @@ package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.VehicleTrajectory;
+import com.joinbe.service.dto.DivisionWithVehicesleDTO;
+import com.joinbe.service.dto.VehicleStateDTO;
 import com.joinbe.service.dto.VehicleTrajectoryDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.joinbe.service.dto.VehicleTrajectoryDetailsDTO;
+import com.joinbe.web.rest.vm.SearchVehicleVM;
+import com.joinbe.web.rest.vm.TrajectoryVM;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -34,10 +38,17 @@ public interface VehicleTrajectoryService {
     /**
      * Get all the vehicleTrajectories.
      *
-     * @param pageable the pagination information.
      * @return the list of entities.
      */
-    Page<VehicleTrajectoryDTO> findAll(Pageable pageable);
+    List<VehicleTrajectoryDTO> findAll(TrajectoryVM vm);
+
+
+    /**
+     * Get all the vehicleTrajectories.
+     *
+     * @return the list of entities.
+     */
+    List<VehicleTrajectoryDetailsDTO> findAllDetails(TrajectoryVM vm);
 
     /**
      * Get the "id" vehicleTrajectory.
@@ -53,4 +64,10 @@ public interface VehicleTrajectoryService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    List<DivisionWithVehicesleDTO> findCurrentUserDivisionsAndVehicles(SearchVehicleVM vm);
+
+    Optional<VehicleStateDTO> findVehicleCurrentState(Long vehicleId);
+
+    List<String> findAllTrajectoryIds(Long vehicleId);
 }

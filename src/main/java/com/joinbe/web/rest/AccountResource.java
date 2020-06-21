@@ -8,7 +8,7 @@ import com.joinbe.service.PermissionService;
 import com.joinbe.service.UserService;
 import com.joinbe.service.dto.PasswordChangeDTO;
 import com.joinbe.service.dto.PermissionDTO;
-import com.joinbe.service.dto.UserDTO;
+import com.joinbe.service.dto.UserAccountDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
@@ -131,8 +131,8 @@ public class AccountResource {
      * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
-    @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新 用户姓名， 用户邮件， 用户语言，和用户图像地址")
-    public void saveAccount(@Valid @RequestBody UserDTO userDTO) {
+    @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新用户姓名， 用户邮件， 用户语言，手机号码和用户avatar地址")
+    public void saveAccount(@Valid @RequestBody UserAccountDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
         Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
@@ -143,7 +143,7 @@ public class AccountResource {
             throw new AccountResourceException("User could not be found");
         }
         userService.updateUser(userDTO.getName(), userDTO.getEmail(),
-            userDTO.getLangKey(), userDTO.getAvatar());
+            userDTO.getLangKey(), userDTO.getAvatar(), userDTO.getMobileNo());
     }
 
     /**

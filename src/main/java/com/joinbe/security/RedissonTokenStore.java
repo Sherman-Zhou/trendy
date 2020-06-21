@@ -52,13 +52,18 @@ public class RedissonTokenStore {
     }
 
     public void storeUserDivision(String login, List<Long> divisionIds) {
-        RMapCache<String, List<Long>> divisionMap =  redissonClient.getMapCache(DIVISION_KEY);
+        RMapCache<String, List<Long>> divisionMap = redissonClient.getMapCache(DIVISION_KEY);
         divisionMap.put(login, divisionIds);
     }
 
     public List<Long> getUserDivisionIds(String login) {
-        RMapCache<String, List<Long>> divisionMap =  redissonClient.getMapCache(DIVISION_KEY);
+        RMapCache<String, List<Long>> divisionMap = redissonClient.getMapCache(DIVISION_KEY);
         return divisionMap.get(login);
+    }
+
+    public void removeDivisionIdsFromRedis(String login) {
+        RMapCache<String, String> tokenMap = redissonClient.getMapCache(DIVISION_KEY);
+        tokenMap.remove(login);
     }
 
     public boolean isTokenExisted(String login) {

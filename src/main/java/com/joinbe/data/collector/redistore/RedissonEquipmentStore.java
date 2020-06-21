@@ -2,7 +2,6 @@ package com.joinbe.data.collector.redistore;
 
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
-import io.github.jhipster.config.JHipsterProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RQueue;
@@ -13,9 +12,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Component
 public class RedissonEquipmentStore {

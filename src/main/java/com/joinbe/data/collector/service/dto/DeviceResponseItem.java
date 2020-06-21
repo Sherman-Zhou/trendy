@@ -2,7 +2,6 @@ package com.joinbe.data.collector.service.dto;
 
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.Size;
 import java.io.Serializable;
 
 public class DeviceResponseItem implements Serializable {

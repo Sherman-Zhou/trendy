@@ -1,6 +1,5 @@
 package com.joinbe.data.collector;
 
-import cn.hutool.core.util.StrUtil;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.cmd.register.impl.LockCmd;
@@ -8,8 +7,6 @@ import com.joinbe.data.collector.cmd.register.impl.SetBatteryCmd;
 import com.joinbe.data.collector.cmd.register.impl.SetUserEventCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
-import com.joinbe.web.rest.errors.BadRequestAlertException;
-import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.async.DeferredResult;
 
 import java.util.HashMap;
 

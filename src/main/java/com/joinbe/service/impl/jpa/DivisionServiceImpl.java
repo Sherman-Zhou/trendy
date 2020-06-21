@@ -3,12 +3,11 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Division;
-import com.joinbe.domain.Permission;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.DivisionRepository;
+import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.dto.DivisionDTO;
-import com.joinbe.service.dto.PermissionSummaryDTO;
 import com.joinbe.web.rest.vm.DivisionVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -110,21 +109,24 @@ public class DivisionServiceImpl implements DivisionService {
     }
 
     @Override
-    public List<DivisionDTO> findAllActiveDivisions() {
-        List<DivisionDTO> divisions = divisionRepository.findAll().stream()
+    public List<DivisionDTO> findCurrentUserDivisions() {
+   /*     List<DivisionDTO> divisions = divisionRepository.findAll().stream()
                 .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
                 .map(DivisionService::toDto)
-                .collect(Collectors.toList());;
+                .collect(Collectors.toList());*/
 
+        List<DivisionDTO> divisions = SecurityUtils.getCurrentUserDivisionIds().stream()
+            .map(divisionRepository::getOne)
+            .map(DivisionService::toDto)
+            .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+            .collect(Collectors.toList());
 
         //group by parentId
-
-       List<DivisionDTO> children = divisions.stream()
-           // .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+        List<DivisionDTO> children = divisions.stream()
+            // .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
             .filter(division -> division.getParentId() != null)
             .sorted(Comparator.comparing(DivisionDTO::getName))
             .collect(Collectors.toList());
-
 
         Map<Long, List<DivisionDTO>> childMenusMap = children.stream().collect(Collectors.groupingBy(DivisionDTO::getParentId));
         //establish relationship for child menu

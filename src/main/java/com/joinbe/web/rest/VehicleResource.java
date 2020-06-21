@@ -1,11 +1,8 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.domain.Division;
-import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.VehicleService;
-import com.joinbe.service.dto.DivisionDTO;
-import com.joinbe.service.dto.VehicleDTO;
+import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
@@ -53,9 +50,9 @@ public class VehicleResource {
      */
     @GetMapping("/vehicles")
     @ApiOperation("搜索车辆")
-    public ResponseEntity<PageData<VehicleDTO>> getAllVehicles(Pageable pageable, VehicleVM vm) {
+    public ResponseEntity<PageData<VehicleDetailsDTO>> getAllVehicles(Pageable pageable, VehicleVM vm) {
         log.debug("REST request to get a page of Vehicles");
-        Page<VehicleDTO> page = vehicleService.findAll(pageable, vm);
+        Page<VehicleDetailsDTO> page = vehicleService.findAll(pageable, vm);
         return ResponseUtil.toPageData(page);
     }
 
@@ -67,9 +64,9 @@ public class VehicleResource {
      */
     @GetMapping("/vehicles/{id}")
     @ApiOperation("获取车辆详情")
-    public ResponseEntity<VehicleDTO> getVehicle(@PathVariable @ApiParam(value = "车辆主键", required = true) Long id) {
+    public ResponseEntity<VehicleDetailsDTO> getVehicle(@PathVariable @ApiParam(value = "车辆主键", required = true) Long id) {
         log.debug("REST request to get Vehicle : {}", id);
-        Optional<VehicleDTO> vehicleDTO = vehicleService.findOne(id);
+        Optional<VehicleDetailsDTO> vehicleDTO = vehicleService.findOne(id);
         return ResponseUtil.wrapOrNotFound(vehicleDTO);
     }
 
@@ -80,9 +77,9 @@ public class VehicleResource {
      */
     @GetMapping("/vehicles/sync")
     @ApiOperation("同步车辆")
-    public ResponseEntity<PageData<VehicleDTO>> syncVehicle(Pageable pageable) {
+    public ResponseEntity<PageData<VehicleDetailsDTO>> syncVehicle(Pageable pageable) {
         log.debug("sync cars from app backend..."); //TODO: to implement...
-        Page<VehicleDTO> page = vehicleService.findAll(pageable, new VehicleVM());
+        Page<VehicleDetailsDTO> page = vehicleService.findAll(pageable, new VehicleVM());
         return ResponseUtil.toPageData(page);
     }
 
@@ -90,17 +87,17 @@ public class VehicleResource {
     /**
      * {@code POST  /vehicles} : Create a new vehicle.
      *
-     * @param vehicleDTO the vehicleDTO to create.
+     * @param vehicleDetailsDTO the vehicleDTO to create.
      * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new vehicleDTO, or with status {@code 400 (Bad Request)} if the vehicle has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/vehicles")
-    public ResponseEntity<VehicleDTO> createVehicle(@Valid @RequestBody VehicleDTO vehicleDTO) throws URISyntaxException {
-        log.debug("REST request to save Vehicle : {}", vehicleDTO);
-        if (vehicleDTO.getId() != null) {
+    public ResponseEntity<VehicleDetailsDTO> createVehicle(@Valid @RequestBody VehicleDetailsDTO vehicleDetailsDTO) throws URISyntaxException {
+        log.debug("REST request to save Vehicle : {}", vehicleDetailsDTO);
+        if (vehicleDetailsDTO.getId() != null) {
             throw new BadRequestAlertException("A new vehicle cannot already have an ID", ENTITY_NAME, "idexists");
         }
-        VehicleDTO result = vehicleService.save(vehicleDTO);
+        VehicleDetailsDTO result = vehicleService.save(vehicleDetailsDTO);
         return ResponseEntity.created(new URI("/api/vehicles/" + result.getId()))
             .body(result);
     }
@@ -108,19 +105,19 @@ public class VehicleResource {
     /**
      * {@code PUT  /vehicles} : Updates an existing vehicle.
      *
-     * @param vehicleDTO the vehicleDTO to update.
+     * @param vehicleDetailsDTO the vehicleDTO to update.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated vehicleDTO,
      * or with status {@code 400 (Bad Request)} if the vehicleDTO is not valid,
      * or with status {@code 500 (Internal Server Error)} if the vehicleDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/vehicles")
-    public ResponseEntity<VehicleDTO> updateVehicle(@Valid @RequestBody VehicleDTO vehicleDTO) throws URISyntaxException {
-        log.debug("REST request to update Vehicle : {}", vehicleDTO);
-        if (vehicleDTO.getId() == null) {
+    public ResponseEntity<VehicleDetailsDTO> updateVehicle(@Valid @RequestBody VehicleDetailsDTO vehicleDetailsDTO) throws URISyntaxException {
+        log.debug("REST request to update Vehicle : {}", vehicleDetailsDTO);
+        if (vehicleDetailsDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
-        VehicleDTO result = vehicleService.save(vehicleDTO);
+        VehicleDetailsDTO result = vehicleService.save(vehicleDetailsDTO);
         return ResponseEntity.ok()
             .body(result);
     }

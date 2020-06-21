@@ -99,6 +99,7 @@ public class UserJWTController {
     @ApiOperation("用户登出")
     public ResponseEntity<Void> logout() {
         redissonTokenStore.removeFromRedis(SecurityUtils.getCurrentUserLogin().orElse(""));
+        redissonTokenStore.removeDivisionIdsFromRedis(SecurityUtils.getCurrentUserLogin().orElse(""));
         return ResponseEntity.noContent().build();
     }
 

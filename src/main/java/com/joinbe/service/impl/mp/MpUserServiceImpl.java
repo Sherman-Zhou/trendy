@@ -107,7 +107,7 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
     }
 
     @Override
-    public void updateUser(String name, String email, String langKey, String imageUrl) {
+    public void updateUser(String name, String email, String langKey, String imageUrl, String mobileNo) {
 
     }
 

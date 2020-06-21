@@ -15,7 +15,7 @@ import java.time.Instant;
  * A DTO for the {@link com.joinbe.domain.Vehicle} entity.
  */
 @Data
-public class VehicleDTO implements Serializable {
+public class VehicleDetailsDTO implements Serializable {
 
     @ApiModelProperty(value = "车辆主键")
     private Long id;
@@ -23,7 +23,7 @@ public class VehicleDTO implements Serializable {
     /**
      * 车牌
      */
-    @Size(max = 10)
+    @Size(max = 20)
     @NotBlank
     @ApiModelProperty(value = "车牌")
     private String licensePlateNumber;
@@ -110,13 +110,16 @@ public class VehicleDTO implements Serializable {
     @ApiModelProperty(value = "联系电话")
     private String contactNumber;
 
+    @ApiModelProperty(value = "是否行驶中", hidden = true)
+    private Boolean isMoving;
+
     @Size(max = 1)
     @Pattern(regexp = "[AD]")
-    @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除",  required = true)
+    @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除", required = true)
     private String status;
 
     @Size(max = 20)
-    @ApiModelProperty(value = "创建者",hidden = true )
+    @ApiModelProperty(value = "创建者", hidden = true)
     private String createdBy;
 
     @ApiModelProperty(value = "创建时间",hidden = true )
@@ -130,7 +133,7 @@ public class VehicleDTO implements Serializable {
     private Instant lastModifiedDate;
 
     @ApiModelProperty(value = "部门主键")
-    @NotBlank
+    @NotNull
     private Long divisionId;
 
     @ApiModelProperty(value = "组织", hidden = true)

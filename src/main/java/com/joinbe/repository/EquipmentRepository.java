@@ -1,9 +1,12 @@
 package com.joinbe.repository;
 
 import com.joinbe.domain.Equipment;
+import com.joinbe.domain.enumeration.EquipmentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * Spring Data  repository for the Equipment entity.
@@ -12,5 +15,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EquipmentRepository extends JpaRepository<Equipment, Long>,
     JpaSpecificationExecutor<Equipment> {
+
+    List<Equipment> findAllByStatus(EquipmentStatus status);
 
 }

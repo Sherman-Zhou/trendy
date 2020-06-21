@@ -1,6 +1,7 @@
 package com.joinbe.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.joinbe.domain.enumeration.RecordStatus;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
@@ -25,8 +26,8 @@ public class Vehicle extends AbstractAuditingEntity {
     /**
      * 车牌
      */
-    @Size(max = 10)
-    @Column(name = "license_plate_number", length = 10)
+    @Size(max = 20)
+    @Column(name = "license_plate_number", length = 20)
     private String licensePlateNumber;
 
     /**
@@ -110,12 +111,15 @@ public class Vehicle extends AbstractAuditingEntity {
     @Column(name = "contact_number", length = 20)
     private String contactNumber;
 
-    @Size(max = 1)
+
     @Column(name = "status", length = 1)
-    private String status;
+    private RecordStatus status;
 
     @Column(name = "bounded")
     private Boolean bounded;
+
+    @Column(name = "is_moving")
+    private Boolean isMoving;
 
     @OneToOne(mappedBy = "vehicle")
     private Equipment equipment;
@@ -288,15 +292,15 @@ public class Vehicle extends AbstractAuditingEntity {
         return this;
     }
 
-    public String getStatus() {
+    public RecordStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(RecordStatus status) {
         this.status = status;
     }
 
-    public Vehicle status(String status) {
+    public Vehicle status(RecordStatus status) {
         this.status = status;
         return this;
     }
@@ -345,6 +349,14 @@ public class Vehicle extends AbstractAuditingEntity {
     public Vehicle division(Division division) {
         this.division = division;
         return this;
+    }
+
+    public Boolean getIsMoving() {
+        return isMoving;
+    }
+
+    public void setIsMoving(Boolean moving) {
+        isMoving = moving;
     }
 
     public Boolean getBounded() {

@@ -1,120 +1,100 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.service.VehicleService;
 import com.joinbe.service.VehicleTrajectoryService;
+import com.joinbe.service.dto.DivisionWithVehicesleDTO;
+import com.joinbe.service.dto.VehicleStateDTO;
 import com.joinbe.service.dto.VehicleTrajectoryDTO;
-import com.joinbe.web.rest.errors.BadRequestAlertException;
-import io.github.jhipster.web.util.HeaderUtil;
-import io.github.jhipster.web.util.PaginationUtil;
-import io.github.jhipster.web.util.ResponseUtil;
+import com.joinbe.service.dto.VehicleTrajectoryDetailsDTO;
+import com.joinbe.web.rest.vm.ResponseUtil;
+import com.joinbe.web.rest.vm.SearchVehicleVM;
+import com.joinbe.web.rest.vm.TrajectoryVM;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.validation.Valid;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
 /**
  * REST controller for managing {@link com.joinbe.domain.VehicleTrajectory}.
  */
-//@RestController
+@RestController
 @RequestMapping("/api")
+@Api(value = "综合监控相关接口", tags = {"综合监控相关接口"})
 public class VehicleMonitoringResource {
 
     private static final String ENTITY_NAME = "vehicleTrajectory";
     private final Logger log = LoggerFactory.getLogger(VehicleMonitoringResource.class);
     private final VehicleTrajectoryService vehicleTrajectoryService;
 
+    private final VehicleService vehicleService;
 
-    public VehicleMonitoringResource(VehicleTrajectoryService vehicleTrajectoryService) {
+
+    public VehicleMonitoringResource(VehicleTrajectoryService vehicleTrajectoryService, VehicleService vehicleService) {
         this.vehicleTrajectoryService = vehicleTrajectoryService;
+        this.vehicleService = vehicleService;
     }
 
-//    /**
-//     * {@code POST  /vehicle-trajectories} : Create a new vehicleTrajectory.
-//     *
-//     * @param vehicleTrajectoryDTO the vehicleTrajectoryDTO to create.
-//     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new vehicleTrajectoryDTO, or with status {@code 400 (Bad Request)} if the vehicleTrajectory has already an ID.
-//     * @throws URISyntaxException if the Location URI syntax is incorrect.
-//     */
-//    @PostMapping("/vehicle-trajectories")
-//    public ResponseEntity<VehicleTrajectoryDTO> createVehicleTrajectory(@Valid @RequestBody VehicleTrajectoryDTO vehicleTrajectoryDTO) throws URISyntaxException {
-//        log.debug("REST request to save VehicleTrajectory : {}", vehicleTrajectoryDTO);
-//        if (vehicleTrajectoryDTO.getId() != null) {
-//            throw new BadRequestAlertException("A new vehicleTrajectory cannot already have an ID", ENTITY_NAME, "idexists");
-//        }
-//        VehicleTrajectoryDTO result = vehicleTrajectoryService.save(vehicleTrajectoryDTO);
-//        return ResponseEntity.created(new URI("/api/vehicle-trajectories/" + result.getId()))
-//            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
-//            .body(result);
-//    }
-//
-//    /**
-//     * {@code PUT  /vehicle-trajectories} : Updates an existing vehicleTrajectory.
-//     *
-//     * @param vehicleTrajectoryDTO the vehicleTrajectoryDTO to update.
-//     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated vehicleTrajectoryDTO,
-//     * or with status {@code 400 (Bad Request)} if the vehicleTrajectoryDTO is not valid,
-//     * or with status {@code 500 (Internal Server Error)} if the vehicleTrajectoryDTO couldn't be updated.
-//     * @throws URISyntaxException if the Location URI syntax is incorrect.
-//     */
-//    @PutMapping("/vehicle-trajectories")
-//    public ResponseEntity<VehicleTrajectoryDTO> updateVehicleTrajectory(@Valid @RequestBody VehicleTrajectoryDTO vehicleTrajectoryDTO) throws URISyntaxException {
-//        log.debug("REST request to update VehicleTrajectory : {}", vehicleTrajectoryDTO);
-//        if (vehicleTrajectoryDTO.getId() == null) {
-//            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
-//        }
-//        VehicleTrajectoryDTO result = vehicleTrajectoryService.save(vehicleTrajectoryDTO);
-//        return ResponseEntity.ok()
-//            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, vehicleTrajectoryDTO.getId().toString()))
-//            .body(result);
-//    }
+
+    @GetMapping("/monitor/vehicles/search")
+    @ApiOperation(value = "获取部门车辆")
+    public List<DivisionWithVehicesleDTO> searchVehicles(SearchVehicleVM vm) {
+        log.debug("REST request to get VehicleTrajectory : {}", vm);
+        return vehicleTrajectoryService.findCurrentUserDivisionsAndVehicles(vm);
+    }
 
     /**
-     * {@code GET  /vehicle-trajectories} : get all the vehicleTrajectories.
+     * {@code GET  /vehicle-trajectories} : get all the vehicleTrajectories.     *
      *
-     * @param pageable the pagination information.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of vehicleTrajectories in body.
      */
-    @GetMapping("/vehicle-trajectories")
-    public ResponseEntity<List<VehicleTrajectoryDTO>> getAllVehicleTrajectories(Pageable pageable) {
+    @GetMapping("/monitor/trajectories")
+    @ApiOperation(value = "获取车辆轨迹")
+    public ResponseEntity<List<VehicleTrajectoryDTO>> getAllVehicleTrajectories(TrajectoryVM vm) {
         log.debug("REST request to get a page of VehicleTrajectories");
-        Page<VehicleTrajectoryDTO> page = vehicleTrajectoryService.findAll(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        List<VehicleTrajectoryDTO> dtos = vehicleTrajectoryService.findAll(vm);
+        return ResponseEntity.ok().body(dtos);
+    }
+
+
+    /**
+     * {@code GET  /monitor/trajectory-details} : get all the Trajectories details.
+     *
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of vehicleTrajectories in body.
+     */
+    @GetMapping("/monitor/trajectory-details")
+    @ApiOperation(value = "获取车辆轨迹详情")
+    public ResponseEntity<List<VehicleTrajectoryDetailsDTO>> getAllVehicleTrajectoryDetails(TrajectoryVM vm) {
+        log.debug("REST request to get a List of getAllVehicleTrajectoryDetails");
+        List<VehicleTrajectoryDetailsDTO> dtos = vehicleTrajectoryService.findAllDetails(vm);
+        return ResponseEntity.ok().body(dtos);
+    }
+
+    @GetMapping("/monitor/trajectoryIds/{vehicleId}")
+    @ApiOperation("获取车辆轨迹Id")
+    public List<String> findAllTrajectoryIds(@PathVariable @ApiParam(value = "车辆主键", required = true) Long vehicleId) {
+        return vehicleTrajectoryService.findAllTrajectoryIds(vehicleId);
     }
 
     /**
-     * {@code GET  /vehicle-trajectories/:id} : get the "id" vehicleTrajectory.
+     * {@code GET  /monitor/vehicle/current-state/:vehicleId} : get the current location of the vehicle :vehicleId.
      *
-     * @param id the id of the vehicleTrajectoryDTO to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the vehicleTrajectoryDTO, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the  location, or with status {@code 404 (Not Found)}.
      */
-    @GetMapping("/vehicle-trajectories/{id}")
-    public ResponseEntity<VehicleTrajectoryDTO> getVehicleTrajectory(@PathVariable Long id) {
-        log.debug("REST request to get VehicleTrajectory : {}", id);
-        Optional<VehicleTrajectoryDTO> vehicleTrajectoryDTO = vehicleTrajectoryService.findOne(id);
-        return ResponseUtil.wrapOrNotFound(vehicleTrajectoryDTO);
+    @GetMapping("/monitor/vehicle/current-state/{vehicleId}")
+    @ApiOperation("获取车辆实时状态")
+    public ResponseEntity<VehicleStateDTO> getLatestVehicleTrajectory(@PathVariable @ApiParam(value = "车辆主键", required = true) Long vehicleId) {
+        log.debug("REST request to get VehicleTrajectory : {}", vehicleId);
+        Optional<VehicleStateDTO> vehicleStateDTO = vehicleTrajectoryService.findVehicleCurrentState(vehicleId);
+        return ResponseUtil.wrapOrNotFound(vehicleStateDTO);
     }
 
-//    /**
-//     * {@code DELETE  /vehicle-trajectories/:id} : delete the "id" vehicleTrajectory.
-//     *
-//     * @param id the id of the vehicleTrajectoryDTO to delete.
-//     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
-//     */
-//    @DeleteMapping("/vehicle-trajectories/{id}")
-//    public ResponseEntity<Void> deleteVehicleTrajectory(@PathVariable Long id) {
-//        log.debug("REST request to delete VehicleTrajectory : {}", id);
-//        vehicleTrajectoryService.delete(id);
-//        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
-//    }
 }

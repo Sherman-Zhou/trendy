@@ -35,7 +35,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -257,7 +256,7 @@ public class UserServiceImpl implements UserService {
      * @param imageUrl image URL of user.
      */
     @Override
-    public void updateUser(String name, String email, String langKey, String imageUrl) {
+    public void updateUser(String name, String email, String langKey, String imageUrl, String mobileNo) {
         SecurityUtils.getCurrentUserLogin()
             .flatMap(login -> userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
             .ifPresent(user -> {
@@ -267,6 +266,7 @@ public class UserServiceImpl implements UserService {
                 }
                 user.setLangKey(langKey);
                 user.setAvatar(imageUrl);
+                user.setMobileNo(mobileNo);
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
             });
@@ -376,9 +376,10 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM vm) {
         QueryParams<User> queryParams = new QueryParams<>();
-         Set<Division> userDivisions = SecurityUtils.getCurrentUserDivisionIds()
-             .stream().map(id -> new Division(id)).collect(Collectors.toSet());;
-         //queryParams.and("divisions", Filter.Operator.in, userDivisions);
+        queryParams.setDistinct(true);
+        Set<Division> userDivisions = SecurityUtils.getCurrentUserDivisionIds()
+            .stream().map(id -> new Division(id)).collect(Collectors.toSet());
+        //queryParams.and("divisions", Filter.Operator.in, userDivisions);
         if (StringUtils.isNotEmpty(vm.getEmail())) {
             queryParams.and("email", Filter.Operator.eq, vm.getEmail());
         }
@@ -489,10 +490,12 @@ public class UserServiceImpl implements UserService {
             //to check if the admin user has the permission of the division Ids to be assign
             SecurityUtils.checkDataPermission(divisionIds);
             SecurityUtils.checkDataPermission(user.getDivisions());
+            user.getDivisions().clear();
+
             divisionIds.forEach(divisionId -> {
                 Division division = new Division();
-                 division.setId(divisionId);
-                    user.addDivision(division);
+                division.setId(divisionId);
+                user.addDivision(division);
             });
             this.clearUserCaches(user);
             userDTO = new UserDTO(user);
