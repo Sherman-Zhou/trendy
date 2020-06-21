@@ -13,6 +13,7 @@ public final class Constants {
     public static final String ANONYMOUS_USER = "anonymoususer";
     public static final String C_QUESTION_MARK = "?";
     public static final String C_VERTICAL_LINE = "|";
+    public static final long VEHICLE_STOPPED_TIMELINE_MINUS = 3;
 
     private Constants() {
     }

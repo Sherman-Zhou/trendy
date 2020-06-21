@@ -8,6 +8,7 @@ import com.joinbe.data.collector.redistore.RedissonEquipmentStore;
 import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.LocationResponseDTO;
 import com.joinbe.data.collector.service.dto.ResponseDTO;
+import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -64,9 +65,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         Channel channel = ctx.channel();
         log.debug("Channel unregistered, Ip: {}, Id:{}", channel.remoteAddress(), channel.id().asLongText());
         String deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
+        //移除设备绑定的通道
         deviceIdAndChannelMap.remove(deviceNo);
         channelIdAndDeviceIdMap.remove(channel.id().asLongText());
+        //移除device绑定的server
         redissonEquipmentStore.removeFromRedisForServer(deviceNo);
+        //车辆行驶状态设置为未知
+        redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
         super.channelUnregistered(ctx);
     }
 
