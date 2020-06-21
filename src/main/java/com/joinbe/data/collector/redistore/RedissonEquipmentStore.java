@@ -48,7 +48,6 @@ public class RedissonEquipmentStore {
 
     @PostConstruct
     public void init() {
-
     }
 
     /**
@@ -212,7 +211,7 @@ public class RedissonEquipmentStore {
      * @return
      */
     public String genId() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHH");
         Date date = new Date();
         String formatDate = sdf.format(date);
         String key = "key" + formatDate;
@@ -220,7 +219,7 @@ public class RedissonEquipmentStore {
         if (incr == 0) {
             incr = getIncr(key, getCurrent2TodayEndMillisTime());//从001开始
         }
-        DecimalFormat df = new DecimalFormat("000");//三位序列号
+        DecimalFormat df = new DecimalFormat("000000");//三位序列号
         return formatDate + df.format(incr);
     }
 
