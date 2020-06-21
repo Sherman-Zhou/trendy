@@ -1,20 +1,30 @@
 package com.joinbe.data.collector;
 
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.dto.*;
+import com.joinbe.domain.VehicleTrajectoryDetails;
+import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,6 +36,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Optional;
 
@@ -41,7 +52,10 @@ public class EquipmentExtController {
     private CmdRegisterFactory factory;
 
     @Autowired
-    private  EquipmentService equipmentService;
+    private EquipmentService equipmentService;
+
+    @Autowired
+    VehicleTrajectoryDetailsRepository vehicleTrajectoryDetailsRepository;
 
     @PostMapping("/location/device")
     @ApiOperation("根据设备id获取设备的实时位置")
@@ -74,6 +88,7 @@ public class EquipmentExtController {
      */
     @PostMapping("/location/vehicle")
     @ApiOperation("根据车牌号获取设备的实时位置")
+    @Transactional(readOnly = true)
     public DeferredResult<ResponseEntity<ResponseDTO>> getLocation(@RequestBody @Valid LocationVehicleReq locationReq, BindingResult bindingResult) {
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(3000L, "Get Location time out");
 
@@ -104,6 +119,7 @@ public class EquipmentExtController {
         serverHandler.sendMessage(deviceId, gposCmd, deferredResult);
         return deferredResult;
     }
+
     /**
      *
      * @param deviceInfo
@@ -112,6 +128,7 @@ public class EquipmentExtController {
      */
     @PostMapping("/device")
     @ApiOperation("根据车牌号获取设备的信息")
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> getDeviceInfo(@RequestBody @Valid DeviceReq deviceInfo, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
@@ -165,8 +182,63 @@ public class EquipmentExtController {
         tokenResponseItem.setToken(md5);
         tokenResponseItem.setExpireDate(expireDateTime);
         tokenResponseDTO.setData(tokenResponseItem);
-
         //TODO: write token to equipment
         return new ResponseEntity<>(tokenResponseDTO, HttpStatus.OK);
+    }
+
+    /**
+     * @param trajectoryReq
+     * @param bindingResult
+     * @return
+     */
+    @PostMapping("/trajectory")
+    @ApiOperation("根据时间段查询车辆的轨迹列表")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> getTrajectory(@RequestBody @Valid TrajectoryReq trajectoryReq, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/external/equipment/trajectory validate error: {}", message);
+            return new ResponseEntity<>(new DeviceResponseDTO(1, message), HttpStatus.OK);
+        }
+
+        logger.debug("REST request to get trajectory : {}", trajectoryReq.toString());
+        TrajectoryResponseDTO trajectoryResponseDTO;
+        try {
+            Pageable pageable = PageRequest.of(trajectoryReq.getPageNum(), trajectoryReq.getPageSize());
+            QueryParams<VehicleTrajectoryDetails> queryParams = new QueryParams<>();
+            queryParams.setDistinct(true);
+            if (StringUtils.isNotBlank(trajectoryReq.getPlateNumber())) {
+                queryParams.and(new Filter("vehicleTrajectory.vehicle.licensePlateNumber", Filter.Operator.eq, trajectoryReq.getPlateNumber()));
+            }
+            if (trajectoryReq.getStartDateFrom() != null && trajectoryReq.getEndDateFrom() != null) {
+                queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(trajectoryReq.getStartDateFrom(), trajectoryReq.getEndDateFrom())));
+            }
+
+            Specification<VehicleTrajectoryDetails> specification = Specification.where(queryParams);
+            Page<VehicleTrajectoryDetails> page = vehicleTrajectoryDetailsRepository.findAll(specification, pageable);
+
+            // generate result orders
+            trajectoryResponseDTO = new TrajectoryResponseDTO(0, "success", page.getTotalElements(), page.getNumber(), page.getSize());
+            trajectoryResponseDTO.setData(page.map(vehicleTrajectoryDetails -> {
+                TrajectoryResponseResult trajectoryDetails = new TrajectoryResponseResult();
+                trajectoryDetails.setTrajectoryId(vehicleTrajectoryDetails.getVehicleTrajectory().getTrajectoryId());
+                trajectoryDetails.setReceivedTime(vehicleTrajectoryDetails.getReceivedTime().getEpochSecond());
+                trajectoryDetails.setLongitude(vehicleTrajectoryDetails.getLongitude());
+                trajectoryDetails.setLatitude(vehicleTrajectoryDetails.getLatitude());
+                trajectoryDetails.setActualSpeed(vehicleTrajectoryDetails.getActualSpeed());
+                trajectoryDetails.setMileage(vehicleTrajectoryDetails.getMileage());
+                trajectoryDetails.setLimitedSpeed(vehicleTrajectoryDetails.getLimitedSpeed());
+                trajectoryDetails.setTirePressureFrontLeft(vehicleTrajectoryDetails.getTirePressureFrontLeft());
+                trajectoryDetails.setTirePressureFrontRight(vehicleTrajectoryDetails.getTirePressureFrontRight());
+                trajectoryDetails.setTirePressureRearLeft(vehicleTrajectoryDetails.getTirePressureRearLeft());
+                trajectoryDetails.setTirePressureRearRight(vehicleTrajectoryDetails.getTirePressureRearRight());
+                return trajectoryDetails;
+            }).getContent());
+            logger.debug("End process trajectory query: {}", trajectoryResponseDTO.toString());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new TrajectoryResponseDTO(1, e.getMessage()), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(trajectoryResponseDTO, HttpStatus.OK);
     }
 }

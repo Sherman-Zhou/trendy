@@ -5,6 +5,7 @@ import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.netty.protocol.PositionProtocol;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.redistore.RedissonEquipmentStore;
+import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.LocationResponseDTO;
 import com.joinbe.data.collector.service.dto.ResponseDTO;
 import io.netty.channel.Channel;
@@ -36,8 +37,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     private static final Logger log = LoggerFactory.getLogger(ServerHandler.class);
 
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-    private static HashMap<String, Channel> deviceIdAndChannelMap = new HashMap<>();
-    private static HashMap<String,String> channelIdAndDeviceIdMap = new HashMap<>();
+    private static final HashMap<String, Channel> deviceIdAndChannelMap = new HashMap<>();
+    private static final HashMap<String, String> channelIdAndDeviceIdMap = new HashMap<>();
 
     @Value("${netty.server-ip}")
     private String serverIp;
@@ -47,6 +48,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
 
     @Autowired
     CmdRegisterFactory factory;
+
+    @Autowired
+    DataCollectService dataCollectService;
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
@@ -87,7 +91,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         channel.eventLoop().execute(new Runnable() {
             @Override
             public void run() {
-                //insert msg, TODO
+                //TODO - Insert message
+                dataCollectService.saveTrajectory(msg);
             }
         });
     }

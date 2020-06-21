@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Spring Data  repository for the Equipment entity.
@@ -15,6 +16,8 @@ import java.util.List;
 @Repository
 public interface EquipmentRepository extends JpaRepository<Equipment, Long>,
     JpaSpecificationExecutor<Equipment> {
+
+    Optional<Equipment> findOneByImei(String imei);
 
     List<Equipment> findAllByStatus(EquipmentStatus status);
 
