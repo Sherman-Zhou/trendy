@@ -9,6 +9,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,14 +30,19 @@ public class StringProtocolInitalizer extends ChannelInitializer<SocketChannel> 
     /**
      * tcp连接超时时间
      */
-    private final static Integer READ_TIME_OUT_SEC = 5 * 60 + 10;
+    @Value("${netty.idle-timeout-second}")
+    private Integer readTimeOutSecond;
+
+
+
+    //private final static Integer READ_TIME_OUT_SEC = 5 * 60 + 10;
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         //截获管道
         ChannelPipeline pipeline = ch.pipeline();
         //心跳
-        pipeline.addLast(new IdleStateHandler(READ_TIME_OUT_SEC, 0, 0));
+        pipeline.addLast(new IdleStateHandler(readTimeOutSecond, 0, 0));
         ch.pipeline().addLast(serverIdleStateTrigger);
         //设置数据decode处理器，for receiver
         pipeline.addLast(new PositionMessageDecoder());

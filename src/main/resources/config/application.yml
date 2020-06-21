@@ -172,9 +172,3 @@ mybatis-plus:
 # ===================================================================
 
 # application:
-netty:
-  port: 17601
-  boss-thread-count: 2
-  worker-thread-count: 8
-  so-keepalive: true
-  so-backlog: 100
