@@ -96,7 +96,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         channel.eventLoop().execute(new Runnable() {
             @Override
             public void run() {
-                //TODO - Insert message
                 dataCollectService.saveTrajectory(msg);
             }
         });
@@ -193,6 +192,32 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
             }
         });
         return "success";
+    }
+
+    /**
+     * Interface call， to send message
+     * @param deviceId
+     * @param event
+     */
+    public void sendLocationMessage(String deviceId, String event, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
+        Channel c = deviceIdAndChannelMap.get(deviceId);
+        if (c == null) {
+            String strInfo= "未找到发送通道, deviceId: " + deviceId;
+            log.warn(strInfo);
+            deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
+        }
+        log.debug("deviceId: {}, isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",deviceId, c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
+        if(c.isWritable()){
+            //put to queue
+            redissonEquipmentStore.putInRedisForQuery(deviceId,EventEnum.GPOS,deferredResult);
+            c.writeAndFlush(event).addListener(future -> {
+                if(!future.isSuccess()){
+                    deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is not on line, deviceId: " + deviceId), HttpStatus.OK));
+                }
+            });
+        }else{
+            deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
+        }
     }
 
     /**

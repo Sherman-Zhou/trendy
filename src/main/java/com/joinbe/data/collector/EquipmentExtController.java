@@ -76,7 +76,7 @@ public class EquipmentExtController {
         }
         String gposCmd = cmd.initCmd(params);
         logger.debug("REST request for get location, command: {}", gposCmd);
-        serverHandler.sendMessage(locationReq.getDeviceId(), gposCmd, deferredResult);
+        serverHandler.sendLocationMessage(locationReq.getDeviceId(), gposCmd, deferredResult);
         return deferredResult;
     }
 
@@ -116,7 +116,7 @@ public class EquipmentExtController {
         }
         String gposCmd = cmd.initCmd(params);
         logger.debug("REST request for get location, command: {}", gposCmd);
-        serverHandler.sendMessage(deviceId, gposCmd, deferredResult);
+        serverHandler.sendLocationMessage(deviceId, gposCmd, deferredResult);
         return deferredResult;
     }
 

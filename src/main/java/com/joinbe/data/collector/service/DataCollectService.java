@@ -134,8 +134,8 @@ public class DataCollectService {
         if(speed == 0){
             //获取上次速度不为0的时间
             Long lastTimeStamp = redissonEquipmentStore.getDeviceCalcStatus(unitId);
-            boolean  isStopped = (System.currentTimeMillis() - lastTimeStamp) / (1000 * 60) > Constants.VEHICLE_STOPPED_TIMELINE_MINUS;
-            if(lastTimeStamp == null || isStopped || VehicleStatusEnum.UNKNOWN.equals(currentDeviceStatus)){
+            //boolean  isStopped = (System.currentTimeMillis() - lastTimeStamp) / (1000 * 60) > Constants.VEHICLE_STOPPED_TIMELINE_MINUS;
+            if(lastTimeStamp == null || (System.currentTimeMillis() - lastTimeStamp) / (1000 * 60) > Constants.VEHICLE_STOPPED_TIMELINE_MINUS || VehicleStatusEnum.UNKNOWN.equals(currentDeviceStatus)){
                 redissonEquipmentStore.putInRedisForStatus(unitId, VehicleStatusEnum.STOPPED);
             }
         }
