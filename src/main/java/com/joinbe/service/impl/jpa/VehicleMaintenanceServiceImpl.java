@@ -1,9 +1,14 @@
 package com.joinbe.service.impl.jpa;
 
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
+import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.VehicleMaintenance;
 import com.joinbe.repository.VehicleMaintenanceRepository;
+import com.joinbe.repository.VehicleRepository;
 import com.joinbe.service.VehicleMaintenanceService;
 import com.joinbe.service.dto.VehicleMaintenanceDTO;
+import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -11,7 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing {@link VehicleMaintenance}.
@@ -24,8 +31,11 @@ public class VehicleMaintenanceServiceImpl implements VehicleMaintenanceService 
 
     private final VehicleMaintenanceRepository vehicleMaintenanceRepository;
 
-    public VehicleMaintenanceServiceImpl(VehicleMaintenanceRepository vehicleMaintenanceRepository) {
+    private final VehicleRepository vehicleRepository;
+
+    public VehicleMaintenanceServiceImpl(VehicleMaintenanceRepository vehicleMaintenanceRepository, VehicleRepository vehicleRepository) {
         this.vehicleMaintenanceRepository = vehicleMaintenanceRepository;
+        this.vehicleRepository = vehicleRepository;
     }
 
     /**
@@ -38,6 +48,8 @@ public class VehicleMaintenanceServiceImpl implements VehicleMaintenanceService 
     public VehicleMaintenanceDTO save(VehicleMaintenanceDTO vehicleMaintenanceDTO) {
         log.debug("Request to save VehicleMaintenance : {}", vehicleMaintenanceDTO);
         VehicleMaintenance vehicleMaintenance = VehicleMaintenanceService.toEntity(vehicleMaintenanceDTO);
+        Vehicle vehicle = vehicleRepository.getOne(vehicleMaintenanceDTO.getVehicleId());
+        vehicleMaintenance.setVehicle(vehicle);
         vehicleMaintenance = vehicleMaintenanceRepository.save(vehicleMaintenance);
         return VehicleMaintenanceService.toDto(vehicleMaintenance);
     }
@@ -79,5 +91,13 @@ public class VehicleMaintenanceServiceImpl implements VehicleMaintenanceService 
     public void delete(Long id) {
         log.debug("Request to delete VehicleMaintenance : {}", id);
         vehicleMaintenanceRepository.deleteById(id);
+    }
+
+    @Override
+    public List<VehicleMaintenanceDTO> findAll(VehicleMaintenanceVM vm) {
+        QueryParams<VehicleMaintenance> queryParams = new QueryParams<>();
+        queryParams.and("vehicle.id", Filter.Operator.eq, vm.getVehicleId());
+        return vehicleMaintenanceRepository.findAll(queryParams)
+            .stream().map(VehicleMaintenanceService::toDto).collect(Collectors.toList());
     }
 }

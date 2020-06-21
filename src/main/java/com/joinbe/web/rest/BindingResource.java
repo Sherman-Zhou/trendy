@@ -7,7 +7,7 @@ import com.joinbe.service.EquipmentService;
 import com.joinbe.service.VehicleService;
 import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.service.dto.EquipmentDTO;
-import com.joinbe.service.dto.VehicleDTO;
+import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.web.rest.vm.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -56,26 +56,26 @@ public class BindingResource {
 
 
     /**
-     * {@code GET  /binding/car/search} : get all the vehicles.
+     * {@code GET  /binding/vehicle/search} : get all the vehicles.
      *
      * @param pageable the pagination information.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of vehicles in body.
      */
-    @GetMapping("/binding/car/search")
+    @GetMapping("/binding/vehicle/search")
     @ApiOperation("搜索车辆")
-    public ResponseEntity<PageData<VehicleDTO>> getAllVehicles(Pageable pageable, VehicleBindingVM vm) {
+    public ResponseEntity<PageData<VehicleDetailsDTO>> getAllVehicles(Pageable pageable, VehicleBindingVM vm) {
         log.debug("REST request to get a page of Vehicles");
-        Page<VehicleDTO> page = vehicleService.findAll(pageable, vm);
+        Page<VehicleDetailsDTO> page = vehicleService.findAll(pageable, vm);
         return ResponseUtil.toPageData(page);
     }
 
 
     @GetMapping("/binding/equipment/to-bound")
     @ApiOperation("待绑定设备")
-    public List<EquipmentDTO> getAllEquipments( ) {
+    public List<EquipmentDTO> getAllUnboundEquipments() {
         log.debug("REST request to get a page of Vehicles");
         List<EquipmentDTO> list = equipmentService.findAllUnboundEquipments();
-        return  list;
+        return list;
     }
 
     /**
@@ -86,7 +86,7 @@ public class BindingResource {
      */
     @PostMapping("/binding")
     @ApiOperation("绑定车辆设备")
-    public ResponseEntity<Void> getVehicle(@RequestBody EquipmentVehicleBindingVM vm) {
+    public ResponseEntity<Void> binding(@RequestBody EquipmentVehicleBindingVM vm) {
         log.debug("REST request to bind Vehicle  {} and Equipment: {}", vm.getVehicleId(), vm.getEquipmentId());
         vehicleService.binding(vm);
         return ResponseEntity.noContent().build();
@@ -122,12 +122,11 @@ public class BindingResource {
     }
 
 
-
     @PostMapping("/binding/upload")
     @ApiOperation("导入绑定信息")
-    public ResponseEntity<PageData<VehicleDTO>> upload(@RequestParam("file") MultipartFile file, Pageable pageable) {
+    public ResponseEntity<PageData<VehicleDetailsDTO>> upload(@RequestParam("file") MultipartFile file, Pageable pageable) {
         log.debug("uploaded file: {}", file.getOriginalFilename());
-        Page<VehicleDTO> page = vehicleService.findAll(pageable, new VehicleVM());
+        Page<VehicleDetailsDTO> page = vehicleService.findAll(pageable, new VehicleVM());
         return ResponseUtil.toPageData(page);
     }
 

@@ -1,9 +1,12 @@
 package com.joinbe.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.joinbe.domain.enumeration.EventCategory;
+import com.joinbe.domain.enumeration.EventType;
+import com.joinbe.domain.enumeration.OperationResult;
+import com.joinbe.domain.enumeration.OperationSourceType;
 
 import javax.persistence.*;
-import javax.validation.constraints.Size;
 
 /**
  * A EquipmentOperationRecord.
@@ -19,18 +22,14 @@ public class EquipmentOperationRecord extends AbstractAuditingEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Size(max = 1)
-    @Column(name = "status", length = 1)
-    private String status;
-
     /**
      * 操作来源：- 枚举类型
      * 控制端
      * APP蓝牙
      */
-    @Size(max = 50)
+    @Enumerated(EnumType.STRING)
     @Column(name = "operation_source_type", length = 50)
-    private String operationSourceType;
+    private OperationSourceType operationSourceType;
 
     /**
      * 事件类型：- 枚举类型
@@ -38,9 +37,9 @@ public class EquipmentOperationRecord extends AbstractAuditingEntity {
      * 开关锁
      * 绑定/解绑
      */
-    @Size(max = 50)
+    @Enumerated(EnumType.STRING)
     @Column(name = "event_type", length = 50)
-    private String eventType;
+    private EventCategory eventType;
 
     /**
      * 事件描述：（6种）-
@@ -52,18 +51,18 @@ public class EquipmentOperationRecord extends AbstractAuditingEntity {
      * 绑定设备
      * 解绑设备     *
      */
-    @Size(max = 50)
+    @Enumerated(EnumType.STRING)
     @Column(name = "event_desc", length = 50)
-    private String eventDesc;
+    private EventType eventDesc;
 
     /**
      * 结果: - 枚举类型
      * 成功
      * 失败
      */
-    @Size(max = 50)
+    @Enumerated(EnumType.STRING)
     @Column(name = "result", length = 50)
-    private String result;
+    private OperationResult result;
 
 
     @ManyToOne
@@ -82,67 +81,55 @@ public class EquipmentOperationRecord extends AbstractAuditingEntity {
         this.id = id;
     }
 
-    public String getStatus() {
-        return status;
-    }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public EquipmentOperationRecord status(String status) {
-        this.status = status;
-        return this;
-    }
-
-    public String getOperationSourceType() {
+    public OperationSourceType getOperationSourceType() {
         return operationSourceType;
     }
 
-    public void setOperationSourceType(String operationSourceType) {
+    public void setOperationSourceType(OperationSourceType operationSourceType) {
         this.operationSourceType = operationSourceType;
     }
 
-    public EquipmentOperationRecord operationSourceType(String operationSourceType) {
+    public EquipmentOperationRecord operationSourceType(OperationSourceType operationSourceType) {
         this.operationSourceType = operationSourceType;
         return this;
     }
 
-    public String getEventType() {
+    public EventCategory getEventType() {
         return eventType;
     }
 
-    public void setEventType(String eventType) {
+    public void setEventType(EventCategory eventType) {
         this.eventType = eventType;
     }
 
-    public EquipmentOperationRecord eventType(String eventType) {
+    public EquipmentOperationRecord eventType(EventCategory eventType) {
         this.eventType = eventType;
         return this;
     }
 
-    public String getEventDesc() {
+    public EventType getEventDesc() {
         return eventDesc;
     }
 
-    public void setEventDesc(String eventDesc) {
+    public void setEventDesc(EventType eventDesc) {
         this.eventDesc = eventDesc;
     }
 
-    public EquipmentOperationRecord eventDesc(String eventDesc) {
+    public EquipmentOperationRecord eventDesc(EventType eventDesc) {
         this.eventDesc = eventDesc;
         return this;
     }
 
-    public String getResult() {
+    public OperationResult getResult() {
         return result;
     }
 
-    public void setResult(String result) {
+    public void setResult(OperationResult result) {
         this.result = result;
     }
 
-    public EquipmentOperationRecord result(String result) {
+    public EquipmentOperationRecord result(OperationResult result) {
         this.result = result;
         return this;
     }
@@ -177,7 +164,6 @@ public class EquipmentOperationRecord extends AbstractAuditingEntity {
     public String toString() {
         return "EquipmentOperationRecord{" +
             "id=" + getId() +
-            ", status='" + getStatus() + "'" +
             ", operationSourceType='" + getOperationSourceType() + "'" +
             ", eventType='" + getEventType() + "'" +
             ", eventDesc='" + getEventDesc() + "'" +

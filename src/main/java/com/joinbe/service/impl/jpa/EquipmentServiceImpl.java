@@ -3,6 +3,8 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Equipment;
+import com.joinbe.domain.Vehicle;
+import com.joinbe.domain.enumeration.EquipmentStatus;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
@@ -12,13 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing {@link Equipment}.
@@ -104,8 +105,13 @@ public class EquipmentServiceImpl implements EquipmentService {
     public void delete(Long id) {
         log.debug("Request to delete Equipment : {}", id);
         Optional<Equipment> equipmentOptional = equipmentRepository.findById(id);
-        if(equipmentOptional.isPresent()){
-            equipmentOptional.get().setStatus("D");
+        if (equipmentOptional.isPresent()) {
+            Equipment equipment = equipmentOptional.get();
+            equipment.setStatus(EquipmentStatus.DELETED);
+            Vehicle vehicle = equipment.getVehicle();
+            if (vehicle != null) {
+                vehicle.setBounded(false);
+            }
         }
 //        equipmentRepository.deleteById(id);
     }
@@ -125,7 +131,8 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     @Override
     public List<EquipmentDTO> findAllUnboundEquipments() {
-        return null;
+        return equipmentRepository.findAllByStatus(EquipmentStatus.UNBOUND)
+            .stream().map(EquipmentService::toDto).collect(Collectors.toList());
     }
 
 }

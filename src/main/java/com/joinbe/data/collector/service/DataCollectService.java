@@ -27,25 +27,22 @@ public class DataCollectService {
     private final Logger log = LoggerFactory.getLogger(DataCollectService.class);
 
     @Autowired
+    VehicleTrajectoryRepository vehicleTrajectoryRepository;
+    @Autowired
     private RedissonEquipmentStore redissonEquipmentStore;
-
     @Autowired
     private EquipmentRepository equipmentRepository;
 
-    @Autowired
-    VehicleTrajectoryRepository vehicleTrajectoryRepository;
-
-
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
-    public void saveTrajectory(PositionProtocol msg){
-        if(msg == null || StringUtils.isBlank(msg.getUnitId())){
+    public void saveTrajectory(PositionProtocol msg) {
+        if (msg == null || StringUtils.isBlank(msg.getUnitId())) {
             return;
         }
         Optional<Equipment> equipment = equipmentRepository.findOneByImei(msg.getUnitId());
-        if(!equipment.isPresent()){
+        if (!equipment.isPresent()) {
             log.warn("Equipment not maintained yet, imei: {}", msg.getUnitId());
             return;
-        }else if(equipment.get().getVehicle() == null){
+        } else if (equipment.get().getVehicle() == null) {
             log.warn("vehicle not bound yet, imei: {}", msg.getUnitId());
             return;
         }

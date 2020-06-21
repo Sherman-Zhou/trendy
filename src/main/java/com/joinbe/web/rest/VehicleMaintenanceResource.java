@@ -3,18 +3,12 @@ package com.joinbe.web.rest;
 import com.joinbe.service.VehicleMaintenanceService;
 import com.joinbe.service.dto.VehicleMaintenanceDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
-import io.github.jhipster.web.util.HeaderUtil;
-import io.github.jhipster.web.util.PaginationUtil;
-import io.github.jhipster.web.util.ResponseUtil;
+import com.joinbe.web.rest.vm.ResponseUtil;
+import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -25,15 +19,14 @@ import java.util.Optional;
 /**
  * REST controller for managing {@link com.joinbe.domain.VehicleMaintenance}.
  */
-//@RestController
+@RestController
 @RequestMapping("/api")
 public class VehicleMaintenanceResource {
 
     private static final String ENTITY_NAME = "vehicleMaintenance";
     private final Logger log = LoggerFactory.getLogger(VehicleMaintenanceResource.class);
     private final VehicleMaintenanceService vehicleMaintenanceService;
-    @Value("${jhipster.clientApp.name}")
-    private String applicationName;
+
 
     public VehicleMaintenanceResource(VehicleMaintenanceService vehicleMaintenanceService) {
         this.vehicleMaintenanceService = vehicleMaintenanceService;
@@ -54,7 +47,6 @@ public class VehicleMaintenanceResource {
         }
         VehicleMaintenanceDTO result = vehicleMaintenanceService.save(vehicleMaintenanceDTO);
         return ResponseEntity.created(new URI("/api/vehicle-maintenances/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
 
@@ -75,22 +67,32 @@ public class VehicleMaintenanceResource {
         }
         VehicleMaintenanceDTO result = vehicleMaintenanceService.save(vehicleMaintenanceDTO);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, vehicleMaintenanceDTO.getId().toString()))
             .body(result);
     }
+
+//    /**
+//     * {@code GET  /vehicle-maintenances} : get all the vehicleMaintenances.
+//     *
+//     * @param pageable the pagination information.
+//     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of vehicleMaintenances in body.
+//     */
+//    @GetMapping("/vehicle-maintenances")
+//    public ResponseEntity<PageData<VehicleMaintenanceDTO>> getAllVehicleMaintenances(Pageable pageable) {
+//        log.debug("REST request to get a page of VehicleMaintenances");
+//        Page<VehicleMaintenanceDTO> page = vehicleMaintenanceService.findAll(pageable);
+//        return ResponseUtil.toPageData(page);
+//    }
 
     /**
      * {@code GET  /vehicle-maintenances} : get all the vehicleMaintenances.
      *
-     * @param pageable the pagination information.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of vehicleMaintenances in body.
      */
     @GetMapping("/vehicle-maintenances")
-    public ResponseEntity<List<VehicleMaintenanceDTO>> getAllVehicleMaintenances(Pageable pageable) {
+    public ResponseEntity<List<VehicleMaintenanceDTO>> getAllVehicleMaintenances(VehicleMaintenanceVM vm) {
         log.debug("REST request to get a page of VehicleMaintenances");
-        Page<VehicleMaintenanceDTO> page = vehicleMaintenanceService.findAll(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), page);
-        return ResponseEntity.ok().headers(headers).body(page.getContent());
+        List<VehicleMaintenanceDTO> vehicleMaintenances = vehicleMaintenanceService.findAll(vm);
+        return ResponseEntity.ok().body(vehicleMaintenances);
     }
 
     /**
@@ -116,6 +118,6 @@ public class VehicleMaintenanceResource {
     public ResponseEntity<Void> deleteVehicleMaintenance(@PathVariable Long id) {
         log.debug("REST request to delete VehicleMaintenance : {}", id);
         vehicleMaintenanceService.delete(id);
-        return ResponseEntity.noContent().headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString())).build();
+        return ResponseEntity.noContent().build();
     }
 }

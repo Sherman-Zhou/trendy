@@ -3,7 +3,6 @@ package com.joinbe.web.rest.vm;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
 import java.io.Serializable;
 
 @Data

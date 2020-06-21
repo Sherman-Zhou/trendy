@@ -5,6 +5,8 @@ import java.util.List;
 
 public class TrajectoryResponseDTO extends ResponseForPageDTO implements Serializable {
 
+    private List<TrajectoryResponseResult> data;
+
     public TrajectoryResponseDTO(int code, String message) {
         super(code, message);
     }
@@ -22,8 +24,6 @@ public class TrajectoryResponseDTO extends ResponseForPageDTO implements Seriali
         super(code, message, totalCount, pageNum, pageSize);
         this.data = data;
     }
-
-    private List<TrajectoryResponseResult> data;
 
     public List<TrajectoryResponseResult> getData() {
         return data;

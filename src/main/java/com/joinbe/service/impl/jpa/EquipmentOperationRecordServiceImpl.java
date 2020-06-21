@@ -3,7 +3,6 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
-import com.joinbe.domain.EquipmentFault;
 import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.repository.EquipmentOperationRecordRepository;
 import com.joinbe.security.SecurityUtils;

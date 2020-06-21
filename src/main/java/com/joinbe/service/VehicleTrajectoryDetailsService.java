@@ -14,8 +14,8 @@ import java.util.Optional;
 public interface VehicleTrajectoryDetailsService {
 
     static VehicleTrajectoryDetailsDTO toDto(VehicleTrajectoryDetails vehicleTrajectoryDetails) {
-
-        return BeanConverter.toDto(vehicleTrajectoryDetails, VehicleTrajectoryDetailsDTO.class);
+        VehicleTrajectoryDetailsDTO dto = BeanConverter.toDto(vehicleTrajectoryDetails, VehicleTrajectoryDetailsDTO.class);
+        return dto;
     }
 
     static VehicleTrajectoryDetails toEntity(VehicleTrajectoryDetailsDTO vehicleTrajectoryDetailsDTO) {

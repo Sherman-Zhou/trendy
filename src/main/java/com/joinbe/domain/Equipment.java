@@ -1,5 +1,7 @@
 package com.joinbe.domain;
 
+import com.joinbe.domain.enumeration.EquipmentStatus;
+
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 import java.util.HashSet;
@@ -56,12 +58,9 @@ public class Equipment extends AbstractAuditingEntity {
 
     /**
      * 设备状态 - 枚举类型
-     * 绑定 B
-     * 未绑定 U
      */
-    @Size(max = 1)
     @Column(name = "status", length = 1)
-    private String status;
+    private EquipmentStatus status;
 
     @Column(name = "is_online")
     private Boolean isOnline;
@@ -148,15 +147,15 @@ public class Equipment extends AbstractAuditingEntity {
         return this;
     }
 
-    public String getStatus() {
+    public EquipmentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(EquipmentStatus status) {
         this.status = status;
     }
 
-    public Equipment status(String status) {
+    public Equipment status(EquipmentStatus status) {
         this.status = status;
         return this;
     }

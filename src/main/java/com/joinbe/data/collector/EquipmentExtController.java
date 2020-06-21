@@ -52,7 +52,7 @@ public class EquipmentExtController {
     private CmdRegisterFactory factory;
 
     @Autowired
-    private  EquipmentService equipmentService;
+    private EquipmentService equipmentService;
 
     @Autowired
     VehicleTrajectoryDetailsRepository vehicleTrajectoryDetailsRepository;
@@ -119,6 +119,7 @@ public class EquipmentExtController {
         serverHandler.sendMessage(deviceId, gposCmd, deferredResult);
         return deferredResult;
     }
+
     /**
      *
      * @param deviceInfo
@@ -186,7 +187,6 @@ public class EquipmentExtController {
     }
 
     /**
-     *
      * @param trajectoryReq
      * @param bindingResult
      * @return
@@ -210,8 +210,8 @@ public class EquipmentExtController {
             if (StringUtils.isNotBlank(trajectoryReq.getPlateNumber())) {
                 queryParams.and(new Filter("vehicleTrajectory.vehicle.licensePlateNumber", Filter.Operator.eq, trajectoryReq.getPlateNumber()));
             }
-            if(trajectoryReq.getStartDateFrom() != null && trajectoryReq.getEndDateFrom() != null){
-                queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(trajectoryReq.getStartDateFrom(),trajectoryReq.getEndDateFrom())));
+            if (trajectoryReq.getStartDateFrom() != null && trajectoryReq.getEndDateFrom() != null) {
+                queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(trajectoryReq.getStartDateFrom(), trajectoryReq.getEndDateFrom())));
             }
 
             Specification<VehicleTrajectoryDetails> specification = Specification.where(queryParams);

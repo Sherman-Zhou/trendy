@@ -26,14 +26,14 @@ public class SystemConfig extends AbstractAuditingEntity {
      * 参数key值
      */
     @Size(max = 50)
-    @Column(name = "key", length = 50)
+    @Column(name = "config_key", length = 50)
     private String key;
 
     /**
      * 参数value值
      */
     @Size(max = 50)
-    @Column(name = "value", length = 50)
+    @Column(name = "config_value", length = 50)
     private String value;
 
     @Size(max = 1)

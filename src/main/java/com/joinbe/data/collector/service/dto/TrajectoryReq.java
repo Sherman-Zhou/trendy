@@ -39,7 +39,7 @@ public class TrajectoryReq {
      */
     @ApiModelProperty(value = "页序号")
     @NotNull(message = "页序号不能为空")
-    @Min(value = 0,message ="页序号要大于0" )
+    @Min(value = 0, message = "页序号要大于0")
     private Integer pageNum;
     /**
      * 每页显示记录数

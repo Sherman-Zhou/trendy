@@ -40,9 +40,11 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     public SystemConfigDTO save(SystemConfigDTO systemConfigDTO) {
         log.debug("Request to save SystemConfig : {}", systemConfigDTO);
         SystemConfig config = systemConfigRepository.findByKey(SystemConfig.TRAJECTORY_RESERVE_DAYS);
+
         config.setValue(String.valueOf(systemConfigDTO.getTrajectoryReserveDays()));
+
         SystemConfig lastBackupTime = systemConfigRepository.findByKey(SystemConfig.LAST_BACKUP_TIME);
-        systemConfigDTO.setLastBackupTime(lastBackupTime.getKey());
+        systemConfigDTO.setLastBackupTime(lastBackupTime.getValue());
         return systemConfigDTO;
     }
 

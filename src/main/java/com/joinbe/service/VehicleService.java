@@ -4,12 +4,14 @@ import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Division;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.security.SecurityUtils;
-import com.joinbe.service.dto.VehicleDTO;
+import com.joinbe.service.dto.VehicleDetailsDTO;
+import com.joinbe.service.dto.VehicleSummaryDTO;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
 import com.joinbe.web.rest.vm.VehicleVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -17,30 +19,38 @@ import java.util.Optional;
  */
 public interface VehicleService {
 
-    static VehicleDTO toDto(Vehicle vehicle) {
-
-        VehicleDTO dto =  BeanConverter.toDto(vehicle, VehicleDTO.class);
+    static VehicleDetailsDTO toDto(Vehicle vehicle) {
+        VehicleDetailsDTO dto = BeanConverter.toDto(vehicle, VehicleDetailsDTO.class);
+        dto.setStatus(vehicle.getStatus() != null ? vehicle.getStatus().getCode() : null);
         Division division = vehicle.getDivision();
         SecurityUtils.checkDataPermission(division);
         dto.setOrgName(division.getName());
-        if(division.getParent()!=null) {
+        if (division.getParent() != null) {
             dto.setDivName(division.getParent().getName());
         }
         return dto;
     }
 
-    static Vehicle toEntity(VehicleDTO vehicleDTO) {
+    static VehicleSummaryDTO toSummaryDto(Vehicle vehicle) {
+        VehicleSummaryDTO summaryDTO = new VehicleSummaryDTO();
+        summaryDTO.setId(vehicle.getId());
+        summaryDTO.setLicensePlateNumber(vehicle.getLicensePlateNumber());
+        summaryDTO.setIsMoving(vehicle.getIsMoving());
+        return summaryDTO;
+    }
 
-        return BeanConverter.toEntity(vehicleDTO, Vehicle.class);
+    static Vehicle toEntity(VehicleDetailsDTO vehicleDetailsDTO) {
+
+        return BeanConverter.toEntity(vehicleDetailsDTO, Vehicle.class);
     }
 
     /**
      * Save a vehicle.
      *
-     * @param vehicleDTO the entity to save.
+     * @param vehicleDetailsDTO the entity to save.
      * @return the persisted entity.
      */
-    VehicleDTO save(VehicleDTO vehicleDTO);
+    VehicleDetailsDTO save(VehicleDetailsDTO vehicleDetailsDTO);
 
     /**
      * Get all the vehicles.
@@ -48,7 +58,7 @@ public interface VehicleService {
      * @param pageable the pagination information.
      * @return the list of entities.
      */
-    Page<VehicleDTO> findAll(Pageable pageable, VehicleVM vm);
+    Page<VehicleDetailsDTO> findAll(Pageable pageable, VehicleVM vm);
 
     /**
      * Get the "id" vehicle.
@@ -56,7 +66,7 @@ public interface VehicleService {
      * @param id the id of the entity.
      * @return the entity.
      */
-    Optional<VehicleDTO> findOne(Long id);
+    Optional<VehicleDetailsDTO> findOne(Long id);
 
 
     void binding(EquipmentVehicleBindingVM vm);
@@ -67,5 +77,7 @@ public interface VehicleService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    List<VehicleSummaryDTO> findVehicleByDivisionId(Long divisionId);
 
 }

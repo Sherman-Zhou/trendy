@@ -3,8 +3,6 @@ package com.joinbe.data.collector.service.dto;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.List;
 
 public class TrajectoryResponseResult {
     /**

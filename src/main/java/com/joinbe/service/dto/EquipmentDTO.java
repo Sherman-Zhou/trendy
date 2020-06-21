@@ -3,7 +3,6 @@ package com.joinbe.service.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -57,8 +56,8 @@ public class EquipmentDTO implements Serializable {
      * 设备状态 - 枚举类型\n绑定\n未绑定\"
      */
     @Size(max = 1)
-    @ApiModelProperty(value = "设备状态 - 枚举类型- B:绑定 U:未绑定 D: 已删除"  )
-    @Pattern(regexp = "[BU]")
+    @ApiModelProperty(value = "设备状态 - 枚举类型- B:绑定 U:未绑定 D: 已删除", hidden = true)
+    @Pattern(regexp = "[BUD]")
     private String status;
 
 

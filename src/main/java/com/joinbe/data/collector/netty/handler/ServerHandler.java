@@ -38,8 +38,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
     private static final Logger log = LoggerFactory.getLogger(ServerHandler.class);
 
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-    private static HashMap<String, Channel> deviceIdAndChannelMap = new HashMap<>();
-    private static HashMap<String,String> channelIdAndDeviceIdMap = new HashMap<>();
+    private static final HashMap<String, Channel> deviceIdAndChannelMap = new HashMap<>();
+    private static final HashMap<String, String> channelIdAndDeviceIdMap = new HashMap<>();
 
     @Value("${netty.server-ip}")
     private String serverIp;

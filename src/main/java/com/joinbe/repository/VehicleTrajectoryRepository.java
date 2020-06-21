@@ -4,8 +4,8 @@ import com.joinbe.domain.VehicleTrajectory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Spring Data  repository for the VehicleTrajectory entity.
@@ -16,4 +16,5 @@ public interface VehicleTrajectoryRepository extends JpaRepository<VehicleTrajec
     JpaSpecificationExecutor<VehicleTrajectory> {
 
     Optional<VehicleTrajectory> findOneByTrajectoryId(String trajectoryId);
+    List<VehicleTrajectory> findByVehicleId(Long vehicleId);
 }

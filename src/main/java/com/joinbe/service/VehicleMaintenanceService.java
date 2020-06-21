@@ -3,9 +3,11 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.VehicleMaintenance;
 import com.joinbe.service.dto.VehicleMaintenanceDTO;
+import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -53,4 +55,6 @@ public interface VehicleMaintenanceService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    List<VehicleMaintenanceDTO> findAll(VehicleMaintenanceVM vm);
 }

@@ -1,7 +1,6 @@
 package com.joinbe.repository;
 
 import com.joinbe.domain.Division;
-import com.joinbe.domain.Permission;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;

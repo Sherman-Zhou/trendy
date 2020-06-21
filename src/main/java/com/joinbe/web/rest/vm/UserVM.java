@@ -1,13 +1,10 @@
 package com.joinbe.web.rest.vm;
 
-import com.joinbe.config.Constants;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 
@@ -22,11 +19,11 @@ public class UserVM implements Serializable {
         // Empty constructor needed for Jackson.
     }
 
-    @NotBlank
-    @Pattern(regexp = Constants.LOGIN_REGEX)
-    @Size(min = 1, max = 50)
-    @ApiModelProperty(value = "用户登陆id")
-    private String login;
+//    @NotBlank
+//    @Pattern(regexp = Constants.LOGIN_REGEX)
+//    @Size(min = 1, max = 50)
+//    @ApiModelProperty(value = "用户登陆id")
+//    private String login;
 
     @Size(max = 50)
     @ApiModelProperty(value = "用户姓名")

@@ -3,6 +3,7 @@ package com.joinbe.web.rest;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.MailService;
 import com.joinbe.service.UserService;
@@ -25,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -73,10 +73,14 @@ public class UserResource {
 
     private final MailService mailService;
 
-    public UserResource(@Qualifier("JpaUserService") UserService userService, MailService mailService, DivisionService divisionService) {
+    private final RedissonTokenStore redissonTokenStore;
+
+    public UserResource(@Qualifier("JpaUserService") UserService userService, MailService mailService,
+                        DivisionService divisionService, RedissonTokenStore redissonTokenStore) {
         this.userService = userService;
         this.mailService = mailService;
         this.divisionService = divisionService;
+        this.redissonTokenStore = redissonTokenStore;
     }
 
     /**
@@ -106,7 +110,7 @@ public class UserResource {
             throw new EmailAlreadyUsedException();
         } else {
             User newUser = userService.createUser(userDTO);
-            mailService.sendCreationEmail(newUser);
+            //mailService.sendCreationEmail(newUser);
             return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
                 .body(newUser);
         }
@@ -209,21 +213,21 @@ public class UserResource {
                                                   @Valid @RequestBody @ApiParam(value ="城市/部门主键列表", required = true ) List<Long>  divisionIds) {
         log.debug("REST request to assign division: {} to user : {}", divisionIds, userId);
         UserDTO result = userService.assignDivision(userId, divisionIds);
+        redissonTokenStore.storeUserDivision(result.getLogin(), divisionIds);
         return ResponseEntity.ok()
             .body(result);
     }
 
     /**
-     * GET  /users/divisions: get all departments.
+     * GET  /users/divisions: get all departments which current user has.
      *
-
      * @return the ResponseEntity with status 200 (OK) and the list of divisions in body
      */
     @GetMapping("/users/divisions")
-    @ApiOperation(value = "获取所有可用部门")
-    public List<DivisionDTO> getAllSubDivisions() {
+    @ApiOperation(value = "获取当前用户拥有的所有部门")
+    public List<DivisionDTO> getCurrentUserDivisions() {
         log.debug("REST request to get all divisions");
-        return divisionService.findAllActiveDivisions();
+        return divisionService.findCurrentUserDivisions();
     }
 
     /**

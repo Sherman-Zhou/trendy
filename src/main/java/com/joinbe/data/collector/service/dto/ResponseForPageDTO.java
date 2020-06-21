@@ -44,9 +44,9 @@ public class ResponseForPageDTO extends ResponseDTO {
     @Override
     public String toString() {
         return "ResponseForPageDTO{" +
-                "totalCount=" + totalCount +
-                ", pageNum=" + pageNum +
-                ", pageSize=" + pageSize +
-                "} " + super.toString();
+            "totalCount=" + totalCount +
+            ", pageNum=" + pageNum +
+            ", pageSize=" + pageSize +
+            "} " + super.toString();
     }
 }

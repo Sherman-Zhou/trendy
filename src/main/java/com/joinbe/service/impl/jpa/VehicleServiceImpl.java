@@ -5,13 +5,15 @@ import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Division;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
+import com.joinbe.domain.enumeration.EquipmentStatus;
+import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.DivisionRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.VehicleService;
-import com.joinbe.service.dto.DivisionDTO;
-import com.joinbe.service.dto.VehicleDTO;
+import com.joinbe.service.dto.VehicleDetailsDTO;
+import com.joinbe.service.dto.VehicleSummaryDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
 import com.joinbe.web.rest.vm.VehicleBindingVM;
@@ -26,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing {@link Vehicle}.
@@ -53,18 +56,22 @@ public class VehicleServiceImpl implements VehicleService {
     /**
      * Save a vehicle.
      *
-     * @param vehicleDTO the entity to save.
+     * @param vehicleDetailsDTO the entity to save.
      * @return the persisted entity.
      */
     @Override
-    public VehicleDTO save(VehicleDTO vehicleDTO) {
-        log.debug("Request to save Vehicle : {}", vehicleDTO);
-        Vehicle vehicle = VehicleService.toEntity(vehicleDTO);
-        Optional<Division> division = divisionRepository.findById(vehicleDTO.getDivisionId());
-        if(division.isPresent()){
+    public VehicleDetailsDTO save(VehicleDetailsDTO vehicleDetailsDTO) {
+        log.debug("Request to save Vehicle : {}", vehicleDetailsDTO);
+        Vehicle vehicle = VehicleService.toEntity(vehicleDetailsDTO);
+        Long divisionId = vehicleDetailsDTO.getDivisionId();
+        if (vehicleDetailsDTO.getId() != null) {
+            divisionId = vehicleRepository.getOne(vehicleDetailsDTO.getId()).getDivision().getId();
+        }
+        Optional<Division> division = divisionRepository.findById(divisionId);
+        if (division.isPresent()) {
             SecurityUtils.checkDataPermission(division.get());
             vehicle.setDivision(division.get());
-        }else {
+        } else {
             throw new BadRequestAlertException("Division does not exist", "Vehicle", "divnotexists");
         }
         vehicle = vehicleRepository.save(vehicle);
@@ -79,20 +86,21 @@ public class VehicleServiceImpl implements VehicleService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Page<VehicleDTO> findAll(Pageable pageable, VehicleVM vm) {
+    public Page<VehicleDetailsDTO> findAll(Pageable pageable, VehicleVM vm) {
         log.debug("Request to get all Vehicles");
         QueryParams<Vehicle> queryParams = new QueryParams<>();
-        if(vm.getDivisionId() != null) {
+        if (vm.getDivisionId() != null) {
             SecurityUtils.checkDataPermission(vm.getDivisionId());
             queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
-        }else {
+        } else {
             // add user's division condition
             List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
             queryParams.and("division.id", Filter.Operator.in, userDivisionIds);
         }
 
+        // only active vehicle...
+        queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
 
-        queryParams.and("status", Filter.Operator.eq, "A");
         if (StringUtils.isNotEmpty(vm.getBrand())) {
             queryParams.and("brand", Filter.Operator.like, vm.getBrand());
         }
@@ -131,7 +139,7 @@ public class VehicleServiceImpl implements VehicleService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Optional<VehicleDTO> findOne(Long id) {
+    public Optional<VehicleDetailsDTO> findOne(Long id) {
         log.debug("Request to get Vehicle : {}", id);
         return vehicleRepository.findById(id)
             .map(VehicleService::toDto);
@@ -140,18 +148,25 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     public void binding(EquipmentVehicleBindingVM vm) {
         log.debug("Request to binding equipment and vehicle: {}", vm);
-        Optional<Vehicle> vehicle = vehicleRepository.findById(vm.getVehicleId());
-        Optional<Equipment> equipment = equipmentRepository.findById(vm.getEquipmentId());
-        if (!vehicle.isPresent()) {
+        Optional<Vehicle> vehicleOptional = vehicleRepository.findById(vm.getVehicleId());
+        Optional<Equipment> equipmentOptional = equipmentRepository.findById(vm.getEquipmentId());
+        Vehicle vehicle = vehicleOptional.get();
+        Equipment equipment = equipmentOptional.get();
+        if (!vehicleOptional.isPresent() || !RecordStatus.ACTIVE.equals(vehicle.getStatus())) {
             throw new BadRequestAlertException("Invalid vehicle id", "Vehicle", "vehicle.notexist");
         }
-        if (!equipment.isPresent()) {
+        if (!equipmentOptional.isPresent() || !RecordStatus.ACTIVE.equals(equipment.getStatus())) {
             throw new BadRequestAlertException("Invalid equipment id", "Equipment", "equipment.notexist");
         }
-        if (equipment.get().getVehicle() != null || vehicle.get().getEquipment() != null) {
-            throw new BadRequestAlertException("Bound already", "Binding", "binding.boundalready");
+        if (equipment.getVehicle() != null) {
+            throw new BadRequestAlertException("Equipment is bound already", "Binding", "equipment.binding.boundalready");
         }
-        equipment.get().setVehicle(vehicle.get());
+        if (vehicle.getEquipment() != null) {
+            throw new BadRequestAlertException("Vehicle is bound already", "Binding", "vehicle.binding.boundalready");
+        }
+        equipment.setVehicle(vehicle);
+        equipment.setStatus(EquipmentStatus.BOUND);
+        vehicle.setBounded(true);
     }
 
     /**
@@ -163,12 +178,23 @@ public class VehicleServiceImpl implements VehicleService {
     public void delete(Long id) {
         log.debug("Request to delete Vehicle : {}", id);
         Optional<Vehicle> vehicleOptional = vehicleRepository.findById(id);
-        if(vehicleOptional.isPresent()){
+        if (vehicleOptional.isPresent()) {
             Vehicle vehicle = vehicleOptional.get();
             SecurityUtils.checkDataPermission(vehicle.getDivision());
-            vehicle.setStatus("D");
+            vehicle.setStatus(RecordStatus.DELETED);
+            vehicle.setBounded(false);
+            if (vehicle.getEquipment() != null) {
+                vehicle.getEquipment().setStatus(EquipmentStatus.UNBOUND);
+            }
         }
-       // vehicleRepository.deleteById(id);
+        // vehicleRepository.deleteById(id);
+    }
+
+    @Override
+    public List<VehicleSummaryDTO> findVehicleByDivisionId(Long divisionId) {
+        List<VehicleSummaryDTO> vehicles = vehicleRepository.findByDivisionIdAndStatus(divisionId, RecordStatus.ACTIVE)
+            .stream().map(VehicleService::toSummaryDto).collect(Collectors.toList());
+        return vehicles;
     }
 
 }

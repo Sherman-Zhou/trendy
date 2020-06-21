@@ -30,7 +30,7 @@ public interface UserService {
 
     User createUser(UserDTO userDTO);
 
-    void updateUser(String name, String email, String langKey, String imageUrl);
+    void updateUser(String name, String email, String langKey, String imageUrl, String mobileNo);
 
     Optional<UserDTO> updateUser(UserDTO userDTO);
 

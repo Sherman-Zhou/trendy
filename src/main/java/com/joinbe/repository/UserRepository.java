@@ -1,6 +1,5 @@
 package com.joinbe.repository;
 
-import com.joinbe.domain.Role;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.RecordStatus;
 import org.springframework.data.domain.Page;

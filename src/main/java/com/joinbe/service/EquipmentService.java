@@ -2,6 +2,7 @@ package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Equipment;
+import com.joinbe.domain.enumeration.EquipmentStatus;
 import com.joinbe.service.dto.EquipmentDTO;
 import com.joinbe.web.rest.vm.EquipmentVM;
 import org.springframework.data.domain.Page;
@@ -16,13 +17,16 @@ import java.util.Optional;
 public interface EquipmentService {
 
     static EquipmentDTO toDto(Equipment equipment) {
-
-        return BeanConverter.toDto(equipment, EquipmentDTO.class);
+        EquipmentDTO dto = BeanConverter.toDto(equipment, EquipmentDTO.class);
+        dto.setStatus(EquipmentStatus.getCode(equipment.getStatus()));
+        return dto;
     }
 
     static Equipment toEntity(EquipmentDTO equipmentDTO) {
 
-        return BeanConverter.toEntity(equipmentDTO, Equipment.class);
+        Equipment dto = BeanConverter.toEntity(equipmentDTO, Equipment.class);
+        dto.setStatus(EquipmentStatus.resolve(equipmentDTO.getStatus()));
+        return dto;
     }
 
     /**

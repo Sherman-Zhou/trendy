@@ -35,20 +35,26 @@ public class VehicleMaintenanceDTO implements Serializable {
     @ApiModelProperty(value = "备注")
     private String remark;
 
-    @NotNull
+
     @Size(max = 20)
+    @ApiModelProperty(value = "创建者", hidden = true)
     private String createdBy;
 
-    @NotNull
+    @ApiModelProperty(value = "创建时间", hidden = true)
     private Instant createdDate;
 
     @Size(max = 20)
+    @ApiModelProperty(value = "更新者", hidden = true)
     private String lastModifiedBy;
 
+    @ApiModelProperty(value = "更新时间", hidden = true)
     private Instant lastModifiedDate;
 
 
+    @ApiModelProperty(value = "汽车主键")
+    @NotNull
     private Long vehicleId;
+
 
     public Long getId() {
         return id;

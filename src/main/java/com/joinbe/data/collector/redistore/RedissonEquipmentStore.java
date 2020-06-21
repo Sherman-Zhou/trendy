@@ -50,6 +50,7 @@ public class RedissonEquipmentStore {
     public void init() {
 
     }
+
     /**
      *
      * @param deviceId
@@ -65,6 +66,7 @@ public class RedissonEquipmentStore {
         RQueue<DeferredResult> queue = redissonClient.getQueue(queryKey);
         return queue.offer(deferredResult);
     }
+
     /**
      *
      * @param deviceId
@@ -207,16 +209,15 @@ public class RedissonEquipmentStore {
     }
 
     /**
-     *
      * @return
      */
     public String genId() {
-        SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMddHHmmss");
-        Date date=new Date();
-        String formatDate=sdf.format(date);
-        String key="key"+formatDate;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+        Date date = new Date();
+        String formatDate = sdf.format(date);
+        String key = "key" + formatDate;
         Long incr = getIncr(key, getCurrent2TodayEndMillisTime());
-        if(incr==0) {
+        if (incr == 0) {
             incr = getIncr(key, getCurrent2TodayEndMillisTime());//从001开始
         }
         DecimalFormat df = new DecimalFormat("000");//三位序列号
@@ -224,7 +225,6 @@ public class RedissonEquipmentStore {
     }
 
     /**
-     *
      * @param key
      * @param liveTime
      * @return
@@ -240,7 +240,6 @@ public class RedissonEquipmentStore {
     }
 
     /**
-     *
      * @return
      */
     private Long getCurrent2TodayEndMillisTime() {

@@ -9,8 +9,10 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -60,7 +62,7 @@ public final class SecurityUtils {
      */
     public static void checkDataPermission(Division division) {
         if(division == null) {
-            return;
+            throw new AccessDeniedException("No Permission to view this record");
         }
        checkDataPermission(division.getId());
     }
