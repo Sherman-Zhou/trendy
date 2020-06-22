@@ -155,7 +155,7 @@ public class VehicleServiceImpl implements VehicleService {
         if (!vehicleOptional.isPresent() || !RecordStatus.ACTIVE.equals(vehicle.getStatus())) {
             throw new BadRequestAlertException("Invalid vehicle id", "Vehicle", "vehicle.notexist");
         }
-        if (!equipmentOptional.isPresent() || !RecordStatus.ACTIVE.equals(equipment.getStatus())) {
+        if (!equipmentOptional.isPresent() || EquipmentStatus.DELETED.equals(equipment.getStatus())) {
             throw new BadRequestAlertException("Invalid equipment id", "Equipment", "equipment.notexist");
         }
         if (equipment.getVehicle() != null) {
