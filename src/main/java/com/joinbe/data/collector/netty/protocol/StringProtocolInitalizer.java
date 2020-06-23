@@ -26,16 +26,11 @@ public class StringProtocolInitalizer extends ChannelInitializer<SocketChannel> 
 
     @Autowired
     private ServerIdleStateTrigger serverIdleStateTrigger;
-
     /**
      * tcp连接超时时间
      */
     @Value("${netty.idle-timeout-second}")
     private Integer readTimeOutSecond;
-
-
-
-    //private final static Integer READ_TIME_OUT_SEC = 5 * 60 + 10;
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
@@ -45,7 +40,7 @@ public class StringProtocolInitalizer extends ChannelInitializer<SocketChannel> 
         pipeline.addLast(new IdleStateHandler(readTimeOutSecond, 0, 0));
         ch.pipeline().addLast(serverIdleStateTrigger);
         //设置数据decode处理器，for receiver
-        pipeline.addLast(new PositionMessageDecoder());
+        pipeline.addLast(new MessageDecoder());
         //设置编码处理器, for send
         pipeline.addLast(encoder);
         //设置数据处理器

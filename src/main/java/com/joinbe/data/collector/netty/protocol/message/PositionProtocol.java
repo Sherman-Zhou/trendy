@@ -1,4 +1,4 @@
-package com.joinbe.data.collector.netty.protocol;
+package com.joinbe.data.collector.netty.protocol.message;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ReflectUtil;
@@ -9,9 +9,13 @@ import com.joinbe.data.collector.netty.protocol.annotation.DataOrder;
 import java.lang.reflect.Field;
 import java.util.List;
 
-public class PositionProtocol {
+public class PositionProtocol extends ProtocolMessage{
 
     private static final Integer DEFAULT_DATA_LENGTH = 22;
+
+    public PositionProtocol(String data) {
+        super(data);
+    }
 
     /**
      * 设备id
@@ -143,9 +147,6 @@ public class PositionProtocol {
     @DataOrder(order = 20)
     private Float voltageBB;
 
-
-    private String data;
-
     /**
      * 跨国公司（移动国家代码）
      */
@@ -156,26 +157,8 @@ public class PositionProtocol {
      */
     private String mnc;
 
-
-    /**
-     * 解析content内容
-     */
-    public void initData() {
-        if (StrUtil.isEmpty(this.data)) {
-            return;
-        }
-        if (data.startsWith("$OK")) {
-            return;
-        }
-        List<String> d = StrUtil.split(this.data, StrUtil.C_COMMA);
-        Field[] fields = ReflectUtil.getFields(PositionProtocol.class);
-        List<Field> fieldList = CollUtil.newArrayList(fields);
-        fieldList.forEach(field -> processField(field, d));
-
-    }
-
-
-    private void processField(Field field, List<String> dataList) {
+    @Override
+    public void processField(Field field, List<String> dataList) {
         DataOrder dataOrder = field.getAnnotation(DataOrder.class);
         if (dataOrder == null) {
             return;
@@ -191,22 +174,6 @@ public class PositionProtocol {
         } else if (String.class.equals(field.getType())) {
             ReflectUtil.invoke(this, methodName, data);
         }
-
-    }
-
-
-    public PositionProtocol(String data) {
-        this.data = data;
-    }
-
-    public PositionProtocol() {
-    }
-
-    public static void main(String[] args) {
-        String data = "868020030100050,20190126000601,121.447943,25.167723,0,0,0,0,3,0.0,1,0.01,11.89,0,0,0,0,466-92,65534,28789517,0.01";
-        PositionProtocol p = new PositionProtocol(data);
-        p.initData();
-        System.out.println(JSONUtil.toJsonStr(p));
     }
 
     public String getUnitId() {
@@ -375,14 +342,6 @@ public class PositionProtocol {
 
     public void setVoltageBB(Float voltageBB) {
         this.voltageBB = voltageBB;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
-        this.data = data;
     }
 
     public String getMcc() {

@@ -1,6 +1,6 @@
 package com.joinbe.data.collector.service.dto;
 
-import com.joinbe.data.collector.netty.protocol.PositionProtocol;
+import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
 
 import java.io.Serializable;
 

@@ -1,7 +1,7 @@
 package com.joinbe.data.collector.service;
 
 import com.joinbe.config.Constants;
-import com.joinbe.data.collector.netty.protocol.PositionProtocol;
+import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
 import com.joinbe.data.collector.redistore.RedissonEquipmentStore;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.VehicleTrajectory;
@@ -72,7 +72,7 @@ public class DataCollectService {
         vehicleTrajectoryDetails.setActualSpeed(BigDecimal.valueOf(msg.getSpeed()));
         vehicleTrajectoryDetails.setMileage(BigDecimal.valueOf(msg.getMileage()));
         /**
-         * TODO - Generate trajectory by Policy
+         *
          * 规则：当静止状运行/未知状态/运行状态发生转换时，新产生轨迹
          */
         if(StringUtils.isBlank(existTrajectoryId) || existTrajectory == null ||

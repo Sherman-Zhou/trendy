@@ -1,5 +1,8 @@
 package com.joinbe.data.collector.netty.protocol;
 
+import cn.hutool.core.util.StrUtil;
+import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
+import com.joinbe.data.collector.netty.protocol.message.ProtocolMessage;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
@@ -8,9 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class PositionMessageDecoder extends ByteToMessageDecoder {
+public class MessageDecoder extends ByteToMessageDecoder {
 
-    private static final Logger log = LoggerFactory.getLogger(PositionMessageDecoder.class);
+    private static final Logger log = LoggerFactory.getLogger(MessageDecoder.class);
 
     /**
      * <pre>
@@ -24,15 +27,23 @@ public class PositionMessageDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf buffer, List<Object> out) throws Exception {
-
         ByteBuf frame = buffer.retainedDuplicate();
         String data = convertByteBufToString(frame);
         log.info("Orig data from equipment: {}", data);
-        PositionProtocol protocol = new PositionProtocol(data);
-        protocol.initData();
-        out.add(protocol);
+        if (StrUtil.isEmpty(data)) {
+            return;
+        }
+        ProtocolMessage message;
+        if (data.startsWith("$OK")) {
+            //TODO - handle query response
+            return;
+        }else{
+            //Position data
+            message = new PositionProtocol(data);
+        }
+        message.initData();
+        out.add(message);
         buffer.skipBytes(buffer.readableBytes());
-
     }
 
     public String convertByteBufToString(ByteBuf buf) {

@@ -2,8 +2,9 @@ package com.joinbe.data.collector.netty.handler;
 
 import cn.hutool.json.JSONUtil;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
-import com.joinbe.data.collector.netty.protocol.PositionProtocol;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
+import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
+import com.joinbe.data.collector.netty.protocol.message.ProtocolMessage;
 import com.joinbe.data.collector.redistore.RedissonEquipmentStore;
 import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.LocationResponseDTO;
@@ -16,6 +17,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,10 +36,11 @@ import java.util.HashMap;
  */
 @Component
 @ChannelHandler.Sharable
-public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol> {
+public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> {
     private static final Logger log = LoggerFactory.getLogger(ServerHandler.class);
 
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    //deviceId : channel
     private static final HashMap<String, Channel> deviceIdAndChannelMap = new HashMap<>();
     private static final HashMap<String, String> channelIdAndDeviceIdMap = new HashMap<>();
 
@@ -81,22 +84,42 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
      * @param msg
      */
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, PositionProtocol msg) {
+    protected void channelRead0(ChannelHandlerContext ctx, ProtocolMessage msg) {
         Channel channel = ctx.channel();
         log.debug("收到客户端消息,Ip: {}, Id:{}, 消息：{}", channel.remoteAddress(), channel.id().asLongText(),JSONUtil.toJsonStr(msg));
-        String deviceNo = msg.getUnitId();
 
-        if(!channelIdAndDeviceIdMap.containsKey(channel.id().asLongText())){
-            log.debug("客户端首次加入，Ip: {}, Id:{}，deviceNo:{}", channel.remoteAddress(), channel.id().asLongText(),deviceNo);
-            channelIdAndDeviceIdMap.put(channel.id().asLongText(), deviceNo);
-            deviceIdAndChannelMap.put(deviceNo, channel);
-            redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
+        //Position message
+        String deviceNo;
+        if(msg instanceof PositionProtocol){
+            deviceNo = ((PositionProtocol)msg).getUnitId();
+            if(!channelIdAndDeviceIdMap.containsKey(channel.id().asLongText())){
+                log.debug("客户端首次加入，Ip: {}, Id:{}，deviceNo:{}", channel.remoteAddress(), channel.id().asLongText(),deviceNo);
+                channelIdAndDeviceIdMap.put(channel.id().asLongText(), deviceNo);
+                deviceIdAndChannelMap.put(deviceNo, channel);
+                redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
+            }
+        }else{
+            //TODO: Handle query results
+            deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
+            if(StringUtils.isBlank(deviceNo)){
+                log.warn("Device not yet bound channel");
+                return;
+            }
         }
         //save message
         channel.eventLoop().execute(new Runnable() {
             @Override
             public void run() {
-                dataCollectService.saveTrajectory(msg);
+                if(msg instanceof PositionProtocol){
+                    PositionProtocol positionProtocolMsg = (PositionProtocol)msg;
+                    DeferredResult deferredResult = redissonEquipmentStore.getInRedisForQuery(deviceNo, EventEnum.GPOS);
+                    if(deferredResult != null){
+                        deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(0, "success", positionProtocolMsg), HttpStatus.OK));
+                    }
+                    dataCollectService.saveTrajectory(positionProtocolMsg);
+                }else{
+                    //TODO : handle query message
+                }
             }
         });
     }
@@ -175,30 +198,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
      * @param deviceId
      * @param event
      */
-    public String sendMessage(String deviceId, String event, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
-        Channel c = deviceIdAndChannelMap.get(deviceId);
-        if (c == null) {
-            String strInfo= "未找到发送通道, deviceId: " + deviceId;
-            log.warn(strInfo);
-            deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
-            return strInfo;
-        }
-        log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
-        c.writeAndFlush(event).addListener(future -> {
-            if(future.isSuccess()){
-                deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Success" + deviceId), HttpStatus.OK));
-            }else{
-                deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is not on line, deviceId: " + deviceId), HttpStatus.OK));
-            }
-        });
-        return "success";
-    }
-
-    /**
-     * Interface call， to send message
-     * @param deviceId
-     * @param event
-     */
     public void sendLocationMessage(String deviceId, String event, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
@@ -212,11 +211,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
             redissonEquipmentStore.putInRedisForQuery(deviceId,EventEnum.GPOS,deferredResult);
             c.writeAndFlush(event).addListener(future -> {
                 if(!future.isSuccess()){
-                    deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is not on line, deviceId: " + deviceId), HttpStatus.OK));
+                    deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
+                }else{
+                    log.debug("sent command succeed, deviceId: {}, command: {}", deviceId, event);
                 }
             });
         }else{
-            deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
+            deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline and not writable, deviceId: " + deviceId), HttpStatus.OK));
         }
     }
 
@@ -235,7 +236,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PositionProtocol>
         log.debug("isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         c.writeAndFlush(event).addListener(future -> {
             if(future.isSuccess()){
-                log.debug("send command success.");
+                log.debug("send command success, deviceId:{}, command: {}", deviceId, event);
             }else{
                 log.warn("send command failed : deviceId: {}, Ip: {}, Id:{} " + deviceId,c.remoteAddress(), c.id().asLongText());
                 log.warn("disconnect device : deviceId: {}, Ip: {}, Id:{} " + deviceId,c.remoteAddress(), c.id().asLongText());
