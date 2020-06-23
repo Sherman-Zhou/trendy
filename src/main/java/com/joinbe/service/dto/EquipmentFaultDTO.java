@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import javax.persistence.Column;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.time.Instant;
@@ -64,5 +65,17 @@ public class EquipmentFaultDTO implements Serializable {
 
     @ApiModelProperty(value = "设备主键")
     private Long equipmentId;
+
+    /**
+     * 处理意见
+     */
+    @ApiModelProperty(value = "处理意见")
+    private String remark;
+
+    /**
+     * 处理时间
+     */
+    @ApiModelProperty(value = "处理时间")
+    private Instant handledOn;
 
 }

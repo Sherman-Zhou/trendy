@@ -8,6 +8,7 @@ import com.joinbe.repository.EquipmentFaultRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentFaultService;
 import com.joinbe.service.dto.EquipmentFaultDTO;
+import com.joinbe.service.dto.EquipmentFaultHandleDTO;
 import com.joinbe.web.rest.vm.EquipmentFaultVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.swing.text.html.Option;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -91,8 +94,12 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
         if (vm.getIsRead() != null) {
             queryParams.and("isRead", Filter.Operator.eq, vm.getIsRead());
         }
-        if (StringUtils.isNotEmpty(vm.getEquipmentId())) {
-            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentId());
+        if (StringUtils.isNotEmpty(vm.getEquipmentIdNum())) {
+            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentIdNum());
+        }
+
+        if(vm.getVehicleId()!=null) {
+            queryParams.and("vehicle.id", Filter.Operator.eq, vm.getVehicleId());
         }
 
         if (StringUtils.isNotEmpty(vm.getAlertType())) {
@@ -137,5 +144,17 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
     public void delete(Long id) {
         log.debug("Request to delete EquipmentFault : {}", id);
         equipmentFaultRepository.deleteById(id);
+    }
+
+    @Override
+    public Optional<EquipmentFaultDTO> handle(EquipmentFaultHandleDTO equipmentFaultHandleDTO) {
+       Optional<EquipmentFault> equipmentFaultOptional =  equipmentFaultRepository.findById(equipmentFaultHandleDTO.getId());
+       if(equipmentFaultOptional.isPresent()){
+           EquipmentFault equipmentFault = equipmentFaultOptional.get();
+           equipmentFault.setRemark(equipmentFaultHandleDTO.getRemark());
+           equipmentFault.setHandledOn(Instant.now());
+           return Optional.of(EquipmentFaultService.toDto(equipmentFault));
+       }
+        return Optional.empty();
     }
 }

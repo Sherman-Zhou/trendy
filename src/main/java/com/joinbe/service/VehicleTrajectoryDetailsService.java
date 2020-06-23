@@ -15,6 +15,8 @@ public interface VehicleTrajectoryDetailsService {
 
     static VehicleTrajectoryDetailsDTO toDto(VehicleTrajectoryDetails vehicleTrajectoryDetails) {
         VehicleTrajectoryDetailsDTO dto = BeanConverter.toDto(vehicleTrajectoryDetails, VehicleTrajectoryDetailsDTO.class);
+        dto.setLat(vehicleTrajectoryDetails.getLatitude());
+        dto.setLng(vehicleTrajectoryDetails.getLongitude());
         return dto;
     }
 

@@ -2,6 +2,7 @@ package com.joinbe.web.rest;
 
 import com.joinbe.service.EquipmentFaultService;
 import com.joinbe.service.dto.EquipmentFaultDTO;
+import com.joinbe.service.dto.EquipmentFaultHandleDTO;
 import com.joinbe.web.rest.vm.EquipmentFaultVM;
 import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
@@ -13,11 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,6 +81,14 @@ public class EquipmentFaultResource {
         log.debug("REST request to get EquipmentFault : {}", id);
         Optional<EquipmentFaultDTO> equipmentFaultDTO = equipmentFaultService.findOne(id);
         return ResponseUtil.wrapOrNotFound(equipmentFaultDTO);
+    }
+
+    @PutMapping("/equipment-faults/handle")
+    @ApiOperation("获取设备异常详情")
+    public ResponseEntity<EquipmentFaultDTO> handleEquipmentFault(@Valid @RequestBody EquipmentFaultHandleDTO equipmentFaultHandleDTO) {
+
+       Optional< EquipmentFaultDTO> equipmentFaultDTO =   equipmentFaultService.handle(equipmentFaultHandleDTO);
+       return   ResponseUtil.wrapOrNotFound(equipmentFaultDTO);
     }
 //
 //    /**

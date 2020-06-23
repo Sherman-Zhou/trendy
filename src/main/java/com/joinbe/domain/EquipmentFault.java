@@ -1,9 +1,12 @@
 package com.joinbe.domain;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
+import java.time.Instant;
 
 /**
  * A EquipmentFault.
@@ -42,6 +45,19 @@ public class EquipmentFault extends AbstractAuditingEntity {
      */
     @Column(name = "is_read")
     private Boolean isRead;
+
+    /**
+     * 处理意见
+     */
+    @Size(max = 200)
+    @Column(name = "remark", length = 200)
+    private String remark;
+
+    /**
+     * 处理时间
+     */
+    @Column(name = "handledOn")
+    private Instant handledOn;
 
 
     @ManyToOne
@@ -97,6 +113,22 @@ public class EquipmentFault extends AbstractAuditingEntity {
 
     public void setIsRead(Boolean isRead) {
         this.isRead = isRead;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
+    }
+
+    public Instant getHandledOn() {
+        return handledOn;
+    }
+
+    public void setHandledOn(Instant handledOn) {
+        this.handledOn = handledOn;
     }
 
     public Vehicle getVehicle() {

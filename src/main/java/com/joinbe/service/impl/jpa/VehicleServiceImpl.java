@@ -158,10 +158,10 @@ public class VehicleServiceImpl implements VehicleService {
         if (!equipmentOptional.isPresent() || EquipmentStatus.DELETED.equals(equipment.getStatus())) {
             throw new BadRequestAlertException("Invalid equipment id", "Equipment", "equipment.notexist");
         }
-        if (equipment.getVehicle() != null) {
+        if (!EquipmentStatus.UNBOUND.equals(equipment.getStatus())) {
             throw new BadRequestAlertException("Equipment is bound already", "Binding", "equipment.binding.boundalready");
         }
-        if (vehicle.getEquipment() != null) {
+        if ( vehicle.getBounded()) {
             throw new BadRequestAlertException("Vehicle is bound already", "Binding", "vehicle.binding.boundalready");
         }
         equipment.setVehicle(vehicle);
@@ -185,6 +185,7 @@ public class VehicleServiceImpl implements VehicleService {
             vehicle.setBounded(false);
             if (vehicle.getEquipment() != null) {
                 vehicle.getEquipment().setStatus(EquipmentStatus.UNBOUND);
+                vehicle.getEquipment().setVehicle(null);
             }
         }
         // vehicleRepository.deleteById(id);
