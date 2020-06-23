@@ -204,6 +204,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             String strInfo= "未找到发送通道, deviceId: " + deviceId;
             log.warn(strInfo);
             deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
+            return;
         }
         log.debug("deviceId: {}, isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",deviceId, c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         if(c.isWritable()){
@@ -218,6 +219,32 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             });
         }else{
             deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline and not writable, deviceId: " + deviceId), HttpStatus.OK));
+        }
+    }
+
+    public void sendMessage(String deviceId, String event, EventEnum eventEnum, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
+        Channel c = deviceIdAndChannelMap.get(deviceId);
+        if (c == null) {
+            String strInfo= "未找到发送通道, deviceId: " + deviceId;
+            log.warn(strInfo);
+            deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
+            return;
+        }
+        log.debug("deviceId: {}, isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",deviceId, c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
+        if(c.isWritable()){
+            //TODO : put to queue
+            //redissonEquipmentStore.putInRedisForQuery(deviceId,eventEnum,deferredResult);
+            c.writeAndFlush(event).addListener(future -> {
+                if(!future.isSuccess()){
+                    deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
+                }else{
+                    //TODO : 修改为通道返回
+                    deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(0, "Success: " + deviceId), HttpStatus.OK));
+                    log.debug("sent command succeed, deviceId: {}, command: {}", deviceId, event);
+                }
+            });
+        }else{
+            deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline and not writable, deviceId: " + deviceId), HttpStatus.OK));
         }
     }
 
