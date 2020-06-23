@@ -9,11 +9,11 @@ import javax.validation.constraints.NotNull;
 public class LockDeviceReq {
 
     @NotNull(message = "vehicle id cant not be empty")
-    @ApiModelProperty(value = "车辆的ID")
+    @ApiModelProperty(value = "车辆的ID",required = true)
     private Long vehicleId;
 
     @NotEmpty(message = "mode cant not be empty")
-    @ApiModelProperty(value = "锁的模式，open - 打开， close -关闭")
+    @ApiModelProperty(value = "锁的模式，open - 打开， close -关闭",required = true)
     private String mode;
 
     public Long getVehicleId() {
