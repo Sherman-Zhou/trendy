@@ -32,7 +32,10 @@ public class EquipmentFaultVM implements Serializable {
     private Boolean isRead;
 
     @ApiModelProperty(value = "设备ID")
-    private String equipmentId;
+    private String equipmentIdNum;
+
+    @ApiModelProperty(value = "车辆主键")
+    private Long vehicleId;
 
     @ApiModelProperty(value = "开始时间", example = "2020-06-30")
     private String startDate;

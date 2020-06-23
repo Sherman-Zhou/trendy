@@ -238,9 +238,12 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         if (vehicleOptional.isPresent()) {
             Vehicle vehicle = vehicleOptional.get();
             SecurityUtils.checkDataPermission(vehicle.getDivision());
-            EquipmentDTO equipment = EquipmentService.toDto(vehicle.getEquipment());
             VehicleStateDTO vehicleStateDTO = new VehicleStateDTO();
-            vehicleStateDTO.setEquipment(equipment);
+            if(vehicle.getEquipment()!=null) {
+                EquipmentDTO equipment = EquipmentService.toDto(vehicle.getEquipment());
+
+                vehicleStateDTO.setEquipment(equipment);
+            }
             //TODO: to calculate....
             vehicleStateDTO.setRemainingFuel(BigDecimal.valueOf(60));
             vehicleStateDTO.setTotalMileage(vehicle.getTotalMileage());

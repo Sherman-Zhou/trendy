@@ -6,6 +6,7 @@ import com.joinbe.domain.EquipmentFault;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.EquipmentFaultDTO;
+import com.joinbe.service.dto.EquipmentFaultHandleDTO;
 import com.joinbe.web.rest.vm.EquipmentFaultVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ public interface EquipmentFaultService {
         EquipmentFaultDTO dto = BeanConverter.toDto(equipmentFault, EquipmentFaultDTO.class);
         if(equipmentFault.getEquipment()!=null){
             dto.setIdentifyNumber(equipmentFault.getEquipment().getIdentifyNumber());
+            dto.setEquipmentId(equipmentFault.getEquipment().getId());
         }
         Vehicle vehicle = equipmentFault.getVehicle();
         if(vehicle != null) {
@@ -30,6 +32,7 @@ public interface EquipmentFaultService {
             Division division = vehicle.getDivision();
             SecurityUtils.checkDataPermission(division);
             dto.setOrgName(division.getName());
+            dto.setVehicleId(vehicle.getId());
             if(division.getParent()!=null) {
                 dto.setDivName(division.getParent().getName());
             }
@@ -76,4 +79,6 @@ public interface EquipmentFaultService {
      * @param id the id of the entity.
      */
     void delete(Long id);
+
+    Optional<EquipmentFaultDTO> handle(EquipmentFaultHandleDTO equipmentFaultHandleDTO);
 }

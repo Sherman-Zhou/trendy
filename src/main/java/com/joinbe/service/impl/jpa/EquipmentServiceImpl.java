@@ -108,6 +108,7 @@ public class EquipmentServiceImpl implements EquipmentService {
         if (equipmentOptional.isPresent()) {
             Equipment equipment = equipmentOptional.get();
             equipment.setStatus(EquipmentStatus.DELETED);
+            equipment.setVehicle(null);
             Vehicle vehicle = equipment.getVehicle();
             if (vehicle != null) {
                 vehicle.setBounded(false);

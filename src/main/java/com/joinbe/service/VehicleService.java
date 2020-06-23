@@ -24,6 +24,7 @@ public interface VehicleService {
         dto.setStatus(vehicle.getStatus() != null ? vehicle.getStatus().getCode() : null);
         Division division = vehicle.getDivision();
         SecurityUtils.checkDataPermission(division);
+        dto.setDivisionId(division.getId());
         dto.setOrgName(division.getName());
         if (division.getParent() != null) {
             dto.setDivName(division.getParent().getName());
