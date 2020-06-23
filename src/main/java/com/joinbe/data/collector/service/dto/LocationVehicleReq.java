@@ -9,7 +9,7 @@ public class LocationVehicleReq {
 
     @NotEmpty(message = "plate number can't not be empty")
     @Length(min = 1, max = 10, message = "plate number's length should between 1~10")
-    @ApiModelProperty(value = "车牌号")
+    @ApiModelProperty(value = "车牌号", required = true)
     private String plateNumber;
 
     public String getPlateNumber() {

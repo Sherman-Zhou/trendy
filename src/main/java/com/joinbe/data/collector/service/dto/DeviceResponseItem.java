@@ -7,10 +7,10 @@ import java.io.Serializable;
 public class DeviceResponseItem implements Serializable {
 
     /**
-     * 设备ID
+     * 设备型号
      */
-    @ApiModelProperty(value = "设备ID")
-    private String deviceId;
+    @ApiModelProperty(value = "设备型号")
+    private String identifyNumber;
 
     /**
      * 设备IMEI
@@ -24,12 +24,12 @@ public class DeviceResponseItem implements Serializable {
     @ApiModelProperty(value = "固件版本")
     private String version;
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getIdentifyNumber() {
+        return identifyNumber;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setIdentifyNumber(String identifyNumber) {
+        this.identifyNumber = identifyNumber;
     }
 
     public String getImei() {

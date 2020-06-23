@@ -39,7 +39,7 @@ public class CmdRegisterFactory implements ApplicationListener<ContextRefreshedE
     }
 
     /**
-     * 获取收银台处理对象
+     * 获取处理对象
      *
      * @param name
      * @return
