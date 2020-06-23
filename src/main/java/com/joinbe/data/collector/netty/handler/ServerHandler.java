@@ -225,7 +225,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     public void sendMessage(String deviceId, String event, EventEnum eventEnum, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
-            String strInfo= "未找到发送通道, deviceId: " + deviceId;
+            String strInfo= "绑定的设备不在线, deviceId: " + deviceId;
             log.warn(strInfo);
             deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
             return;

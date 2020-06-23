@@ -4,24 +4,24 @@ import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 public class LockDeviceReq {
 
-    @NotEmpty(message = "device id cant not be empty")
-    @Length(min = 1, max = 100, message = "device id's length should between 1~100")
-    @ApiModelProperty(value = "设备Id")
-    private String deviceId;
+    @NotNull(message = "vehicle id cant not be empty")
+    @ApiModelProperty(value = "车辆的ID")
+    private Long vehicleId;
 
     @NotEmpty(message = "mode cant not be empty")
     @ApiModelProperty(value = "锁的模式，open - 打开， close -关闭")
     private String mode;
 
-    public String getDeviceId() {
-        return deviceId;
+    public Long getVehicleId() {
+        return vehicleId;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setVehicleId(Long vehicleId) {
+        this.vehicleId = vehicleId;
     }
 
     public String getMode() {
