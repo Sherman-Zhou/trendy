@@ -148,6 +148,13 @@ public class PositionProtocol extends ProtocolMessage{
     private Float voltageBB;
 
     /**
+     * 当IBUTTON吸附时，AT35会发送事件ID=100至SERVER并将IBUTTON ID附加于信息最后
+     * 当IBUTTON移除后，AT35会发送事件件ID=101至SERVER
+     */
+    @DataOrder(order = 21)
+    private String ibuttonId;
+
+    /**
      * 跨国公司（移动国家代码）
      */
     private String mcc;
@@ -358,5 +365,13 @@ public class PositionProtocol extends ProtocolMessage{
 
     public void setMnc(String mnc) {
         this.mnc = mnc;
+    }
+
+    public String getIbuttonId() {
+        return ibuttonId;
+    }
+
+    public void setIbuttonId(String ibuttonId) {
+        this.ibuttonId = ibuttonId;
     }
 }

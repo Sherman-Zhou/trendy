@@ -29,6 +29,7 @@ import org.springframework.web.context.request.async.DeferredResult;
 
 import java.net.InetSocketAddress;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * handlerAdded -> channelRegistered -> channelActive -> channelRead -> channelReadComplete
@@ -199,6 +200,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
      * @param event
      */
     public void sendLocationMessage(String deviceId, String event, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
+        for (Map.Entry<String, Channel> entry : deviceIdAndChannelMap.entrySet()) {
+            log.debug("deviceIdAndChannelMap Key: {}; value:{} ", entry.getKey() ,entry.getValue().id().asLongText());
+        }
+        for (Map.Entry<String, String> entry : channelIdAndDeviceIdMap.entrySet()) {
+            log.debug("channelIdAndDeviceIdMap Key: {}; value:{} ", entry.getKey() ,entry.getValue());
+        }
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
             String strInfo= "未找到发送通道, deviceId: " + deviceId;
@@ -223,6 +230,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     }
 
     public void sendMessage(String deviceId, String event, EventEnum eventEnum, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
+        for (Map.Entry<String, Channel> entry : deviceIdAndChannelMap.entrySet()) {
+            log.debug("deviceIdAndChannelMap Key: {}; value:{} ", entry.getKey() ,entry.getValue().id().asLongText());
+        }
+        for (Map.Entry<String, String> entry : channelIdAndDeviceIdMap.entrySet()) {
+            log.debug("channelIdAndDeviceIdMap Key: {}; value:{} ", entry.getKey() ,entry.getValue());
+        }
+
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
             String strInfo= "绑定的设备不在线, deviceId: " + deviceId;
