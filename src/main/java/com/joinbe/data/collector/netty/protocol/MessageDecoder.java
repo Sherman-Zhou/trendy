@@ -50,18 +50,21 @@ public class MessageDecoder extends ByteToMessageDecoder {
             switch (eventType) {
                 case "SGPO":
                     message = new LockUnlockProtocol(data);
+                    message.initData(LockUnlockProtocol.class);
                     break;
                 case "SETKEY":
                     message = new SetKeyProtocol(data);
+                    message.initData(SetKeyProtocol.class);
                     break;
                 default:
                     message = new CommonProtocol(data);
+                    message.initData(CommonProtocol.class);
             }
         }else{
             //Position data
             message = new PositionProtocol(data);
+            message.initData(PositionProtocol.class);
         }
-        message.initData();
         out.add(message);
         buffer.skipBytes(buffer.readableBytes());
     }
