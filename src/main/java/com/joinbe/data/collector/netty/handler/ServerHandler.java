@@ -29,7 +29,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,11 +73,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         Channel channel = ctx.channel();
         log.debug("Channel unregistered, Ip: {}, Id:{}", channel.remoteAddress(), channel.id().asLongText());
         String deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
-        //移除设备绑定的通道
-        deviceIdAndChannelMap.remove(deviceNo);
+
+        List<String> numOfDevice = this.getKeyList(channelIdAndDeviceIdMap, deviceNo);
+        /**
+         * 防止设备断开重连时全部移除
+         */
+        if(numOfDevice.size() <= 1 ){
+            //移除设备绑定的通道
+            deviceIdAndChannelMap.remove(deviceNo);
+            //移除device绑定的server
+            redissonEquipmentStore.removeFromRedisForServer(deviceNo);
+        }
         channelIdAndDeviceIdMap.remove(channel.id().asLongText());
-        //移除device绑定的server
-        redissonEquipmentStore.removeFromRedisForServer(deviceNo);
         //车辆行驶状态设置为未知
         redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
         super.channelUnregistered(ctx);
@@ -298,5 +307,22 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             }
         });
         return "success";
+    }
+
+
+    /**
+     * get all keys by value
+     * @param map
+     * @param value
+     * @return
+     */
+    public List<String> getKeyList(ConcurrentHashMap<String,String> map, String value){
+        List<String> keyList = new ArrayList();
+        for(String getKey: map.keySet()){
+            if(map.get(getKey).equals(value)){
+                keyList.add(getKey);
+            }
+        }
+        return keyList;
     }
 }
