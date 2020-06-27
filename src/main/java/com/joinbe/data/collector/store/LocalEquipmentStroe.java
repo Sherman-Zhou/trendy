@@ -18,6 +18,7 @@ public class LocalEquipmentStroe {
     private static final Logger log = LoggerFactory.getLogger(LocalEquipmentStroe.class);
 
     private static final String DEVICE_QUERY_KEY = "DEVICE_ID|DEVICE_EVENT:";
+    private static final String DEVICE_COMMON_QUERY_KEY = "DEVICE_ID:";
     private static ConcurrentHashMap<String, LinkedBlockingQueue<DeferredResult<ResponseEntity<ResponseDTO>>>> userDeferredResultMap = new ConcurrentHashMap<>();
 
     /**
@@ -59,6 +60,43 @@ public class LocalEquipmentStroe {
             .append(deviceId)
             .append(Constants.C_VERTICAL_LINE)
             .append(event.getEvent()).toString();
+        if (userDeferredResultMap.containsKey(queryKey)) {
+            return userDeferredResultMap.get(queryKey).poll();
+        }
+        return null;
+    }
+
+
+
+
+    public synchronized static boolean putCommonQuery(String deviceId, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
+        log.debug("put in Local equipment store for common query, deviceId: {}", deviceId);
+
+        if (StringUtils.isBlank(deviceId)) {
+            return false;
+        }
+        String queryKey = new StringBuffer(DEVICE_COMMON_QUERY_KEY)
+            .append(deviceId)
+            .toString();
+        if(!userDeferredResultMap.containsKey(queryKey)){
+            LinkedBlockingQueue<DeferredResult<ResponseEntity<ResponseDTO>>> queue = new LinkedBlockingQueue<>();
+            userDeferredResultMap.put(queryKey, queue);
+        }
+        return userDeferredResultMap.get(queryKey).offer(deferredResult);
+    }
+
+    /**
+     *
+     * @param deviceId
+     * @return
+     */
+    public static DeferredResult<ResponseEntity<ResponseDTO>>  getCommonResult(String deviceId) {
+        log.debug("get from Local equipment stroe, deviceId: {}", deviceId);
+        if (StringUtils.isBlank(deviceId)) {
+            return null;
+        }
+        String queryKey = new StringBuffer(DEVICE_COMMON_QUERY_KEY)
+            .append(deviceId).toString();
         if (userDeferredResultMap.containsKey(queryKey)) {
             return userDeferredResultMap.get(queryKey).poll();
         }

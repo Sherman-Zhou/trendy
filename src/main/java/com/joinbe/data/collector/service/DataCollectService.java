@@ -87,6 +87,7 @@ public class DataCollectService {
             newVehicleTrajectory.setStartTime(Instant.now());
             newVehicleTrajectory.setEquipment(equipment.get());
             newVehicleTrajectory.setVehicle(equipment.get().getVehicle());
+
             newVehicleTrajectory.setDetails(new HashSet<VehicleTrajectoryDetails>() {{ add(vehicleTrajectoryDetails);}});
             vehicleTrajectoryDetails.setVehicleTrajectory(newVehicleTrajectory);
             //设置之前的轨迹为结束

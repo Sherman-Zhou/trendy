@@ -73,8 +73,8 @@ public class VehicleTrajectory implements Serializable {
      * 已結算
      * 未结算
      */
-    @Size(max = 1)
-//    @Column(name = "status", length = 1)
+    //@Size(max = 1)
+     @Column(name = "status", length = 1)
     private PaymentStatus status = PaymentStatus.UNSETTLED;
 
     @OneToMany(mappedBy = "vehicleTrajectory" ,cascade=CascadeType.ALL)

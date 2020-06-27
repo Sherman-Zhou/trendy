@@ -7,11 +7,13 @@ import com.joinbe.data.collector.cmd.register.impl.SetBatteryCmd;
 import com.joinbe.data.collector.cmd.register.impl.SetUserEventCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
-import com.joinbe.data.collector.service.dto.*;
+import com.joinbe.data.collector.service.dto.LockDeviceReq;
+import com.joinbe.data.collector.service.dto.LockResponseDTO;
+import com.joinbe.data.collector.service.dto.ResponseDTO;
+import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.service.EquipmentService;
-import com.joinbe.service.dto.EquipmentDTO;
 import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +105,7 @@ public class EquipmentController {
     @ApiOperation("开锁/关锁")
     @PostMapping("/lock")
     public DeferredResult<ResponseEntity<ResponseDTO>> lock(@RequestBody @Valid LockDeviceReq lockDeviceReq, BindingResult bindingResult) {
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Lock/Unlock time out");
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Lock/Unlock time out, maybe device is disconnecting, please try later, vehicleId: " + lockDeviceReq.getVehicleId());
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/equipment/lock validate error: {}", message);
@@ -117,7 +119,7 @@ public class EquipmentController {
             deviceId = vehicle.get().getEquipment().getImei();
         }else{
             String message = "No binding device found for the vehicle ID: " + lockDeviceReq.getVehicleId();
-            deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, message), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
 
@@ -141,7 +143,12 @@ public class EquipmentController {
         }
         String sgpoStr = cmd.initCmd(params);
         logger.debug("REST request for lock/unlock, command: {}", sgpoStr);
-        serverHandler.sendMessage(deviceId, sgpoStr, EventEnum.SGPO, deferredResult);
+        serverHandler.sendCommonQueryMessage(deviceId, sgpoStr, EventEnum.SGPO, deferredResult);
+        deferredResult.onTimeout(() -> {
+            //remove from local store if timeout
+            logger.warn("Lock/Unlock time out, maybe device is disconnecting, device: {}", deviceId);
+            LocalEquipmentStroe.get(deviceId,EventEnum.SGPO);
+        });
         return deferredResult;
     }
 }

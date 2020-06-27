@@ -1,11 +1,14 @@
 package com.joinbe.data.collector.netty.protocol;
 
 import cn.hutool.core.util.StrUtil;
-import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
-import com.joinbe.data.collector.netty.protocol.message.ProtocolMessage;
+import com.joinbe.data.collector.netty.protocol.message.*;
+import com.joinbe.data.collector.service.dto.LocationResponseDTO;
+import com.joinbe.data.collector.service.dto.LockResponseDTO;
+import com.joinbe.data.collector.service.dto.ResponseDTO;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,16 +39,41 @@ public class MessageDecoder extends ByteToMessageDecoder {
         ProtocolMessage message;
         if (data.startsWith("$OK")) {
             //TODO - handle query response
-            return;
+            String[] splitEventType = data.split(StrUtil.COMMA);
+            String eventType = null;
+            if(splitEventType.length >=2 && StringUtils.isNotEmpty(splitEventType[1])){
+                eventType = splitEventType[1];
+            }
+            if(StringUtils.isEmpty(eventType)){
+                return;
+            }
+            switch (eventType) {
+                case "SGPO":
+                    message = new LockUnlockProtocol(data);
+                    message.initData(LockUnlockProtocol.class);
+                    break;
+                case "SETKEY":
+                    message = new SetKeyProtocol(data);
+                    message.initData(SetKeyProtocol.class);
+                    break;
+                default:
+                    message = new CommonProtocol(data);
+                    message.initData(CommonProtocol.class);
+            }
         }else{
             //Position data
             message = new PositionProtocol(data);
+            message.initData(PositionProtocol.class);
         }
-        message.initData();
         out.add(message);
         buffer.skipBytes(buffer.readableBytes());
     }
 
+    /**
+     *
+     * @param buf
+     * @return
+     */
     public String convertByteBufToString(ByteBuf buf) {
         String str;
         // 处理堆缓冲区
@@ -56,6 +84,12 @@ public class MessageDecoder extends ByteToMessageDecoder {
             byte[] bytes = new byte[buf.readableBytes()];
             buf.getBytes(buf.readerIndex(), bytes);
             str = new String(bytes, 0, buf.readableBytes());
+        }
+        /**
+         * remove \r\n
+         */
+        if(str.length() > 2){
+            str = str.substring(0, str.length()-2);
         }
         return str;
     }
