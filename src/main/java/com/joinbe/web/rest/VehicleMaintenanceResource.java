@@ -5,6 +5,8 @@ import com.joinbe.service.dto.VehicleMaintenanceDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api")
+@Api(value = "车辆维护相关接口", tags = {"车辆维护相关接口"}, produces = "application/json")
 public class VehicleMaintenanceResource {
 
     private static final String ENTITY_NAME = "vehicleMaintenance";
@@ -40,6 +43,7 @@ public class VehicleMaintenanceResource {
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("/vehicle-maintenances")
+    @ApiOperation("查询车辆维护记录")
     public ResponseEntity<VehicleMaintenanceDTO> createVehicleMaintenance(@Valid @RequestBody VehicleMaintenanceDTO vehicleMaintenanceDTO) throws URISyntaxException {
         log.debug("REST request to save VehicleMaintenance : {}", vehicleMaintenanceDTO);
         if (vehicleMaintenanceDTO.getId() != null) {
@@ -57,10 +61,10 @@ public class VehicleMaintenanceResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated vehicleMaintenanceDTO,
      * or with status {@code 400 (Bad Request)} if the vehicleMaintenanceDTO is not valid,
      * or with status {@code 500 (Internal Server Error)} if the vehicleMaintenanceDTO couldn't be updated.
-     * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/vehicle-maintenances")
-    public ResponseEntity<VehicleMaintenanceDTO> updateVehicleMaintenance(@Valid @RequestBody VehicleMaintenanceDTO vehicleMaintenanceDTO) throws URISyntaxException {
+    @ApiOperation("更新车辆维护记录")
+    public ResponseEntity<VehicleMaintenanceDTO> updateVehicleMaintenance(@Valid @RequestBody VehicleMaintenanceDTO vehicleMaintenanceDTO) {
         log.debug("REST request to update VehicleMaintenance : {}", vehicleMaintenanceDTO);
         if (vehicleMaintenanceDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
@@ -89,6 +93,7 @@ public class VehicleMaintenanceResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of vehicleMaintenances in body.
      */
     @GetMapping("/vehicle-maintenances")
+    @ApiOperation("获取所有车辆维护记录")
     public ResponseEntity<List<VehicleMaintenanceDTO>> getAllVehicleMaintenances(VehicleMaintenanceVM vm) {
         log.debug("REST request to get a page of VehicleMaintenances");
         List<VehicleMaintenanceDTO> vehicleMaintenances = vehicleMaintenanceService.findAll(vm);
@@ -102,6 +107,7 @@ public class VehicleMaintenanceResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the vehicleMaintenanceDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/vehicle-maintenances/{id}")
+    @ApiOperation("获取车辆维护记录详情")
     public ResponseEntity<VehicleMaintenanceDTO> getVehicleMaintenance(@PathVariable Long id) {
         log.debug("REST request to get VehicleMaintenance : {}", id);
         Optional<VehicleMaintenanceDTO> vehicleMaintenanceDTO = vehicleMaintenanceService.findOne(id);
@@ -115,6 +121,7 @@ public class VehicleMaintenanceResource {
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
     @DeleteMapping("/vehicle-maintenances/{id}")
+    @ApiOperation("删除车辆维护记录")
     public ResponseEntity<Void> deleteVehicleMaintenance(@PathVariable Long id) {
         log.debug("REST request to delete VehicleMaintenance : {}", id);
         vehicleMaintenanceService.delete(id);

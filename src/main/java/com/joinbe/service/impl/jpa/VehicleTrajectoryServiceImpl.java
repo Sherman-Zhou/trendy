@@ -3,6 +3,7 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
+import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.VehicleTrajectory;
 import com.joinbe.domain.VehicleTrajectoryDetails;
@@ -32,6 +33,7 @@ import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.Predicate;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -167,7 +169,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
         List<DivisionWithVehicesleDTO> divisions = userDivisionIds.stream()
             .map(divisionRepository::getOne)
-            .map(division -> new DivisionWithVehicesleDTO(division))
+            .map(DivisionWithVehicesleDTO::new)
             .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
             .collect(Collectors.toList());
 
@@ -203,14 +205,11 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
                 dto.setDivisionId(vehicle.getDivision().getId());
                 return dto;
             })
-            .collect(Collectors.groupingBy(vehicle -> vehicle.getDivisionId()));
+            .collect(Collectors.groupingBy(VehicleSummaryDTO::getDivisionId));
 
         //group by parentId
         List<DivisionWithVehicesleDTO> children = divisions.stream()
-            .map(division -> {
-                division.setVehicles(vehicleMap.get(division.getId()));
-                return division;
-            })
+            .peek(division -> division.setVehicles(vehicleMap.get(division.getId())))
             .filter(division -> division.getParentId() != null)
             .sorted(Comparator.comparing(DivisionDTO::getName))
             .collect(Collectors.toList());
@@ -239,7 +238,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             Vehicle vehicle = vehicleOptional.get();
             SecurityUtils.checkDataPermission(vehicle.getDivision());
             VehicleStateDTO vehicleStateDTO = new VehicleStateDTO();
-            if(vehicle.getEquipment()!=null) {
+            if (vehicle.getEquipment() != null) {
                 EquipmentDTO equipment = EquipmentService.toDto(vehicle.getEquipment());
 
                 vehicleStateDTO.setEquipment(equipment);
@@ -269,5 +268,35 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
     public List<String> findAllTrajectoryIds(Long vehicleId) {
         List<VehicleTrajectory> trajectories = vehicleTrajectoryRepository.findByVehicleId(vehicleId);
         return trajectories.stream().map(VehicleTrajectory::getTrajectoryId).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TrajectoryReportDTO> findAllTrajectory4backup(Instant startTime, Instant endTime) {
+
+
+        List<VehicleTrajectory> vehicleTrajectories = vehicleTrajectoryRepository.findTrajectoryAfter(startTime, endTime);
+
+        List<TrajectoryReportDTO> reports = vehicleTrajectories.stream().map(VehicleTrajectory::getDetails)
+            .flatMap(details -> details.stream())
+            .map(
+                vehicleTrajectoryDetails -> {
+                    TrajectoryReportDTO trajectoryReportDTO = new TrajectoryReportDTO();
+                    trajectoryReportDTO.setReceivedTime(DateUtils.formatDate(vehicleTrajectoryDetails.getReceivedTime(), DateUtils.PATTERN_DATEALLTIME));
+                    trajectoryReportDTO.setLat(vehicleTrajectoryDetails.getLatitude());
+                    trajectoryReportDTO.setLng(vehicleTrajectoryDetails.getLongitude());
+                    trajectoryReportDTO.setTrajectoryId(vehicleTrajectoryDetails.getVehicleTrajectory().getTrajectoryId());
+                    Equipment equipment = vehicleTrajectoryDetails.getVehicleTrajectory().getEquipment();
+                    if (equipment != null) {
+                        trajectoryReportDTO.setIdentifyNumber(equipment.getIdentifyNumber());
+                        trajectoryReportDTO.setImei(equipment.getImei());
+                    }
+                    return trajectoryReportDTO;
+                }
+            ).sorted(Comparator.comparing(TrajectoryReportDTO::getIdentifyNumber)
+                .thenComparing(TrajectoryReportDTO::getTrajectoryId)
+                .thenComparing(TrajectoryReportDTO::getReceivedTime))
+            .collect(Collectors.toList());
+
+        return reports;
     }
 }

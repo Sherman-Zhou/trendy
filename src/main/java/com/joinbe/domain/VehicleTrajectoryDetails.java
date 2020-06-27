@@ -27,7 +27,9 @@ public class VehicleTrajectoryDetails implements Serializable {
     @Column(name = "received_time")
     private Instant receivedTime;
 
-
+    /**
+     * 经度
+     */
     @Column(name = "longitude", precision = 21, scale = 7)
     private BigDecimal longitude;
 

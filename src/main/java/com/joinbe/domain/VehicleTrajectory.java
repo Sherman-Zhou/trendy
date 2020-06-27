@@ -1,6 +1,7 @@
 package com.joinbe.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.joinbe.domain.enumeration.PaymentStatus;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
@@ -73,8 +74,8 @@ public class VehicleTrajectory implements Serializable {
      * 未结算
      */
     @Size(max = 1)
-    @Column(name = "status", length = 1)
-    private String status;
+//    @Column(name = "status", length = 1)
+    private PaymentStatus status = PaymentStatus.UNSETTLED;
 
     @OneToMany(mappedBy = "vehicleTrajectory" ,cascade=CascadeType.ALL)
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -187,15 +188,15 @@ public class VehicleTrajectory implements Serializable {
         return this;
     }
 
-    public String getStatus() {
+    public PaymentStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(PaymentStatus status) {
         this.status = status;
     }
 
-    public VehicleTrajectory status(String status) {
+    public VehicleTrajectory status(PaymentStatus status) {
         this.status = status;
         return this;
     }
