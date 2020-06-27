@@ -97,7 +97,7 @@ public class UserResource {
      */
     @PostMapping("/users")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    @ApiOperation(value = "创建新用户", notes = "")
+    @ApiOperation(value = "创建新用户")
     public ResponseEntity<User> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
         log.debug("REST request to save User : {}", userDTO);
 
@@ -126,7 +126,7 @@ public class UserResource {
      */
     @PutMapping("/users")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-    @ApiOperation(value = "更新新用户", notes = "")
+    @ApiOperation(value = "更新新用户")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
         Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
@@ -165,7 +165,7 @@ public class UserResource {
      * @param id the id of the user.
      */
     @GetMapping(path = "/user/{id}/reset")
-    @ApiOperation(value = "重置用户密码", notes = "")
+    @ApiOperation(value = "重置用户密码")
     public ResponseEntity<UserDTO> requestPasswordReset(@PathVariable  @ApiParam(value ="用户主键", required = true ) Long id) {
         Optional<User> user = userService.requestPasswordReset(id);
         user.ifPresent(mailService::sendPasswordResetMail);
@@ -192,7 +192,6 @@ public class UserResource {
      * @return all available roles.
      */
     @GetMapping("/users/roles")
-//    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     @ApiOperation("获取所有角色")
     public List<RoleDTO> getRoles() {
         return userService.getRoles();
@@ -256,23 +255,8 @@ public class UserResource {
     public ResponseEntity<UserDetailsDTO> getUser(@PathVariable @ApiParam(value ="用户登陆id", required = true ) String login) {
         log.debug("REST request to get User : {}", login);
         return ResponseUtil.wrapOrNotFound(
-            userService.getUserWithAuthoritiesByLogin(login)
-                .map(UserDetailsDTO::new));
+            userService.getUserWithAuthoritiesByLogin(login));
     }
-
-//    /**
-//     * {@code DELETE /users/:login} : delete the "login" User.
-//     *
-//     * @param login the login of the user to delete.
-//     * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
-//     */
-//    @DeleteMapping("/users/{login:" + Constants.LOGIN_REGEX + "}")
-////    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
-//    public ResponseEntity<Void> deleteUser(@PathVariable String login) {
-//        log.debug("REST request to delete User: {}", login);
-//        userService.deleteUser(login);
-//        return ResponseEntity.noContent().build();
-//    }
 
     /**
      * {@code DELETE /users/:id} : delete the  User by Id.

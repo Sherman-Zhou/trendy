@@ -30,7 +30,7 @@ public interface UserService {
 
     User createUser(UserDTO userDTO);
 
-    void updateUser(String name, String email, String langKey, String imageUrl, String mobileNo);
+    void updateUser(String name, String email, String langKey, String address, String mobileNo);
 
     Optional<UserDTO> updateUser(UserDTO userDTO);
 
@@ -44,7 +44,7 @@ public interface UserService {
 
     Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM userVM);
 
-    Optional<User> getUserWithAuthoritiesByLogin(String login);
+    Optional<UserDetailsDTO> getUserWithAuthoritiesByLogin(String login);
 
     Optional<User> getUserWithAuthorities(Long id);
 
