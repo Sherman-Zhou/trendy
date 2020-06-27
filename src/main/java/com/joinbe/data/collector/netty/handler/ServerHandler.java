@@ -5,7 +5,8 @@ import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
 import com.joinbe.data.collector.netty.protocol.message.ProtocolMessage;
-import com.joinbe.data.collector.redistore.RedissonEquipmentStore;
+import com.joinbe.data.collector.store.LocalEquipmentStroe;
+import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.LocationResponseDTO;
 import com.joinbe.data.collector.service.dto.ResponseDTO;
@@ -28,8 +29,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * handlerAdded -> channelRegistered -> channelActive -> channelRead -> channelReadComplete
@@ -42,8 +46,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
 
     private static final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     //deviceId : channel
-    private static final HashMap<String, Channel> deviceIdAndChannelMap = new HashMap<>();
-    private static final HashMap<String, String> channelIdAndDeviceIdMap = new HashMap<>();
+    private static final ConcurrentHashMap<String, Channel> deviceIdAndChannelMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, String> channelIdAndDeviceIdMap = new ConcurrentHashMap<>();
 
     @Value("${netty.server-ip}")
     private String serverIp;
@@ -69,11 +73,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         Channel channel = ctx.channel();
         log.debug("Channel unregistered, Ip: {}, Id:{}", channel.remoteAddress(), channel.id().asLongText());
         String deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
-        //移除设备绑定的通道
-        deviceIdAndChannelMap.remove(deviceNo);
+
+        List<String> numOfDevice = this.getKeyList(channelIdAndDeviceIdMap, deviceNo);
+        /**
+         * 防止设备断开重连时全部移除
+         */
+        if(numOfDevice.size() <= 1 ){
+            //移除设备绑定的通道
+            deviceIdAndChannelMap.remove(deviceNo);
+            //移除device绑定的server
+            redissonEquipmentStore.removeFromRedisForServer(deviceNo);
+        }
         channelIdAndDeviceIdMap.remove(channel.id().asLongText());
-        //移除device绑定的server
-        redissonEquipmentStore.removeFromRedisForServer(deviceNo);
         //车辆行驶状态设置为未知
         redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
         super.channelUnregistered(ctx);
@@ -113,7 +124,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             public void run() {
                 if(msg instanceof PositionProtocol){
                     PositionProtocol positionProtocolMsg = (PositionProtocol)msg;
-                    DeferredResult deferredResult = redissonEquipmentStore.getInRedisForQuery(deviceNo, EventEnum.GPOS);
+                    //DeferredResult deferredResult = redissonEquipmentStore.getInRedisForQuery(deviceNo, EventEnum.GPOS);
+                    DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.GPOS);
                     if(deferredResult != null){
                         deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(0, "success", positionProtocolMsg), HttpStatus.OK));
                     }
@@ -216,7 +228,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         log.debug("deviceId: {}, isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",deviceId, c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         if(c.isWritable()){
             //put to queue
-            redissonEquipmentStore.putInRedisForQuery(deviceId,EventEnum.GPOS,deferredResult);
+            boolean putResult = LocalEquipmentStroe.put(deviceId, EventEnum.GPOS, deferredResult);
+            if(!putResult){
+                deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Large concurrency, please try later: " + deviceId), HttpStatus.OK));
+            }
             c.writeAndFlush(event).addListener(future -> {
                 if(!future.isSuccess()){
                     deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
@@ -229,6 +244,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         }
     }
 
+    /**
+     *
+     * @param deviceId
+     * @param event
+     * @param eventEnum
+     * @param deferredResult
+     */
     public void sendMessage(String deviceId, String event, EventEnum eventEnum, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
         for (Map.Entry<String, Channel> entry : deviceIdAndChannelMap.entrySet()) {
             log.debug("deviceIdAndChannelMap Key: {}; value:{} ", entry.getKey() ,entry.getValue().id().asLongText());
@@ -236,7 +258,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         for (Map.Entry<String, String> entry : channelIdAndDeviceIdMap.entrySet()) {
             log.debug("channelIdAndDeviceIdMap Key: {}; value:{} ", entry.getKey() ,entry.getValue());
         }
-
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
             String strInfo= "绑定的设备不在线, deviceId: " + deviceId;
@@ -247,7 +268,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         log.debug("deviceId: {}, isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",deviceId, c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         if(c.isWritable()){
             //TODO : put to queue
-            //redissonEquipmentStore.putInRedisForQuery(deviceId,eventEnum,deferredResult);
+            //LocalEquipmentStroe.put(deviceId,eventEnum,deferredResult);
             c.writeAndFlush(event).addListener(future -> {
                 if(!future.isSuccess()){
                     deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
@@ -286,5 +307,22 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             }
         });
         return "success";
+    }
+
+
+    /**
+     * get all keys by value
+     * @param map
+     * @param value
+     * @return
+     */
+    public List<String> getKeyList(ConcurrentHashMap<String,String> map, String value){
+        List<String> keyList = new ArrayList();
+        for(String getKey: map.keySet()){
+            if(map.get(getKey).equals(value)){
+                keyList.add(getKey);
+            }
+        }
+        return keyList;
     }
 }

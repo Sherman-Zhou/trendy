@@ -16,6 +16,7 @@ import io.swagger.annotations.ApiOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -41,6 +42,9 @@ public class EquipmentController {
 
     @Autowired
     private VehicleRepository vehicleRepository;
+
+    @Value("${netty.query-timeout}")
+    private Long queryTimeout;
     /**
      *
      * @param deviceId
@@ -99,7 +103,7 @@ public class EquipmentController {
     @ApiOperation("开锁/关锁")
     @PostMapping("/lock")
     public DeferredResult<ResponseEntity<ResponseDTO>> lock(@RequestBody @Valid LockDeviceReq lockDeviceReq, BindingResult bindingResult) {
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(5000L, "Lock/Unlock time out");
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Lock/Unlock time out");
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/equipment/lock validate error: {}", message);

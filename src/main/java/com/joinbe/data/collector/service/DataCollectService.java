@@ -2,7 +2,7 @@ package com.joinbe.data.collector.service;
 
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
-import com.joinbe.data.collector.redistore.RedissonEquipmentStore;
+import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.VehicleTrajectory;
 import com.joinbe.domain.VehicleTrajectoryDetails;
