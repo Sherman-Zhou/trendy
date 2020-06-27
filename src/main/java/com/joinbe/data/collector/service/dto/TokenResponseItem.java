@@ -9,8 +9,8 @@ public class TokenResponseItem implements Serializable {
     /**
      * 设备ID
      */
-    @ApiModelProperty(value = "设备ID")
-    private String deviceId;
+    @ApiModelProperty(value = "设备IMEI")
+    private String imei;
 
     /**
      * 设备token
@@ -32,12 +32,12 @@ public class TokenResponseItem implements Serializable {
         this.token = token;
     }
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getImei() {
+        return imei;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setImei(String imei) {
+        this.imei = imei;
     }
 
     public String getExpireDate() {

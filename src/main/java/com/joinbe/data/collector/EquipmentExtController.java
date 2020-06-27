@@ -4,6 +4,8 @@ import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.cmd.register.Cmd;
+import com.joinbe.data.collector.cmd.register.impl.LockCmd;
+import com.joinbe.data.collector.cmd.register.impl.SetTokenCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.dto.*;
@@ -58,7 +60,7 @@ public class EquipmentExtController {
     VehicleTrajectoryDetailsRepository vehicleTrajectoryDetailsRepository;
 
     @PostMapping("/location/device")
-    @ApiOperation("根据设备id获取设备的实时位置")
+    @ApiOperation("根据设备IMEI获取设备的实时位置")
     public DeferredResult<ResponseEntity<ResponseDTO>> getLocation(@RequestBody @Valid LocationDeviceReq locationReq, BindingResult bindingResult) {
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(3000L, "Get Location time out");
 
@@ -76,7 +78,7 @@ public class EquipmentExtController {
         }
         String gposCmd = cmd.initCmd(params);
         logger.debug("REST request for get location, command: {}", gposCmd);
-        serverHandler.sendLocationMessage(locationReq.getDeviceId(), gposCmd, deferredResult);
+        serverHandler.sendLocationMessage(locationReq.getImei(), gposCmd, deferredResult);
         return deferredResult;
     }
 
@@ -102,13 +104,15 @@ public class EquipmentExtController {
         Optional<EquipmentDTO> equipmentDto = equipmentService.findByLicensePlateNumber(locationReq.getPlateNumber());
         String deviceId;
         if(equipmentDto.isPresent()){
-            deviceId = equipmentDto.get().getIdentifyNumber();
+            deviceId = equipmentDto.get().getImei();
         }else{
             String message = "No binding device found for the plate number: " + locationReq.getPlateNumber();
-            logger.warn("In /api/external/equipment/location/vehicle validate error: {}", message);
+            logger.warn("In /api/external/equipment/location/vehicle, warn: {}", message);
             deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
+
+
         HashMap<String, String> params = new HashMap<>(8);
         Cmd cmd = factory.createInstance(EventEnum.GPOS.getEvent());
         if (cmd == null) {
@@ -141,7 +145,7 @@ public class EquipmentExtController {
         Optional<EquipmentDTO> equipmentDto = equipmentService.findByLicensePlateNumber(deviceInfo.getPlateNumber());
         if(equipmentDto.isPresent()){
             DeviceResponseItem deviceResponseItem = new DeviceResponseItem();
-            deviceResponseItem.setDeviceId(equipmentDto.get().getIdentifyNumber());
+            deviceResponseItem.setIdentifyNumber(equipmentDto.get().getIdentifyNumber());
             deviceResponseItem.setImei(equipmentDto.get().getImei());
             deviceResponseItem.setVersion(equipmentDto.get().getVersion());
             deviceResponseDTO.setData(deviceResponseItem);
@@ -166,8 +170,9 @@ public class EquipmentExtController {
         Optional<EquipmentDTO> equipmentDto = equipmentService.findByLicensePlateNumber(deviceInfo.getPlateNumber());
         String deviceId;
         if(equipmentDto.isPresent()){
-            deviceId = equipmentDto.get().getIdentifyNumber();
+            deviceId = equipmentDto.get().getImei();
         }else{
+            logger.debug("No binding device found for the plate number : {}", deviceInfo.getPlateNumber());
             tokenResponseDTO.setMessage("No binding device found for the plate number: " + deviceInfo.getPlateNumber());
             return new ResponseEntity<>(tokenResponseDTO, HttpStatus.OK);
         }
@@ -178,11 +183,22 @@ public class EquipmentExtController {
         String md5 = DigestUtils.md5DigestAsHex(md5OrigValue.toString().getBytes());
 
         TokenResponseItem tokenResponseItem = new TokenResponseItem();
-        tokenResponseItem.setDeviceId(deviceId);
+        tokenResponseItem.setImei(deviceId);
         tokenResponseItem.setToken(md5);
         tokenResponseItem.setExpireDate(expireDateTime);
         tokenResponseDTO.setData(tokenResponseItem);
         //TODO: write token to equipment
+        HashMap<String, String> params = new HashMap<>(8);
+        params.put(SetTokenCmd.TOKEN, md5);
+        Cmd cmd = factory.createInstance(EventEnum.SETKEY.getEvent());
+        if (cmd == null) {
+            logger.error("Unimplemented command, please check with admin, plateNumber: {}", deviceInfo.getPlateNumber());
+            //deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
+            //return deferredResult;
+        }
+        String tokenStr = cmd.initCmd(params);
+        logger.debug("REST request for write token, command: {}", tokenStr);
+        //serverHandler.sendMessage(deviceId, tokenStr, EventEnum.SETKEY, deferredResult);
         return new ResponseEntity<>(tokenResponseDTO, HttpStatus.OK);
     }
 

@@ -7,16 +7,16 @@ import javax.validation.constraints.NotEmpty;
 
 public class LocationDeviceReq {
 
-    @NotEmpty(message = "device id cant not be empty")
-    @Length(min = 1, max = 100, message = "device id's length should between 1~100")
-    @ApiModelProperty(value = "设备Id")
-    private String deviceId;
+    @NotEmpty(message = "device IMEI number cant not be empty")
+    @Length(min = 1, max = 100, message = "device IMEI number length should between 1~100")
+    @ApiModelProperty(value = "设备IMEI", required=true)
+    private String imei;
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getImei() {
+        return imei;
     }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
+    public void setImei(String imei) {
+        this.imei = imei;
     }
 }

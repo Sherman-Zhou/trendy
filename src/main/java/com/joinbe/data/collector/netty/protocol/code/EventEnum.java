@@ -122,6 +122,11 @@ public enum EventEnum {
      * Enable/Disable RFID read function (*available in AT35 series only)
      */
     RFID("RFID"),
+
+    /**
+     * set token
+     */
+    SETKEY("SETKEY"),
     ;
 
 
