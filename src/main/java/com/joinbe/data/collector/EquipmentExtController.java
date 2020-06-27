@@ -8,6 +8,7 @@ import com.joinbe.data.collector.cmd.register.impl.SetTokenCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.dto.*;
+import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.domain.VehicleTrajectoryDetails;
 import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
 import com.joinbe.service.EquipmentService;
@@ -66,7 +67,6 @@ public class EquipmentExtController {
     @ApiOperation("根据设备IMEI获取设备的实时位置")
     public DeferredResult<ResponseEntity<ResponseDTO>> getLocation(@RequestBody @Valid LocationDeviceReq locationReq, BindingResult bindingResult) {
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Get Location time out");
-
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/external/equipment/location/device validate error: {}", message);
@@ -82,6 +82,12 @@ public class EquipmentExtController {
         String gposCmd = cmd.initCmd(params);
         logger.debug("REST request for get location, command: {}", gposCmd);
         serverHandler.sendLocationMessage(locationReq.getImei(), gposCmd, deferredResult);
+        deferredResult.onTimeout(() -> {
+            //remove from local store if timeout
+            logger.warn("getLocation timout, maybe device is disconnecting, please try later, device: {}", locationReq.getImei());
+            LocalEquipmentStroe.get(locationReq.getImei(),EventEnum.GPOS);
+        });
+
         return deferredResult;
     }
 
