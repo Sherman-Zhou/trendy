@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> registerUserEmail(UserRegisterVM userDTO) {
         userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
-            if (!existingUser.getId().equals(userDTO.getLogin()) && existingUser.getActivated()) {
+            if (!existingUser.getLogin().equals(userDTO.getLogin()) && existingUser.getActivated()) {
                 throw new EmailAlreadyUsedException();
             }
         });
@@ -148,8 +148,8 @@ public class UserServiceImpl implements UserService {
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 user.setEmail(userDTO.getEmail().toLowerCase());
-               // user.setStatus(RecordStatus.ACTIVE);
-               // user.setActivationKey(null);
+                user.setStatus(RecordStatus.ACTIVE);
+                user.setActivationKey(null);
                 userRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Created Information for User: {}", user);
@@ -161,7 +161,7 @@ public class UserServiceImpl implements UserService {
     public Optional<User> changeUserEmail(ChangeEmailVM userDTO) {
 
         userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
-            if (!existingUser.getId().equals(userDTO.getLogin()) && existingUser.getActivated()) {
+            if (!existingUser.getLogin().equals(userDTO.getLogin()) && existingUser.getActivated()) {
                 throw new EmailAlreadyUsedException();
             }
         });
@@ -173,7 +173,7 @@ public class UserServiceImpl implements UserService {
         }
 
         return Optional.of(userInDb)
-            .filter(Optional::isPresent)
+            //.filter(Optional::isPresent)
             .map(Optional::get)
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
@@ -220,14 +220,17 @@ public class UserServiceImpl implements UserService {
             user.setLangKey(userDTO.getLangKey());
         }
         user.setSex(Sex.resolve(userDTO.getSex()));
-//        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
         user.setMobileNo(userDTO.getMobileNo());
         String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
         user.setPassword(encryptedPassword);
+        user.setRemark(userDTO.getRemark());
+        user.setAddress(userDTO.getAddress());
+
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
         user.setStatus(RecordStatus.INACTIVE);
         user.setActivationKey(RandomUtil.generateActivationKey());
+
         if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
             Set<Role> roles = userDTO.getRoleIds().stream()
                 .map(roleRepository::findById)
@@ -250,13 +253,13 @@ public class UserServiceImpl implements UserService {
     /**
      * Update basic information (first name, last name, email, language) for the current user.
      *
-     * @param name     name of user.
-     * @param email    email id of user.
-     * @param langKey  language key.
-     * @param imageUrl image URL of user.
+     * @param name    name of user.
+     * @param email   email id of user.
+     * @param langKey language key.
+     * @param address image URL of user.
      */
     @Override
-    public void updateUser(String name, String email, String langKey, String imageUrl, String mobileNo) {
+    public void updateUser(String name, String email, String langKey, String address, String mobileNo) {
         SecurityUtils.getCurrentUserLogin()
             .flatMap(login -> userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
             .ifPresent(user -> {
@@ -265,7 +268,7 @@ public class UserServiceImpl implements UserService {
                     user.setEmail(email.toLowerCase());
                 }
                 user.setLangKey(langKey);
-                user.setAvatar(imageUrl);
+                user.setAddress(address);
                 user.setMobileNo(mobileNo);
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
@@ -288,12 +291,18 @@ public class UserServiceImpl implements UserService {
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 this.clearUserCaches(user);
-                SecurityUtils.checkDataPermission(user.getDivisions());
+                // SecurityUtils.checkDataPermission(user.getDivisions());
                 user.setLogin(userDTO.getLogin().toLowerCase());
                 user.setName(userDTO.getName());
 
                 if (userDTO.getEmail() != null) {
                     user.setEmail(userDTO.getEmail().toLowerCase());
+                }
+                user.setAddress(userDTO.getAddress());
+                user.setRemark(userDTO.getRemark());
+                if (StringUtils.isNotEmpty(userDTO.getPassword())) {
+                    String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
+                    user.setPassword(encryptedPassword);
                 }
                 user.setAvatar(userDTO.getAvatar());
                 user.setStatus(RecordStatus.resolve(userDTO.getStatus()));
@@ -326,7 +335,7 @@ public class UserServiceImpl implements UserService {
             //not allow to update deleted user
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
-                SecurityUtils.checkDataPermission(user.getDivisions());
+                // SecurityUtils.checkDataPermission(user.getDivisions());
                 user.setStatus(status);
                 userRepository.save(user);
                 this.clearUserCaches(user);
@@ -336,21 +345,14 @@ public class UserServiceImpl implements UserService {
             .map(UserDTO::new);
     }
 
-//    @Override
-//    public void deleteUser(String login) {
-//        userRepository.findOneByLogin(login).ifPresent(user -> {
-//            userRepository.delete(user);
-//            this.clearUserCaches(user);
-//            log.debug("Deleted User: {}", user);
-//        });
-//    }
-
     @Override
     public void deleteUser(Long id) {
         userRepository.findById(id).ifPresent(user -> {
             // userRepository.delete(user);
-            SecurityUtils.checkDataPermission(user.getDivisions());
+            // SecurityUtils.checkDataPermission(user.getDivisions());
             user.setStatus(RecordStatus.DELETED);
+            String deleteLogin = user.getLogin().length() >= 48 ? user.getLogin().substring(0, 48) : user.getLogin();
+            user.setLogin(deleteLogin + "$D");
             this.clearUserCaches(user);
             log.debug("Deleted User: {}", user);
         });
@@ -377,8 +379,8 @@ public class UserServiceImpl implements UserService {
     public Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM vm) {
         QueryParams<User> queryParams = new QueryParams<>();
         queryParams.setDistinct(true);
-        Set<Division> userDivisions = SecurityUtils.getCurrentUserDivisionIds()
-            .stream().map(id -> new Division(id)).collect(Collectors.toSet());
+//        Set<Division> userDivisions = SecurityUtils.getCurrentUserDivisionIds()
+//            .stream().map(id -> new Division(id)).collect(Collectors.toSet());
         //queryParams.and("divisions", Filter.Operator.in, userDivisions);
         if (StringUtils.isNotEmpty(vm.getEmail())) {
             queryParams.and("email", Filter.Operator.eq, vm.getEmail());
@@ -407,21 +409,21 @@ public class UserServiceImpl implements UserService {
         }
 
         //Divisions Id
-        Specification<User> divisionSpecification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
-             return root.join("divisions").in(userDivisions);
-        };
-        specification = specification.and(divisionSpecification);
+//        Specification<User> divisionSpecification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
+//             return root.join("divisions").in(userDivisions);
+//        };
+//        specification = specification.and(divisionSpecification);
         return userRepository.findAll(specification, pageable).map(UserDTO::new);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> getUserWithAuthoritiesByLogin(String login) {
+    public Optional<UserDetailsDTO> getUserWithAuthoritiesByLogin(String login) {
 
-        Optional<User> userOptional = userRepository.findOneWithRolesByLogin(login);
-        if(userOptional.isPresent()){
-            SecurityUtils.checkDataPermission(userOptional.get().getDivisions());
-        }
+        Optional<UserDetailsDTO> userOptional = userRepository.findOneWithRolesByLogin(login).map(UserDetailsDTO::new);
+//        if(userOptional.isPresent()){
+//            SecurityUtils.checkDataPermission(userOptional.get().getDivisions());
+//        }
         return userOptional;
     }
 
@@ -488,8 +490,8 @@ public class UserServiceImpl implements UserService {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             //to check if the admin user has the permission of the division Ids to be assign
-            SecurityUtils.checkDataPermission(divisionIds);
-            SecurityUtils.checkDataPermission(user.getDivisions());
+//            SecurityUtils.checkDataPermission(divisionIds);
+//            SecurityUtils.checkDataPermission(user.getDivisions());
             user.getDivisions().clear();
 
             divisionIds.forEach(divisionId -> {

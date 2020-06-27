@@ -1,5 +1,6 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.config.Constants;
 import com.joinbe.domain.User;
 import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.security.SecurityUtils;
@@ -14,6 +15,7 @@ import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
 import com.joinbe.web.rest.vm.ChangeEmailVM;
 import com.joinbe.web.rest.vm.KeyAndPasswordVM;
+import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.UserRegisterVM;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -131,7 +134,7 @@ public class AccountResource {
      * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
      */
     @PostMapping("/account")
-    @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新用户姓名， 用户邮件， 用户语言，手机号码和用户avatar地址")
+    @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新用户姓名， 用户邮件， 用户语言，手机号码和 地址")
     public void saveAccount(@Valid @RequestBody UserAccountDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
         Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
@@ -143,7 +146,7 @@ public class AccountResource {
             throw new AccountResourceException("User could not be found");
         }
         userService.updateUser(userDTO.getName(), userDTO.getEmail(),
-            userDTO.getLangKey(), userDTO.getAvatar(), userDTO.getMobileNo());
+            userDTO.getLangKey(), userDTO.getAddress(), userDTO.getMobileNo());
     }
 
     /**
@@ -162,32 +165,56 @@ public class AccountResource {
     }
 
     /**
-     * {@code POST   /account/reset-password/init} : Send an email to reset the password of the user.
+     * {@code GET /account/forgot-password/:login} : get the user email by login.
      *
-     * @param mail the mail of the user.
+     * @param login the login of the user to find.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the "login" user, or with status {@code 404 (Not Found)}.
      */
-    @PostMapping(path = "/account/reset-password/init")
-    @ApiOperation("申请重置用户密码")
-    public void requestPasswordReset(@RequestBody @ApiParam(value = "用户邮件", required = true) String mail) {
-        Optional<User> user = userService.requestPasswordReset(mail);
-        if (user.isPresent()) {
+    @GetMapping("/account/forgot-password/{login:" + Constants.LOGIN_REGEX + "}")
+    @ApiOperation("忘记密码")
+    public ResponseEntity<UserDetailsDTO> forgotPassword(@PathVariable @ApiParam(value = "用户登陆id", required = true) String login) {
+        log.debug("REST request to get User {} email", login);
+
+        Optional<UserDetailsDTO> userDetailsDTO = userService.getUserWithAuthoritiesByLogin(login);
+
+        if (userDetailsDTO.isPresent()) {
+            Optional<User> user = userService.requestPasswordReset(userDetailsDTO.get().getEmail());
             mailService.sendPasswordResetMail(user.get());
         } else {
             // Pretend the request has been successful to prevent checking which emails really exist
             // but log that an invalid attempt has been made
-            log.warn("Password reset requested for non existing mail '{}'", mail);
+            log.warn("Password reset requested for non existing login '{}'", login);
         }
+        return ResponseUtil.wrapOrNotFound(userDetailsDTO);
     }
 
+//    /**
+//     * {@code POST   /account/reset-password/init} : Send an email to reset the password of the user.
+//     *
+//     * @param mail the mail of the user.
+//     */
+//    @PostMapping(path = "/account/reset-password/init")
+//    @ApiOperation("申请重置用户密码")
+//    public void requestPasswordReset(@RequestBody @ApiParam(value = "用户邮件", required = true) String mail) {
+//        Optional<User> user = userService.requestPasswordReset(mail);
+//        if (user.isPresent()) {
+//            mailService.sendPasswordResetMail(user.get());
+//        } else {
+//            // Pretend the request has been successful to prevent checking which emails really exist
+//            // but log that an invalid attempt has been made
+//            log.warn("Password reset requested for non existing mail '{}'", mail);
+//        }
+//    }
+
     /**
-     * {@code POST   /account/reset-password/finish} : Finish to reset the password of the user.
+     * {@code POST   /account/forgot-password/finish} : Finish to reset the password of the user.
      *
      * @param keyAndPassword the generated key and the new password.
      * @throws InvalidPasswordException {@code 400 (Bad Request)} if the password is incorrect.
      * @throws RuntimeException         {@code 500 (Internal Server Error)} if the password could not be reset.
      */
     @ApiOperation("使用重置密匙重置用户密码")
-    @PostMapping(path = "/account/reset-password/finish")
+    @PostMapping(path = "/account/forgot-password/finish")
     public void finishPasswordReset(@RequestBody KeyAndPasswordVM keyAndPassword) {
         if (!checkPasswordLength(keyAndPassword.getNewPassword())) {
             throw new InvalidPasswordException();
@@ -212,27 +239,29 @@ public class AccountResource {
     public void registerEmail(@Valid @RequestBody UserRegisterVM managedUserVM) {
 
         Optional<User> userOptional = userService.registerUserEmail(managedUserVM);
-        userOptional.ifPresent(user -> {
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
             log.debug("user is registered with email: {}", user.getEmail());
-            mailService.sendActivationEmail(user);
-        });
-
-    }
-
-    /**
-     * {@code GET  /account/activate} : activate the registered user.
-     *
-     * @param key the activation key.
-     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
-     */
-    @GetMapping("/account/activate")
-    @ApiOperation("激活邮件")
-    public void activateAccount(@RequestParam(value = "key") String key) {
-        Optional<User> user = userService.activateRegistration(key);
-        if (!user.isPresent()) {
-            throw new AccountResourceException("No user was found for this activation key");
+            //mailService.sendActivationEmail(user);
+        } else {
+            log.warn("the user {} does not exist, just ignored", managedUserVM.getLogin());
         }
     }
+
+//    /**
+//     * {@code GET  /account/activate} : activate the registered user.
+//     *
+//     * @param key the activation key.
+//     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
+//     */
+//    @GetMapping("/account/activate")
+//    @ApiOperation("激活邮件")
+//    public void activateAccount(@RequestParam(value = "key") String key) {
+//        Optional<User> user = userService.activateRegistration(key);
+//        if (!user.isPresent()) {
+//            throw new AccountResourceException("No user was found for this activation key");
+//        }
+//    }
 
     /**
      * {@code POST  /account/change-email} : changes the current user's email.

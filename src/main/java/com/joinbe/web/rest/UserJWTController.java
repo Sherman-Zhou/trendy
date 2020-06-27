@@ -59,7 +59,7 @@ public class UserJWTController {
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
         Optional<User> userOptional;
         if (new EmailValidator().isValid(loginVM.getUsername(), null)) {
-           userOptional = userService.findOneByEmailIgnoreCase(loginVM.getUsername());
+            userOptional = userService.findOneByEmailIgnoreCase(loginVM.getUsername());
             if (userOptional.isPresent()) {
                 if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
                     JWTToken token = new JWTToken();
@@ -67,14 +67,15 @@ public class UserJWTController {
                     return new ResponseEntity<>(token, HttpStatus.OK);
                 }
             }
-        }
-        String lowercaseLogin = loginVM.getUsername().toLowerCase(Locale.ENGLISH);
-        userOptional = userService.findOneByLogin(lowercaseLogin);
-        if (userOptional.isPresent()) {
-            if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
-                JWTToken token = new JWTToken();
-                token.setNeedRegister(true);
-                return new ResponseEntity<>(token, HttpStatus.OK);
+        } else {
+            String lowercaseLogin = loginVM.getUsername().toLowerCase(Locale.ENGLISH);
+            userOptional = userService.findOneByLogin(lowercaseLogin);
+            if (userOptional.isPresent()) {
+                if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
+                    JWTToken token = new JWTToken();
+                    token.setNeedRegister(true);
+                    return new ResponseEntity<>(token, HttpStatus.OK);
+                }
             }
         }
 
