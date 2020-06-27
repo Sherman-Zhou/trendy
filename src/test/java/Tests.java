@@ -1,9 +1,12 @@
+import cn.hutool.core.util.StrUtil;
+import com.joinbe.config.Constants;
 import org.junit.Test;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Arrays;
 
 public class Tests {
 
@@ -12,6 +15,10 @@ public class Tests {
     public void today() {
         LocalDate today = LocalDate.now();
         System.out.println(today);
+        String str = "A,640000016DA85401";
+
+        String[] split = str.split(",");
+        System.out.println(split[1]);
     }
 
     @Test

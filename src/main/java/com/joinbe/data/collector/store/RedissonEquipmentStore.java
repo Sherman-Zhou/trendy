@@ -1,5 +1,6 @@
 package com.joinbe.data.collector.store;
 
+import cn.hutool.core.util.StrUtil;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.dto.ResponseDTO;
@@ -168,7 +169,7 @@ public class RedissonEquipmentStore {
             existIButtonId = this.getDeviceIButtonId(deviceId);
         }
         if(StringUtils.isNotEmpty(existIButtonId)){
-            value.append(Constants.C_VERTICAL_LINE).append(existIButtonId);
+            value.append(StrUtil.COMMA).append(existIButtonId);
         }
         deviceServerMap.put(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX + deviceId, value.toString());
     }
@@ -183,7 +184,7 @@ public class RedissonEquipmentStore {
         String status = deviceServerMap.get(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX + deviceId);
         log.debug("Ibutton in redis for deviceId {}:{}", deviceId, status);
         if(StringUtils.isNotEmpty(status)){
-            status = status.split(Constants.C_VERTICAL_LINE)[0];
+            status = status.split(StrUtil.COMMA)[0];
         }
         return IbuttonStatusEnum.getByCode(status);
     }
@@ -197,8 +198,8 @@ public class RedissonEquipmentStore {
         RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY);
         String status = deviceServerMap.get(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX + deviceId);
         log.debug("Ibutton in redis for deviceId {}:{}", deviceId, status);
-        if(StringUtils.isNotEmpty(status) && status.split(Constants.C_VERTICAL_LINE).length >=2){
-            return status.split(Constants.C_VERTICAL_LINE)[1];
+        if(StringUtils.isNotEmpty(status) && status.split(StrUtil.COMMA).length >=2){
+            return status.split(StrUtil.COMMA)[1];
         }else{
             return null;
         }
