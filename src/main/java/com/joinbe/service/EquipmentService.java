@@ -1,9 +1,11 @@
 package com.joinbe.service;
 
+import com.joinbe.common.excel.EquipmentData;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.enumeration.EquipmentStatus;
 import com.joinbe.service.dto.EquipmentDTO;
+import com.joinbe.service.dto.UploadResultDTO;
 import com.joinbe.web.rest.vm.EquipmentVM;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -67,5 +69,7 @@ public interface EquipmentService {
      */
     Optional<EquipmentDTO> findByLicensePlateNumber(String plateNumber);
 
-    List<EquipmentDTO> findAllUnboundEquipments() ;
+    List<EquipmentDTO> findAllUnboundEquipments();
+
+    List<UploadResultDTO> upload(List<EquipmentData> records);
 }

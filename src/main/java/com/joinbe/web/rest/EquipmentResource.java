@@ -1,7 +1,12 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.common.excel.EquipmentData;
+import com.joinbe.common.excel.EquipmentDataListener;
+import com.joinbe.common.util.ExcelUtil;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
+import com.joinbe.service.dto.UploadResultDTO;
+import com.joinbe.service.util.SpringContextUtils;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.EquipmentVM;
 import com.joinbe.web.rest.vm.PageData;
@@ -11,6 +16,8 @@ import io.swagger.annotations.ApiOperation;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +32,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing {@link com.joinbe.domain.Equipment}.
@@ -39,9 +49,11 @@ public class EquipmentResource {
     private final Logger log = LoggerFactory.getLogger(EquipmentResource.class);
     private final EquipmentService equipmentService;
 
+    private final MessageSource messageSource;
 
-    public EquipmentResource(EquipmentService equipmentService) {
+    public EquipmentResource(EquipmentService equipmentService, MessageSource messageSource) {
         this.equipmentService = equipmentService;
+        this.messageSource = messageSource;
     }
 
     /**
@@ -70,11 +82,10 @@ public class EquipmentResource {
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated equipmentDTO,
      * or with status {@code 400 (Bad Request)} if the equipmentDTO is not valid,
      * or with status {@code 500 (Internal Server Error)} if the equipmentDTO couldn't be updated.
-     * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/equipment")
     @ApiOperation("修改设备")
-    public ResponseEntity<EquipmentDTO> updateEquipment(@Valid @RequestBody EquipmentDTO equipmentDTO) throws URISyntaxException {
+    public ResponseEntity<EquipmentDTO> updateEquipment(@Valid @RequestBody EquipmentDTO equipmentDTO) {
         log.debug("REST request to update Equipment : {}", equipmentDTO);
         if (equipmentDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
@@ -128,20 +139,31 @@ public class EquipmentResource {
 
     @PostMapping("/equipment/upload")
     @ApiOperation("导入excel")
-    public ResponseEntity<PageData<EquipmentDTO>> upload(@RequestParam("file") MultipartFile file, Pageable pageable) {
+    public List<UploadResultDTO> upload(@RequestParam("file") MultipartFile file) {
         log.debug("uploaded file: {}", file.getOriginalFilename());
-        Page<EquipmentDTO> page = equipmentService.findAll(pageable, new EquipmentVM());
-        return ResponseUtil.toPageData(page);
+        EquipmentDataListener equipmentDataListener = SpringContextUtils.getBean(EquipmentDataListener.class);
+        try {
+            ExcelUtil.readExcel(file.getInputStream(), EquipmentData.class, equipmentDataListener);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+        List<UploadResultDTO> results = equipmentService.upload(equipmentDataListener.getList());
+
+        results.addAll(equipmentDataListener.getErrors());
+
+        return results.stream().sorted(Comparator.comparingLong(UploadResultDTO::getRowNum)).collect(Collectors.toList());
     }
 
     @GetMapping("/equipment/template/download")
     @ApiOperation("下载导入excel模版")
     public ResponseEntity<byte[]> downloadTemplate() throws Exception {
-        final String TEMPLATE_FILE_NAME = "Equipment.xls";
+        final String TEMPLATE_FILE_NAME = "Equipment.xlsx";
+        String fileName = messageSource.getMessage("equipment.upload.template", null, LocaleContextHolder.getLocale());
         log.debug("REST request to download template excel file !");
         InputStream template = this.getClass().getResourceAsStream("/templates/excel/" + TEMPLATE_FILE_NAME);
         byte[] files = IOUtils.toByteArray(template);
-        return download(files, TEMPLATE_FILE_NAME);
+        return download(files, fileName + ".xlsx");
     }
 
     private ResponseEntity<byte[]> download(byte[] content, String fileName) throws Exception {

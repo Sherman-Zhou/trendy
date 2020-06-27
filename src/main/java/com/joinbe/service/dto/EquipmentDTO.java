@@ -23,6 +23,7 @@ public class EquipmentDTO implements Serializable {
      */
     @Size(max = 100)
     @ApiModelProperty(value = "设备ID")
+    @NotBlank
     private String identifyNumber;
 
     /**
