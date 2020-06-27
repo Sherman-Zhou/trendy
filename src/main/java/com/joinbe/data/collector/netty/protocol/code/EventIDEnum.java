@@ -112,6 +112,16 @@ public enum EventIDEnum {
      * 输入3状态更改事件
      */
     INPUT_3_STATE_CHANGING_EVENT(53),
+
+    /**
+     * IBUTTON吸附
+     */
+    IBUTTON_ATTACHED(100),
+
+    /**
+     *IBUTTON移除
+     */
+    IBUTTON_REMOVED(101),
     ;
 
 

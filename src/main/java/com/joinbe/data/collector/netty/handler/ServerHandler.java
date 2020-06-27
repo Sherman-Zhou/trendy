@@ -8,6 +8,7 @@ import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
+import com.joinbe.domain.enumeration.IbuttonStatusEnum;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -87,6 +88,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         channelIdAndDeviceIdMap.remove(channel.id().asLongText());
         //车辆行驶状态设置为未知
         redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
+        //Ibutton状态设置为未知
+        redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN,null);
         super.channelUnregistered(ctx);
     }
 
@@ -110,6 +113,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 deviceIdAndChannelMap.put(deviceNo, channel);
                 redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
             }
+            //handle event
+
         }else{
             deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
             log.debug("query result, device:data {}:{}", deviceNo, msg.getData());
