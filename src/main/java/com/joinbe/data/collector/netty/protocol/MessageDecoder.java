@@ -85,6 +85,12 @@ public class MessageDecoder extends ByteToMessageDecoder {
             buf.getBytes(buf.readerIndex(), bytes);
             str = new String(bytes, 0, buf.readableBytes());
         }
+        /**
+         * remove \r\n
+         */
+        if(str.length() > 2){
+            str = str.substring(0, str.length()-2);
+        }
         return str;
     }
 }
