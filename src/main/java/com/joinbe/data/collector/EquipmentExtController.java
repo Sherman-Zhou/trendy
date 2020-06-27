@@ -4,7 +4,6 @@ import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.cmd.register.Cmd;
-import com.joinbe.data.collector.cmd.register.impl.LockCmd;
 import com.joinbe.data.collector.cmd.register.impl.SetTokenCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
@@ -20,6 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -59,10 +59,13 @@ public class EquipmentExtController {
     @Autowired
     VehicleTrajectoryDetailsRepository vehicleTrajectoryDetailsRepository;
 
+    @Value("${netty.query-timeout}")
+    private Long queryTimeout;
+
     @PostMapping("/location/device")
     @ApiOperation("根据设备IMEI获取设备的实时位置")
     public DeferredResult<ResponseEntity<ResponseDTO>> getLocation(@RequestBody @Valid LocationDeviceReq locationReq, BindingResult bindingResult) {
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(3000L, "Get Location time out");
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Get Location time out");
 
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
@@ -92,7 +95,7 @@ public class EquipmentExtController {
     @ApiOperation("根据车牌号获取设备的实时位置")
     @Transactional(readOnly = true)
     public DeferredResult<ResponseEntity<ResponseDTO>> getLocation(@RequestBody @Valid LocationVehicleReq locationReq, BindingResult bindingResult) {
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(3000L, "Get Location time out");
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Get Location time out");
 
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();

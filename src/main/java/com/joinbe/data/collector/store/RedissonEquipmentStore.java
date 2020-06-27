@@ -1,7 +1,8 @@
-package com.joinbe.data.collector.redistore;
+package com.joinbe.data.collector.store;
 
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
+import com.joinbe.data.collector.service.dto.ResponseDTO;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RAtomicLong;
@@ -10,6 +11,7 @@ import org.redisson.api.RQueue;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -48,6 +50,11 @@ public class RedissonEquipmentStore {
 
     @PostConstruct
     public void init() {
+        /*boolean result = LocalEquipmentStroe.put("111", EventEnum.GPOS, new DeferredResult<>(5000L, "Get Location time out"));
+        log.debug("put result: {}", result);
+
+        DeferredResult<ResponseEntity<ResponseDTO>> responseEntityDeferredResult = LocalEquipmentStroe.get("111", EventEnum.GPOS);
+        log.debug("responseEntityDeferredResult: {}", responseEntityDeferredResult.toString());*/
     }
 
     /**
