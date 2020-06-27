@@ -120,9 +120,15 @@ public class DataCollectService {
         if(EventIDEnum.IBUTTON_ATTACHED.getEventId().equals(eventId)){
             log.info("IButton is attached, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
             redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED,msg.getIbuttonId());
+            //for debug
+            log.debug("IButton current status in redis, iButtonStatus:{}", redissonEquipmentStore.getDeviceIButtonStatus(msg.getUnitId()));
+            log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
         }else if(EventIDEnum.IBUTTON_REMOVED.getEventId().equals(eventId)){
             log.info("IButton is removed, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
             redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED,msg.getIbuttonId());
+            //for debug
+            log.debug("IButton current status in redis, iButtonStatus:{}", redissonEquipmentStore.getDeviceIButtonStatus(msg.getUnitId()));
+            log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
         }
     }
 
