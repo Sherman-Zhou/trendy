@@ -4,6 +4,7 @@ import com.joinbe.domain.SystemConfig;
 import com.joinbe.repository.SystemConfigRepository;
 import com.joinbe.service.SystemConfigService;
 import com.joinbe.service.dto.SystemConfigDTO;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -42,8 +43,10 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         SystemConfig config = systemConfigRepository.findByKey(SystemConfig.TRAJECTORY_RESERVE_DAYS);
 
         config.setValue(String.valueOf(systemConfigDTO.getTrajectoryReserveDays()));
-
         SystemConfig lastBackupTime = systemConfigRepository.findByKey(SystemConfig.LAST_BACKUP_TIME);
+        if (StringUtils.isNotEmpty(systemConfigDTO.getLastBackupTime())) {
+            lastBackupTime.setValue(systemConfigDTO.getLastBackupTime());
+        }
         systemConfigDTO.setLastBackupTime(lastBackupTime.getValue());
         return systemConfigDTO;
     }

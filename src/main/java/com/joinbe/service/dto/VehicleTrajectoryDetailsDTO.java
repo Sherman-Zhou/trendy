@@ -7,7 +7,6 @@ import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Objects;
 
 
 @Data
@@ -21,6 +20,10 @@ public class VehicleTrajectoryDetailsDTO implements Serializable {
     @ApiModelProperty(value = "接收时间")
     private Instant receivedTime;
 
+    /**
+     * 经度
+     */
+    @ApiModelProperty(value = "经度")
     @Size(max = 50)
     private BigDecimal lng;
 

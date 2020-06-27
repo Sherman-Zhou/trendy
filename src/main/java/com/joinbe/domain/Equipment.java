@@ -3,6 +3,7 @@ package com.joinbe.domain;
 import com.joinbe.domain.enumeration.EquipmentStatus;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.util.HashSet;
 import java.util.Set;
@@ -32,6 +33,7 @@ public class Equipment extends AbstractAuditingEntity {
      * 设备IMEI
      */
     @Size(max = 100)
+    @NotBlank
     @Column(name = "imei", length = 100)
     private String imei;
 

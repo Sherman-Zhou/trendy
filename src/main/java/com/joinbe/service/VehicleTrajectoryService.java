@@ -2,13 +2,12 @@ package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.VehicleTrajectory;
-import com.joinbe.service.dto.DivisionWithVehicesleDTO;
-import com.joinbe.service.dto.VehicleStateDTO;
-import com.joinbe.service.dto.VehicleTrajectoryDTO;
-import com.joinbe.service.dto.VehicleTrajectoryDetailsDTO;
+import com.joinbe.domain.enumeration.PaymentStatus;
+import com.joinbe.service.dto.*;
 import com.joinbe.web.rest.vm.SearchVehicleVM;
 import com.joinbe.web.rest.vm.TrajectoryVM;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,13 +17,15 @@ import java.util.Optional;
 public interface VehicleTrajectoryService {
 
     static VehicleTrajectoryDTO toDto(VehicleTrajectory vehicleTrajectory) {
-
-        return BeanConverter.toDto(vehicleTrajectory, VehicleTrajectoryDTO.class);
+        VehicleTrajectoryDTO dto = BeanConverter.toDto(vehicleTrajectory, VehicleTrajectoryDTO.class);
+        dto.setStatus(PaymentStatus.getCode(vehicleTrajectory.getStatus()));
+        return dto;
     }
 
     static VehicleTrajectory toEntity(VehicleTrajectoryDTO vehicleTrajectoryDTO) {
-
-        return BeanConverter.toEntity(vehicleTrajectoryDTO, VehicleTrajectory.class);
+        VehicleTrajectory entity = BeanConverter.toEntity(vehicleTrajectoryDTO, VehicleTrajectory.class);
+        entity.setStatus(PaymentStatus.resolve(vehicleTrajectoryDTO.getStatus()));
+        return entity;
     }
 
     /**
@@ -70,4 +71,6 @@ public interface VehicleTrajectoryService {
     Optional<VehicleStateDTO> findVehicleCurrentState(Long vehicleId);
 
     List<String> findAllTrajectoryIds(Long vehicleId);
+
+    List<TrajectoryReportDTO> findAllTrajectory4backup(Instant from, Instant to);
 }

@@ -3,6 +3,7 @@ package com.joinbe.service.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
@@ -28,6 +29,7 @@ public class EquipmentDTO implements Serializable {
      * 设备IMEI
      */
     @Size(max = 100)
+    @NotBlank
     @ApiModelProperty(value = "设备IMEI")
     private String imei;
 

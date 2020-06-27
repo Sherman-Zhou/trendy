@@ -64,7 +64,7 @@ public class VehicleTrajectoryDTO implements Serializable {
      * 结算状态 - 枚举类型\n已結算\n未结算
      */
     @Size(max = 1)
-    @ApiModelProperty(value = "结算状态 - 枚举类型\n已結算\n未结算")
+    @ApiModelProperty(value = "结算状态 - 枚举类型\nS:已結算\nU:未结算")
     private String status;
 
 
