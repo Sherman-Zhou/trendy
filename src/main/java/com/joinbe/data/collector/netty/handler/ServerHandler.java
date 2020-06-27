@@ -3,13 +3,11 @@ package com.joinbe.data.collector.netty.handler;
 import cn.hutool.json.JSONUtil;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
-import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
-import com.joinbe.data.collector.netty.protocol.message.ProtocolMessage;
+import com.joinbe.data.collector.netty.protocol.message.*;
+import com.joinbe.data.collector.service.DataCollectService;
+import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
-import com.joinbe.data.collector.service.DataCollectService;
-import com.joinbe.data.collector.service.dto.LocationResponseDTO;
-import com.joinbe.data.collector.service.dto.ResponseDTO;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -29,6 +27,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import java.net.InetSocketAddress;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -111,14 +111,14 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
             }
         }else{
-            //TODO: Handle query results
             deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
+            log.debug("query result, device:data {}:{}", deviceNo, msg.getData());
             if(StringUtils.isBlank(deviceNo)){
                 log.warn("Device not yet bound channel");
                 return;
             }
         }
-        //save message
+        //save & handle query response message
         channel.eventLoop().execute(new Runnable() {
             @Override
             public void run() {
@@ -132,6 +132,30 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                     dataCollectService.saveTrajectory(positionProtocolMsg);
                 }else{
                     //TODO : handle query message
+                    if(msg instanceof LockUnlockProtocol){
+                        LockUnlockProtocol lockUnlockProtocol = (LockUnlockProtocol)msg;
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SGPO);
+                        if(deferredResult != null){
+                            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(0, "success", lockUnlockProtocol), HttpStatus.OK));
+                        }
+                    }else if(msg instanceof SetKeyProtocol){
+                        SetKeyProtocol setKeyProtocol = (SetKeyProtocol)msg;
+                        String expireDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now().plusDays(7));
+                        TokenResponseItem tokenResponseItem = new TokenResponseItem();
+                        tokenResponseItem.setImei(deviceNo);
+                        tokenResponseItem.setToken(setKeyProtocol.getDeviceToken());
+                        tokenResponseItem.setExpireDate(expireDateTime);
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SETKEY);
+                        if(deferredResult != null){
+                            deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(0, "success", tokenResponseItem), HttpStatus.OK));
+                        }
+                    }else if(msg instanceof CommonProtocol){
+                        CommonProtocol commonProtocol = (CommonProtocol)msg;
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.getCommonResult(deviceNo);
+                        if(deferredResult != null){
+                            deferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(0, "success", commonProtocol), HttpStatus.OK));
+                        }
+                    }
                 }
             }
         });
@@ -207,7 +231,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         ctx.close();
     }
     /**
-     * Interface call， to send message
+     * Interface call， to send location message
      * @param deviceId
      * @param event
      */
@@ -220,7 +244,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         }
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
-            String strInfo= "未找到发送通道, deviceId: " + deviceId;
+            String strInfo= "Equipment is offline, please try later,  deviceId: " + deviceId;
             log.warn(strInfo);
             deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
             return;
@@ -251,7 +275,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
      * @param eventEnum
      * @param deferredResult
      */
-    public void sendMessage(String deviceId, String event, EventEnum eventEnum, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
+    public void sendCommonQueryMessage(String deviceId, String event, EventEnum eventEnum, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
         for (Map.Entry<String, Channel> entry : deviceIdAndChannelMap.entrySet()) {
             log.debug("deviceIdAndChannelMap Key: {}; value:{} ", entry.getKey() ,entry.getValue().id().asLongText());
         }
@@ -260,26 +284,46 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         }
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
-            String strInfo= "绑定的设备不在线, deviceId: " + deviceId;
+            String strInfo= "Equipment is offline, Please try later, deviceId: " + deviceId;
             log.warn(strInfo);
-            deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1, strInfo), HttpStatus.OK));
             return;
         }
         log.debug("deviceId: {}, isActive:{}, isOpen:{}, isRegistered:{}, isWritable:{}",deviceId, c.isActive(),c.isOpen(),c.isRegistered(),c.isWritable());
         if(c.isWritable()){
-            //TODO : put to queue
-            //LocalEquipmentStroe.put(deviceId,eventEnum,deferredResult);
+            boolean putResult = LocalEquipmentStroe.put(deviceId, eventEnum, deferredResult);
+            if(!putResult){
+                deferredResult.setErrorResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1, "Large concurrency, please try later: " + deviceId), HttpStatus.OK));
+            }
             c.writeAndFlush(event).addListener(future -> {
                 if(!future.isSuccess()){
-                    deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
+                    deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1,"Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
                 }else{
-                    //TODO : 修改为通道返回
-                    deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(0, "Success: " + deviceId), HttpStatus.OK));
                     log.debug("sent command succeed, deviceId: {}, command: {}", deviceId, event);
                 }
             });
         }else{
-            deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline and not writable, deviceId: " + deviceId), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1, "Equipment is offline and not writable, deviceId: " + deviceId), HttpStatus.OK));
+        }
+    }
+
+    /**
+     *
+     * @param eventEnum
+     * @param code
+     * @param message
+     * @return
+     */
+    public ResponseDTO genCommonResponseByEvent(EventEnum eventEnum, int code, String message){
+        switch (eventEnum.getEvent()) {
+            case "SGPO":
+                return new LockResponseDTO(code, message);
+            case "GPOS":
+                return new LocationResponseDTO(code, message);
+            case "SETKEY":
+                return new TokenResponseDTO(code,message);
+            default:
+                return new CommonResponseDTO(code, message);
         }
     }
 
