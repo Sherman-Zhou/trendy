@@ -2,6 +2,7 @@ package com.joinbe.common.util;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.read.listener.ReadListener;
 import com.alibaba.excel.write.metadata.WriteSheet;
 
 import java.io.ByteArrayOutputStream;
@@ -45,7 +46,7 @@ public class ExcelUtil {
         return outputStream.toByteArray();
     }
 
-//    public static void fillExcelRead(InputStream file, Class<?> head, ReadListener readListener) {
-//        EasyExcel.read(file, head, readListener).sheet().doRead();
-//    }
+    public static void readExcel(InputStream file, Class<?> head, ReadListener<?> readListener) {
+        EasyExcel.read(file, head, readListener).sheet().doRead();
+    }
 }

@@ -1,5 +1,6 @@
 package com.joinbe.service.impl.jpa;
 
+import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Division;
@@ -12,6 +13,7 @@ import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.VehicleService;
+import com.joinbe.service.dto.UploadResultDTO;
 import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.service.dto.VehicleSummaryDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
@@ -21,11 +23,14 @@ import com.joinbe.web.rest.vm.VehicleVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,12 +50,14 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final DivisionRepository divisionRepository;
 
+    private final MessageSource messageSource;
 
     public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
-                              DivisionRepository divisionRepository) {
+                              DivisionRepository divisionRepository, MessageSource messageSource) {
         this.vehicleRepository = vehicleRepository;
         this.equipmentRepository = equipmentRepository;
         this.divisionRepository = divisionRepository;
+        this.messageSource = messageSource;
     }
 
     /**
@@ -148,20 +155,23 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     public void binding(EquipmentVehicleBindingVM vm) {
         log.debug("Request to binding equipment and vehicle: {}", vm);
-        Optional<Vehicle> vehicleOptional = vehicleRepository.findById(vm.getVehicleId());
-        Optional<Equipment> equipmentOptional = equipmentRepository.findById(vm.getEquipmentId());
-        Vehicle vehicle = vehicleOptional.get();
-        Equipment equipment = equipmentOptional.get();
-        if (!vehicleOptional.isPresent() || !RecordStatus.ACTIVE.equals(vehicle.getStatus())) {
+        Optional<Vehicle> vehicleOptional = vehicleRepository.findById(vm.getVehicleId()).filter(vehicle -> RecordStatus.ACTIVE.equals(vehicle.getStatus()));
+
+        Optional<Equipment> equipmentOptional = equipmentRepository.findById(vm.getEquipmentId()).filter(equipment -> EquipmentStatus.DELETED.equals(equipment.getStatus()));
+
+
+        if (!vehicleOptional.isPresent()) {
             throw new BadRequestAlertException("Invalid vehicle id", "Vehicle", "vehicle.notexist");
         }
-        if (!equipmentOptional.isPresent() || EquipmentStatus.DELETED.equals(equipment.getStatus())) {
+        if (!equipmentOptional.isPresent()) {
             throw new BadRequestAlertException("Invalid equipment id", "Equipment", "equipment.notexist");
         }
+        Vehicle vehicle = vehicleOptional.get();
+        Equipment equipment = equipmentOptional.get();
         if (!EquipmentStatus.UNBOUND.equals(equipment.getStatus())) {
             throw new BadRequestAlertException("Equipment is bound already", "Binding", "equipment.binding.boundalready");
         }
-        if ( vehicle.getBounded()) {
+        if (vehicle.getBounded()) {
             throw new BadRequestAlertException("Vehicle is bound already", "Binding", "vehicle.binding.boundalready");
         }
         equipment.setVehicle(vehicle);
@@ -196,6 +206,57 @@ public class VehicleServiceImpl implements VehicleService {
         List<VehicleSummaryDTO> vehicles = vehicleRepository.findByDivisionIdAndStatus(divisionId, RecordStatus.ACTIVE)
             .stream().map(VehicleService::toSummaryDto).collect(Collectors.toList());
         return vehicles;
+    }
+
+    @Override
+    public List<UploadResultDTO> binding(List<BindingData> data) {
+
+        List<UploadResultDTO> results = new ArrayList<>();
+
+        for (BindingData bindingData : data) {
+            boolean hasError = false;
+            Optional<Vehicle> vehicleOptional = vehicleRepository.findOneByLicensePlateNumberAndStatus(bindingData.getLicensePlateNumber(), RecordStatus.ACTIVE);
+            Optional<Equipment> equipmentOptional = equipmentRepository.findOneByIdentifyNumberAndStatusNot(bindingData.getIdentifyNumber(), EquipmentStatus.DELETED);
+
+            if (!vehicleOptional.isPresent()) {
+                createResult("binding.upload.vehicle.not.exist", bindingData.getRowIdx(), false, results);
+                hasError = true;
+            }
+            if (!equipmentOptional.isPresent()) {
+                createResult("binding.upload.equipment.not.exist", bindingData.getRowIdx(), false, results);
+                hasError = true;
+
+            }
+            if (vehicleOptional.isPresent() && equipmentOptional.isPresent()) {
+                Vehicle vehicle = vehicleOptional.get();
+                Equipment equipment = equipmentOptional.get();
+                if (!EquipmentStatus.UNBOUND.equals(equipment.getStatus())) {
+                    createResult("binding.upload.equipment.bound.already", bindingData.getRowIdx(), false, results);
+                    hasError = true;
+                }
+                if (vehicle.getBounded()) {
+                    createResult("binding.upload.vehicle.bound.already", bindingData.getRowIdx(), false, results);
+                    hasError = true;
+                }
+            }
+            if (!hasError) {
+                Vehicle vehicle = vehicleOptional.get();
+                Equipment equipment = equipmentOptional.get();
+                equipment.setVehicle(vehicle);
+                equipment.setStatus(EquipmentStatus.BOUND);
+                vehicle.setBounded(true);
+            }
+        }
+        return results;
+    }
+
+    private void createResult(String msgKey, int rowIdx, boolean success, List<UploadResultDTO> results) {
+        String message = messageSource.getMessage(msgKey, new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+        UploadResultDTO result = new UploadResultDTO();
+        result.setIsSuccess(success);
+        result.setMsg(message);
+        result.setRowNum((long) rowIdx);
+        results.add(result);
     }
 
 }

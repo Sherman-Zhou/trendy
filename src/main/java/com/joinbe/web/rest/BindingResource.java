@@ -1,5 +1,8 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.common.excel.BindingData;
+import com.joinbe.common.excel.BindingDataListener;
+import com.joinbe.common.util.ExcelUtil;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.DivisionService;
@@ -7,14 +10,21 @@ import com.joinbe.service.EquipmentService;
 import com.joinbe.service.VehicleService;
 import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.service.dto.EquipmentDTO;
+import com.joinbe.service.dto.UploadResultDTO;
 import com.joinbe.service.dto.VehicleDetailsDTO;
-import com.joinbe.web.rest.vm.*;
+import com.joinbe.service.util.SpringContextUtils;
+import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
+import com.joinbe.web.rest.vm.PageData;
+import com.joinbe.web.rest.vm.ResponseUtil;
+import com.joinbe.web.rest.vm.VehicleBindingVM;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,12 +57,14 @@ public class BindingResource {
 
     private final EquipmentService equipmentService;
 
+    private final MessageSource messageSource;
 
     public BindingResource(VehicleService vehicleService, DivisionService divisionService,
-                           EquipmentService equipmentService) {
+                           EquipmentService equipmentService, MessageSource messageSource) {
         this.vehicleService = vehicleService;
         this.divisionService = divisionService;
         this.equipmentService = equipmentService;
+        this.messageSource = messageSource;
     }
 
 
@@ -124,20 +137,31 @@ public class BindingResource {
 
     @PostMapping("/binding/upload")
     @ApiOperation("导入绑定信息")
-    public ResponseEntity<PageData<VehicleDetailsDTO>> upload(@RequestParam("file") MultipartFile file, Pageable pageable) {
+    public List<UploadResultDTO> uploadAndBinding(@RequestParam("file") MultipartFile file) {
         log.debug("uploaded file: {}", file.getOriginalFilename());
-        Page<VehicleDetailsDTO> page = vehicleService.findAll(pageable, new VehicleVM());
-        return ResponseUtil.toPageData(page);
+        BindingDataListener bindingDataListener = SpringContextUtils.getBean(BindingDataListener.class);
+        try {
+            ExcelUtil.readExcel(file.getInputStream(), BindingData.class, bindingDataListener);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            throw new RuntimeException(e);
+        }
+        List<UploadResultDTO> results = vehicleService.binding(bindingDataListener.getList());
+
+        results.addAll(bindingDataListener.getErrors());
+
+        return results.stream().sorted(Comparator.comparingLong(UploadResultDTO::getRowNum)).collect(Collectors.toList());
     }
 
     @GetMapping("/binding/template/download")
     @ApiOperation("下载导入绑定信息模版")
     public ResponseEntity<byte[]> downloadTemplate() throws Exception {
-        final String TEMPLATE_FILE_NAME = "Binding.xls";
+        final String TEMPLATE_FILE_NAME = "Binding.xlsx";
         log.debug("REST request to download template excel file !");
+        String fileName = messageSource.getMessage("binding.upload.template", null, LocaleContextHolder.getLocale());
         InputStream template = this.getClass().getResourceAsStream("/templates/excel/" + TEMPLATE_FILE_NAME);
         byte[] files = IOUtils.toByteArray(template);
-        return download(files, TEMPLATE_FILE_NAME);
+        return download(files, fileName + ".xlsx");
     }
 
     private ResponseEntity<byte[]> download(byte[] content, String fileName) throws Exception {

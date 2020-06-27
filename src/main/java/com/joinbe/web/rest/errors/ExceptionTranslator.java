@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.zalando.problem.DefaultProblem;
 import org.zalando.problem.Problem;
 import org.zalando.problem.ProblemBuilder;
@@ -95,6 +96,16 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
     public ResponseEntity<Problem> handleEmailAlreadyUsedException(com.joinbe.common.error.EmailAlreadyUsedException ex, NativeWebRequest request) {
         EmailAlreadyUsedException problem = new EmailAlreadyUsedException();
         return create(problem, request, HeaderUtil.createFailureAlert(applicationName, true, problem.getEntityName(), problem.getErrorKey(), problem.getMessage()));
+    }
+
+    /* spring默认上传大小1MB 超出大小捕获异常MaxUploadSizeExceededException */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Problem> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException e, NativeWebRequest request) {
+        Problem problem = Problem.builder()
+            .withStatus(Status.BAD_REQUEST)
+            .with(MESSAGE_KEY, "File too large")
+            .build();
+        return create(e, problem, request);
     }
 
     @ExceptionHandler

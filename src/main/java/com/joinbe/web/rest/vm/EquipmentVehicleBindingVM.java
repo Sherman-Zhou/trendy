@@ -13,4 +13,5 @@ public class EquipmentVehicleBindingVM implements Serializable {
 
     @ApiModelProperty(value = "车辆主键")
     private Long vehicleId;
+
 }
