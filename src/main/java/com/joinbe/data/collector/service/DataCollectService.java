@@ -1,11 +1,13 @@
 package com.joinbe.data.collector.service;
 
 import com.joinbe.config.Constants;
+import com.joinbe.data.collector.netty.protocol.code.EventIDEnum;
 import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.VehicleTrajectory;
 import com.joinbe.domain.VehicleTrajectoryDetails;
+import com.joinbe.domain.enumeration.IbuttonStatusEnum;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleTrajectoryRepository;
@@ -46,6 +48,8 @@ public class DataCollectService {
             log.warn("vehicle not bound yet, imei: {}", msg.getUnitId());
             return;
         }
+        //处理event
+        handleEvent(msg);
         //之前状态
         VehicleStatusEnum previousDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
         //状态处理
@@ -108,6 +112,23 @@ public class DataCollectService {
         }
         if(newVehicleTrajectory != null){
             vehicleTrajectoryRepository.save(newVehicleTrajectory);
+        }
+    }
+
+    private void handleEvent(PositionProtocol msg) {
+        Integer eventId = msg.getEventId();
+        if(EventIDEnum.IBUTTON_ATTACHED.getEventId().equals(eventId)){
+            log.info("IButton is attached, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
+            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED,msg.getIbuttonId());
+            //for debug
+            log.debug("IButton current status in redis, iButtonStatus:{}", redissonEquipmentStore.getDeviceIButtonStatus(msg.getUnitId()));
+            log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
+        }else if(EventIDEnum.IBUTTON_REMOVED.getEventId().equals(eventId)){
+            log.info("IButton is removed, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
+            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED,msg.getIbuttonId());
+            //for debug
+            log.debug("IButton current status in redis, iButtonStatus:{}", redissonEquipmentStore.getDeviceIButtonStatus(msg.getUnitId()));
+            log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
         }
     }
 
