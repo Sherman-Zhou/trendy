@@ -105,5 +105,11 @@ public class DictTypeServiceImpl implements DictTypeService {
             .map(DictEntryService::toDto).collect(Collectors.toList());
     }
 
+    @Override
+    public List<DictEntryDTO> getDictEntriesByTypeAndLang(String type, String lang) {
+        List<DictEntryDTO> dictEntryDTOList = this.getDictEntriesByType(type);
+        return dictEntryDTOList.stream().filter(dictEntryDTO -> lang.equalsIgnoreCase(dictEntryDTO.getLang())).collect(Collectors.toList());
+    }
+
 
 }

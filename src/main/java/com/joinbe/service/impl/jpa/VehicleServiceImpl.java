@@ -13,7 +13,8 @@ import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.VehicleService;
-import com.joinbe.service.dto.UploadResultDTO;
+import com.joinbe.service.dto.RowParseError;
+import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.service.dto.VehicleSummaryDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
@@ -30,7 +31,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -209,21 +209,20 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
-    public List<UploadResultDTO> binding(List<BindingData> data) {
+    public void binding(UploadResponse response, List<BindingData> bindingDataList) {
 
-        List<UploadResultDTO> results = new ArrayList<>();
 
-        for (BindingData bindingData : data) {
+        for (BindingData bindingData : bindingDataList) {
             boolean hasError = false;
             Optional<Vehicle> vehicleOptional = vehicleRepository.findOneByLicensePlateNumberAndStatus(bindingData.getLicensePlateNumber(), RecordStatus.ACTIVE);
             Optional<Equipment> equipmentOptional = equipmentRepository.findOneByIdentifyNumberAndStatusNot(bindingData.getIdentifyNumber(), EquipmentStatus.DELETED);
 
             if (!vehicleOptional.isPresent()) {
-                createResult("binding.upload.vehicle.not.exist", bindingData.getRowIdx(), false, results);
+                createResult("binding.upload.vehicle.not.exist", bindingData.getRowIdx(), false, response.getErrors());
                 hasError = true;
             }
             if (!equipmentOptional.isPresent()) {
-                createResult("binding.upload.equipment.not.exist", bindingData.getRowIdx(), false, results);
+                createResult("binding.upload.equipment.not.exist", bindingData.getRowIdx(), false, response.getErrors());
                 hasError = true;
 
             }
@@ -231,11 +230,11 @@ public class VehicleServiceImpl implements VehicleService {
                 Vehicle vehicle = vehicleOptional.get();
                 Equipment equipment = equipmentOptional.get();
                 if (!EquipmentStatus.UNBOUND.equals(equipment.getStatus())) {
-                    createResult("binding.upload.equipment.bound.already", bindingData.getRowIdx(), false, results);
+                    createResult("binding.upload.equipment.bound.already", bindingData.getRowIdx(), false, response.getErrors());
                     hasError = true;
                 }
                 if (vehicle.getBounded()) {
-                    createResult("binding.upload.vehicle.bound.already", bindingData.getRowIdx(), false, results);
+                    createResult("binding.upload.vehicle.bound.already", bindingData.getRowIdx(), false, response.getErrors());
                     hasError = true;
                 }
             }
@@ -245,15 +244,16 @@ public class VehicleServiceImpl implements VehicleService {
                 equipment.setVehicle(vehicle);
                 equipment.setStatus(EquipmentStatus.BOUND);
                 vehicle.setBounded(true);
+            } else {
+                response.successToError();
             }
         }
-        return results;
+
     }
 
-    private void createResult(String msgKey, int rowIdx, boolean success, List<UploadResultDTO> results) {
+    private void createResult(String msgKey, int rowIdx, boolean success, List<RowParseError> results) {
         String message = messageSource.getMessage(msgKey, new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
-        UploadResultDTO result = new UploadResultDTO();
-        result.setIsSuccess(success);
+        RowParseError result = new RowParseError();
         result.setMsg(message);
         result.setRowNum((long) rowIdx);
         results.add(result);

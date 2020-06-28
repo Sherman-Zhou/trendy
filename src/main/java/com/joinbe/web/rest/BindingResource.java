@@ -10,7 +10,7 @@ import com.joinbe.service.EquipmentService;
 import com.joinbe.service.VehicleService;
 import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.service.dto.EquipmentDTO;
-import com.joinbe.service.dto.UploadResultDTO;
+import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.service.util.SpringContextUtils;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
@@ -36,7 +36,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URLEncoder;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -137,7 +136,7 @@ public class BindingResource {
 
     @PostMapping("/binding/upload")
     @ApiOperation("导入绑定信息")
-    public List<UploadResultDTO> uploadAndBinding(@RequestParam("file") MultipartFile file) {
+    public UploadResponse uploadAndBinding(@RequestParam("file") MultipartFile file) {
         log.debug("uploaded file: {}", file.getOriginalFilename());
         BindingDataListener bindingDataListener = SpringContextUtils.getBean(BindingDataListener.class);
         try {
@@ -146,11 +145,9 @@ public class BindingResource {
             log.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
-        List<UploadResultDTO> results = vehicleService.binding(bindingDataListener.getList());
+        vehicleService.binding(bindingDataListener.getResponse(), bindingDataListener.getList());
 
-        results.addAll(bindingDataListener.getErrors());
-
-        return results.stream().sorted(Comparator.comparingLong(UploadResultDTO::getRowNum)).collect(Collectors.toList());
+        return bindingDataListener.getResponse();
     }
 
     @GetMapping("/binding/template/download")

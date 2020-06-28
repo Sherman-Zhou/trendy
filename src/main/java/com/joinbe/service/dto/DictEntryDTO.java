@@ -47,6 +47,10 @@ public class DictEntryDTO implements Serializable {
     @ApiModelProperty(value = "备注")
     private String remark;
 
+    @Size(max = 10)
+    @ApiModelProperty(value = "语言")
+    private String lang;
+
 //    @NotNull
 //    @Size(max = 1)
 //    private String status;

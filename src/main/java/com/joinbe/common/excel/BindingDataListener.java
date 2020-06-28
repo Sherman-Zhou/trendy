@@ -2,7 +2,8 @@ package com.joinbe.common.excel;
 
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
-import com.joinbe.service.dto.UploadResultDTO;
+import com.joinbe.service.dto.RowParseError;
+import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -22,7 +23,8 @@ import java.util.Map;
 public class BindingDataListener extends AnalysisEventListener<BindingData> {
     private final Logger log = LoggerFactory.getLogger(BindingDataListener.class);
     List<BindingData> list = new ArrayList<>();
-    List<UploadResultDTO> errors = new ArrayList<>();
+    private UploadResponse response = new UploadResponse();
+
     @Autowired
     private MessageSource messageSource;
 
@@ -42,11 +44,14 @@ public class BindingDataListener extends AnalysisEventListener<BindingData> {
             recordError(message, rowIdx);
             hasError = true;
         }
-
+        response.increaseTotalRowsNum();
         data.setRowIdx(rowIdx);
 
-        if (!hasError) {
+        if (hasError) {
+            response.increaseFailedRowNum();
+        } else {
             log.info("Parsed Data:{}", data);
+            response.increaseSuccessRowNum();
             list.add(data);
         }
 
@@ -87,11 +92,11 @@ public class BindingDataListener extends AnalysisEventListener<BindingData> {
     }
 
     private void recordError(String message, int rowIdx) {
-        UploadResultDTO result = new UploadResultDTO();
-        result.setIsSuccess(false);
+        RowParseError result = new RowParseError();
+        // result.setIsSuccess(false);
         result.setMsg(message);
         result.setRowNum((long) rowIdx);
-        errors.add(result);
+        response.addError(result);
     }
 
     public List<BindingData> getList() {
@@ -102,11 +107,11 @@ public class BindingDataListener extends AnalysisEventListener<BindingData> {
         this.list = list;
     }
 
-    public List<UploadResultDTO> getErrors() {
-        return errors;
+    public UploadResponse getResponse() {
+        return response;
     }
 
-    public void setErrors(List<UploadResultDTO> errors) {
-        this.errors = errors;
+    public void setResponse(UploadResponse response) {
+        this.response = response;
     }
 }

@@ -5,7 +5,7 @@ import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Division;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.security.SecurityUtils;
-import com.joinbe.service.dto.UploadResultDTO;
+import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.service.dto.VehicleSummaryDTO;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
@@ -83,6 +83,6 @@ public interface VehicleService {
 
     List<VehicleSummaryDTO> findVehicleByDivisionId(Long divisionId);
 
-    List<UploadResultDTO> binding(List<BindingData> data);
+    void binding(UploadResponse response, List<BindingData> data);
 
 }

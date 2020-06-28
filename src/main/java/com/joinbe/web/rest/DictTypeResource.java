@@ -90,9 +90,23 @@ public class DictTypeResource {
      */
     @ApiOperation("获取数据字典值")
     @GetMapping("/dict-types/{type}")
-    public List<DictEntryDTO> getDictionEntryByType(@PathVariable  @ApiParam(value="数据字典key") String type) {
+    public List<DictEntryDTO> getDictionEntryByType(@PathVariable @ApiParam(value = "数据字典key") String type) {
         log.debug("REST request to get DictType : {}", type);
         return dictTypeService.getDictEntriesByType(type);
+    }
+
+    /**
+     * {@code GET  /diction/:type/:lang} : get values fo the dictType type.
+     *
+     * @param type the type of the diction to retrieve.
+     * @return a list of diction entries for the type
+     */
+    @ApiOperation("获取数据字典值")
+    @GetMapping("/dict-types/{type}/{lang}")
+    public List<DictEntryDTO> getDictionEntryByTypeAndLang(@PathVariable @ApiParam(value = "数据字典key") String type,
+                                                           @PathVariable @ApiParam(value = "数据字典语言") String lang) {
+        log.debug("REST request to get DictType : {}", type);
+        return dictTypeService.getDictEntriesByTypeAndLang(type, lang);
     }
 
 //    /**
