@@ -21,7 +21,7 @@ public class DoorCmd extends AbstractCmdRegister implements Cmd {
 
     @Override
     String getEvent() {
-        return EventEnum.SETKEY.getEvent();
+        return EventEnum.DOOR.getEvent();
     }
 
 
