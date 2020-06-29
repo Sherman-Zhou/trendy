@@ -52,6 +52,10 @@ public class MessageDecoder extends ByteToMessageDecoder {
                     message = new LockUnlockProtocol(data);
                     message.initData(LockUnlockProtocol.class);
                     break;
+                case "DOOR":
+                    message = new DoorProtocol(data);
+                    message.initData(DoorProtocol.class);
+                    break;
                 case "SETKEY":
                     message = new SetKeyProtocol(data);
                     message.initData(SetKeyProtocol.class);

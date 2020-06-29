@@ -143,6 +143,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         if(deferredResult != null){
                             deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(0, "success", lockUnlockProtocol), HttpStatus.OK));
                         }
+                    }else if(msg instanceof DoorProtocol){
+                        DoorProtocol doorProtocol = (DoorProtocol)msg;
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.DOOR);
+                        if(deferredResult != null){
+                            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(0, "success", doorProtocol), HttpStatus.OK));
+                        }
                     }else if(msg instanceof SetKeyProtocol){
                         SetKeyProtocol setKeyProtocol = (SetKeyProtocol)msg;
                         String expireDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now().plusDays(7));
@@ -323,6 +329,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         switch (eventEnum.getEvent()) {
             case "SGPO":
                 return new LockResponseDTO(code, message);
+            case "DOOR":
+                return new DoorResponseDTO(code, message);
             case "GPOS":
                 return new LocationResponseDTO(code, message);
             case "SETKEY":

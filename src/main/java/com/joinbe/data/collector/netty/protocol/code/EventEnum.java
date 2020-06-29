@@ -127,6 +127,12 @@ public enum EventEnum {
      * set token
      */
     SETKEY("SETKEY"),
+
+    /**
+     * 0-关门
+     * 1-开门
+     */
+    DOOR("DOOR"),
     ;
 
 
