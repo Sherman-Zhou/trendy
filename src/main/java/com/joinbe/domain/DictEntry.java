@@ -55,6 +55,9 @@ public class DictEntry extends AbstractAuditingEntity {
     @Column(name = "remark", length = 500)
     private String remark;
 
+    @Column(name = "lang", length = 10)
+    private String lang;
+
     @Column(name = "status")
     private RecordStatus status;
 
@@ -131,6 +134,14 @@ public class DictEntry extends AbstractAuditingEntity {
     public DictEntry remark(String remark) {
         this.remark = remark;
         return this;
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public void setLang(String lang) {
+        this.lang = lang;
     }
 
     public void setRemark(String remark) {

@@ -5,7 +5,7 @@ import com.joinbe.common.excel.EquipmentDataListener;
 import com.joinbe.common.util.ExcelUtil;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
-import com.joinbe.service.dto.UploadResultDTO;
+import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.service.util.SpringContextUtils;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.EquipmentVM;
@@ -32,10 +32,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * REST controller for managing {@link com.joinbe.domain.Equipment}.
@@ -139,7 +136,7 @@ public class EquipmentResource {
 
     @PostMapping("/equipment/upload")
     @ApiOperation("导入excel")
-    public List<UploadResultDTO> upload(@RequestParam("file") MultipartFile file) {
+    public UploadResponse upload(@RequestParam("file") MultipartFile file) {
         log.debug("uploaded file: {}", file.getOriginalFilename());
         EquipmentDataListener equipmentDataListener = SpringContextUtils.getBean(EquipmentDataListener.class);
         try {
@@ -148,11 +145,8 @@ public class EquipmentResource {
             log.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
-        List<UploadResultDTO> results = equipmentService.upload(equipmentDataListener.getList());
-
-        results.addAll(equipmentDataListener.getErrors());
-
-        return results.stream().sorted(Comparator.comparingLong(UploadResultDTO::getRowNum)).collect(Collectors.toList());
+        equipmentService.upload(equipmentDataListener.getResponse(), equipmentDataListener.getList());
+        return equipmentDataListener.getResponse();
     }
 
     @GetMapping("/equipment/template/download")

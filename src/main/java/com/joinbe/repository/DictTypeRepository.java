@@ -17,4 +17,6 @@ public interface DictTypeRepository extends JpaRepository<DictType, Long>,
 
     @EntityGraph(attributePaths = "entries")
     DictType findOneByTypeAndStatus(String type, RecordStatus status);
+
+
 }

@@ -48,6 +48,8 @@ public interface DictTypeService {
 
     List<DictEntryDTO> getDictEntriesByType(String type);
 
+    List<DictEntryDTO> getDictEntriesByTypeAndLang(String type, String lang);
+
     default DictTypeDTO toDto(DictType model) {
         return BeanConverter.toDto(model, DictTypeDTO.class);
     }

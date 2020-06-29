@@ -12,7 +12,8 @@ import com.joinbe.repository.DivisionRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
-import com.joinbe.service.dto.UploadResultDTO;
+import com.joinbe.service.dto.RowParseError;
+import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.web.rest.vm.EquipmentVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -150,19 +151,19 @@ public class EquipmentServiceImpl implements EquipmentService {
     }
 
     @Override
-    public List<UploadResultDTO> upload(List<EquipmentData> records) {
-        List<UploadResultDTO> results = new ArrayList<>();
+    public void upload(UploadResponse response, List<EquipmentData> equipmentDataList) {
+
         List<Equipment> equipments = new ArrayList<>();
 
-        for (EquipmentData equipmentData : records) {
+        for (EquipmentData equipmentData : equipmentDataList) {
             boolean hasError = false;
             Division org = null;
             if (equipmentRepository.findOneByImeiAndStatusNot(equipmentData.getImei(), EquipmentStatus.DELETED).isPresent()) {
-                createResult("equipment.upload.imei.exists", equipmentData.getRowIdx(), false, results);
+                createResult("equipment.upload.imei.exists", equipmentData.getRowIdx(), false, response.getErrors());
                 hasError = true;
             }
             if (equipmentRepository.findOneByIdentifyNumberAndStatusNot(equipmentData.getIdentifyNumber(), EquipmentStatus.DELETED).isPresent()) {
-                createResult("equipment.upload.equipmentId.exists", equipmentData.getRowIdx(), false, results);
+                createResult("equipment.upload.equipmentId.exists", equipmentData.getRowIdx(), false, response.getErrors());
                 hasError = true;
             }
             Optional<Division> divisionOptional = divisionRepository.findByNameAndStatus(equipmentData.getDivName(), RecordStatus.ACTIVE);
@@ -172,13 +173,13 @@ public class EquipmentServiceImpl implements EquipmentService {
                     .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
                     .collect(Collectors.toList());
                 if (orgs.isEmpty()) {
-                    createResult("equipment.upload.division.not.exists", equipmentData.getRowIdx(), false, results);
+                    createResult("equipment.upload.division.not.exists", equipmentData.getRowIdx(), false, response.getErrors());
                     hasError = true;
                 } else {
                     org = orgs.get(0);
                 }
             } else {
-                createResult("equipment.upload.division.not.exists", equipmentData.getRowIdx(), false, results);
+                createResult("equipment.upload.division.not.exists", equipmentData.getRowIdx(), false, response.getErrors());
                 hasError = true;
             }
             if (!hasError) {
@@ -193,16 +194,17 @@ public class EquipmentServiceImpl implements EquipmentService {
                 equipment.setStatus(EquipmentStatus.UNBOUND);
                 equipment.setDivision(org);
                 equipments.add(equipment);
+            } else {
+                response.successToError();
             }
         }
         equipmentRepository.saveAll(equipments);
-        return results;
     }
 
-    private void createResult(String msgKey, int rowIdx, boolean success, List<UploadResultDTO> results) {
+    private void createResult(String msgKey, int rowIdx, boolean success, List<RowParseError> results) {
         String message = messageSource.getMessage(msgKey, new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
-        UploadResultDTO result = new UploadResultDTO();
-        result.setIsSuccess(success);
+        RowParseError result = new RowParseError();
+//        result.setIsSuccess(success);
         result.setMsg(message);
         result.setRowNum((long) rowIdx);
         results.add(result);

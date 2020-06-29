@@ -2,12 +2,12 @@ package com.joinbe.common.excel;
 
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
-import com.joinbe.service.dto.UploadResultDTO;
+import com.joinbe.service.dto.RowParseError;
+import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -23,9 +23,12 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
 
     private final Logger log = LoggerFactory.getLogger(EquipmentDataListener.class);
     List<EquipmentData> list = new ArrayList<>();
-    List<UploadResultDTO> errors = new ArrayList<>();
-    @Autowired
-    private MessageSource messageSource;
+    private final MessageSource messageSource;
+    UploadResponse response = new UploadResponse();
+
+    public EquipmentDataListener(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
 
     /**
      * 在异常时会调改方法，抛出异常则停止读取, 如果这里不抛出异常则继续读取下一行
@@ -78,10 +81,13 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
         }
 
         data.setRowIdx(rowIdx);
-
+        response.increaseTotalRowsNum();
         if (!hasError) {
             log.info("Parsed Data:{}", data);
+            response.increaseSuccessRowNum();
             list.add(data);
+        } else {
+            response.increaseFailedRowNum();
         }
     }
 
@@ -112,11 +118,11 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
     }
 
     private void recordError(String message, int rowIdx) {
-        UploadResultDTO result = new UploadResultDTO();
-        result.setIsSuccess(false);
+        RowParseError result = new RowParseError();
+        //result.setIsSuccess(false);
         result.setMsg(message);
-        result.setRowNum(Long.valueOf(rowIdx));
-        errors.add(result);
+        result.setRowNum((long) rowIdx);
+        response.getErrors().add(result);
     }
 
 
@@ -128,11 +134,11 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
         this.list = list;
     }
 
-    public List<UploadResultDTO> getErrors() {
-        return errors;
+    public UploadResponse getResponse() {
+        return response;
     }
 
-    public void setErrors(List<UploadResultDTO> errors) {
-        this.errors = errors;
+    public void setResponse(UploadResponse response) {
+        this.response = response;
     }
 }
