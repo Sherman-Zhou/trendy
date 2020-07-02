@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class DataCollectService {
@@ -82,7 +83,7 @@ public class DataCollectService {
         if(StringUtils.isBlank(existTrajectoryId) || existTrajectory == null ||
             previousDeviceStatus == null || !previousDeviceStatus.equals(currentDeviceStatus)){
             String newTrajectoryId = redissonEquipmentStore.genId();
-            log.debug("Generate new trajectory: {}", newTrajectoryId);
+            log.info("Generate new trajectory: {}", newTrajectoryId);
 
             newVehicleTrajectory = new VehicleTrajectory();
             newVehicleTrajectory.setTrajectoryId(newTrajectoryId);
@@ -91,19 +92,23 @@ public class DataCollectService {
             newVehicleTrajectory.setStartTime(Instant.now());
             newVehicleTrajectory.setEquipment(equipment.get());
             newVehicleTrajectory.setVehicle(equipment.get().getVehicle());
-
+            //第一条数据，不用计算, 为0
+            newVehicleTrajectory.setMileage(BigDecimal.ZERO);
             newVehicleTrajectory.setDetails(new HashSet<VehicleTrajectoryDetails>() {{ add(vehicleTrajectoryDetails);}});
             vehicleTrajectoryDetails.setVehicleTrajectory(newVehicleTrajectory);
             //设置之前的轨迹为结束
             if(existTrajectory != null){
                 existTrajectory.setEndTime(Instant.now());
-                //TODO - 计算之前轨迹的总里程数， 超速次数
+                //TODO - 计算超速次数
             }
             //覆盖之前的轨迹
             redissonEquipmentStore.putInRedisForTrajectory(msg.getUnitId(), newTrajectoryId);
         }else{
-            log.debug("Use exist trajectory, {}", existTrajectoryId);
+            log.info("Use exist trajectory, {}", existTrajectoryId);
             existTrajectory.getDetails().add(vehicleTrajectoryDetails);
+            //计算当前轨迹的实时里程
+            BigDecimal mileage = handleTrajectoryMileage(existTrajectory);
+            existTrajectory.setMileage(mileage);
             vehicleTrajectoryDetails.setVehicleTrajectory(existTrajectory);
         }
         //save
@@ -115,6 +120,39 @@ public class DataCollectService {
         }
     }
 
+    /**
+     * 轨迹为累加值
+     * @param existTrajectory
+     */
+    private BigDecimal handleTrajectoryMileage(VehicleTrajectory existTrajectory) {
+        Set<VehicleTrajectoryDetails> trajectoryDetails = existTrajectory.getDetails();
+        VehicleTrajectoryDetails maxTrajectoryDetails = trajectoryDetails.stream().filter(detail -> detail.getReceivedTime() != null)
+            .max((trajectoryDetails1, trajectoryDetails2) -> {
+                return trajectoryDetails1.getReceivedTime().compareTo(trajectoryDetails2.getReceivedTime());
+            })
+            .orElseGet(null);
+        VehicleTrajectoryDetails minTrajectoryDetails = trajectoryDetails.stream().filter(detail -> detail.getReceivedTime() != null)
+            .min((trajectoryDetails1, trajectoryDetails2) -> {
+                return trajectoryDetails1.getReceivedTime().compareTo(trajectoryDetails2.getReceivedTime());
+            })
+            .orElseGet(null);
+        if(maxTrajectoryDetails != null && minTrajectoryDetails != null && maxTrajectoryDetails.getMileage()!=null && minTrajectoryDetails.getMileage()!=null){
+            BigDecimal maxMileage = maxTrajectoryDetails.getMileage();
+            BigDecimal minMileage = minTrajectoryDetails.getMileage();
+            log.debug("HandleTrajectoryMileage: trajectoryId: {}, minMileageDetailsId: {}, maxMileageDetailsId: {}", existTrajectory.getId(), minTrajectoryDetails.getId(),maxTrajectoryDetails.getId());
+            if(maxMileage.compareTo(minMileage) == 0){
+                return BigDecimal.ZERO;
+            }else if(maxMileage.compareTo(minMileage) > 0){
+                return maxMileage.subtract(minMileage);
+            }
+        }
+        return BigDecimal.ZERO;
+    }
+
+    /**
+     * 处理Event
+     * @param msg
+     */
     private void handleEvent(PositionProtocol msg) {
         Integer eventId = msg.getEventId();
         if(EventIDEnum.IBUTTON_ATTACHED.getEventId().equals(eventId)){

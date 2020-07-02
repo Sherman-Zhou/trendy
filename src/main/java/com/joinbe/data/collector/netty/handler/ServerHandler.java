@@ -255,7 +255,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         }
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
-            String strInfo= "Equipment is offline, please try later,  deviceId: " + deviceId;
+            String strInfo= "Equipment is offline, please try later,  device: " + deviceId;
             log.warn(strInfo);
             deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, strInfo), HttpStatus.OK));
             return;
@@ -269,13 +269,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             }
             c.writeAndFlush(event).addListener(future -> {
                 if(!future.isSuccess()){
-                    deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
+                    deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline, device: " + deviceId), HttpStatus.OK));
                 }else{
-                    log.debug("sent command succeed, deviceId: {}, command: {}", deviceId, event);
+                    log.debug("sent command succeed, device: {}, command: {}", deviceId, event);
                 }
             });
         }else{
-            deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline and not writable, deviceId: " + deviceId), HttpStatus.OK));
+            deferredResult.setErrorResult(new ResponseEntity<>(new LocationResponseDTO(1, "Equipment is offline and not writable, device: " + deviceId), HttpStatus.OK));
         }
     }
 
@@ -295,7 +295,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         }
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
-            String strInfo= "Equipment is offline, Please try later, deviceId: " + deviceId;
+            String strInfo= "Equipment is offline, Please try later, device: " + deviceId;
             log.warn(strInfo);
             deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1, strInfo), HttpStatus.OK));
             return;
@@ -308,13 +308,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             }
             c.writeAndFlush(event).addListener(future -> {
                 if(!future.isSuccess()){
-                    deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1,"Equipment is offline, deviceId: " + deviceId), HttpStatus.OK));
+                    deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1,"Equipment is offline, device: " + deviceId), HttpStatus.OK));
                 }else{
                     log.debug("sent command succeed, deviceId: {}, command: {}", deviceId, event);
                 }
             });
         }else{
-            deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1, "Equipment is offline and not writable, deviceId: " + deviceId), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1, "Equipment is offline and not writable, device: " + deviceId), HttpStatus.OK));
         }
     }
 
