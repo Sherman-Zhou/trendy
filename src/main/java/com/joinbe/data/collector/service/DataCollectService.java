@@ -3,12 +3,14 @@ package com.joinbe.data.collector.service;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventIDEnum;
 import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
+import com.joinbe.data.collector.service.dto.UploadEventLogReq;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.Equipment;
+import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.domain.VehicleTrajectory;
 import com.joinbe.domain.VehicleTrajectoryDetails;
-import com.joinbe.domain.enumeration.IbuttonStatusEnum;
-import com.joinbe.domain.enumeration.VehicleStatusEnum;
+import com.joinbe.domain.enumeration.*;
+import com.joinbe.repository.EquipmentOperationRecordRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleTrajectoryRepository;
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +37,8 @@ public class DataCollectService {
     private RedissonEquipmentStore redissonEquipmentStore;
     @Autowired
     private EquipmentRepository equipmentRepository;
+    @Autowired
+    private  EquipmentOperationRecordRepository equipmentOperationRecordRepository;
 
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void saveTrajectory(PositionProtocol msg) {
@@ -200,5 +204,17 @@ public class DataCollectService {
                 redissonEquipmentStore.putInRedisForStatus(unitId, VehicleStatusEnum.STOPPED);
             }
         }
+    }
+
+    /**
+     *
+     * @param equipmentOperationRecord
+     */
+    @Transactional
+    public void insertEventLog(EquipmentOperationRecord equipmentOperationRecord){
+        if(equipmentOperationRecord == null){
+            return;
+        }
+        equipmentOperationRecordRepository.save(equipmentOperationRecord);
     }
 }

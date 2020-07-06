@@ -134,14 +134,14 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<EquipmentDTO> findByLicensePlateNumber(String plateNumber) {
+    public Optional<Equipment> findByLicensePlateNumber(String plateNumber) {
         log.debug("Request to get all Equipment by plateNumber: {}", plateNumber);
         if(StringUtils.isBlank(plateNumber)){
             return Optional.empty();
         }
         QueryParams<Equipment> queryParams = new QueryParams<>();
         queryParams.and("vehicle.licensePlateNumber", Filter.Operator.eq, plateNumber);
-        return equipmentRepository.findOne(queryParams).map(EquipmentService::toDto);
+        return equipmentRepository.findOne(queryParams);
     }
 
     @Override

@@ -67,7 +67,7 @@ public interface EquipmentService {
      * @param plateNumber
      * @return
      */
-    Optional<EquipmentDTO> findByLicensePlateNumber(String plateNumber);
+    Optional<Equipment> findByLicensePlateNumber(String plateNumber);
 
     List<EquipmentDTO> findAllUnboundEquipments();
 

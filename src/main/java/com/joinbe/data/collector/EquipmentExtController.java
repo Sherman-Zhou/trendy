@@ -7,9 +7,17 @@ import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.cmd.register.impl.SetTokenCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
+import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
+import com.joinbe.domain.Equipment;
+import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.domain.VehicleTrajectoryDetails;
+import com.joinbe.domain.enumeration.EventCategory;
+import com.joinbe.domain.enumeration.EventType;
+import com.joinbe.domain.enumeration.OperationResult;
+import com.joinbe.domain.enumeration.OperationSourceType;
+import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
@@ -58,7 +66,13 @@ public class EquipmentExtController {
     private EquipmentService equipmentService;
 
     @Autowired
-    VehicleTrajectoryDetailsRepository vehicleTrajectoryDetailsRepository;
+    private VehicleTrajectoryDetailsRepository vehicleTrajectoryDetailsRepository;
+
+    @Autowired
+    private  EquipmentRepository equipmentRepository;
+
+    @Autowired
+    private DataCollectService dataCollectService;
 
     @Value("${netty.query-timeout}")
     private Long queryTimeout;
@@ -108,17 +122,16 @@ public class EquipmentExtController {
             return deferredResult;
         }
         //get device id
-        Optional<EquipmentDTO> equipmentDto = equipmentService.findByLicensePlateNumber(locationReq.getPlateNumber());
+        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(locationReq.getPlateNumber());
         String deviceId;
-        if(equipmentDto.isPresent()){
-            deviceId = equipmentDto.get().getImei();
+        if(equipment.isPresent()){
+            deviceId = equipment.get().getImei();
         }else{
             String message = "No binding device found for the plate number: " + locationReq.getPlateNumber();
             logger.warn("In /api/external/equipment/location/vehicle, warn: {}", message);
             deferredResult.setResult(new ResponseEntity<>(new LocationResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
-
 
         HashMap<String, String> params = new HashMap<>(8);
         Cmd cmd = factory.createInstance(EventEnum.GPOS.getEvent());
@@ -154,12 +167,12 @@ public class EquipmentExtController {
 
         logger.debug("REST request to get Equipment : {}", deviceInfo);
         DeviceResponseDTO deviceResponseDTO = new DeviceResponseDTO(0, "success");
-        Optional<EquipmentDTO> equipmentDto = equipmentService.findByLicensePlateNumber(deviceInfo.getPlateNumber());
-        if(equipmentDto.isPresent()){
+        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(deviceInfo.getPlateNumber());
+        if(equipment.isPresent()){
             DeviceResponseItem deviceResponseItem = new DeviceResponseItem();
-            deviceResponseItem.setIdentifyNumber(equipmentDto.get().getIdentifyNumber());
-            deviceResponseItem.setImei(equipmentDto.get().getImei());
-            deviceResponseItem.setVersion(equipmentDto.get().getVersion());
+            deviceResponseItem.setIdentifyNumber(equipment.get().getIdentifyNumber());
+            deviceResponseItem.setImei(equipment.get().getImei());
+            deviceResponseItem.setVersion(equipment.get().getVersion());
             deviceResponseDTO.setData(deviceResponseItem);
         }else{
             deviceResponseDTO.setMessage("No binding device found for the plate number: " + deviceInfo.getPlateNumber() );
@@ -179,16 +192,23 @@ public class EquipmentExtController {
             return  deferredResult;
         }
         logger.debug("REST request to generate device's token : {}", deviceInfo);
-        Optional<EquipmentDTO> equipmentDto = equipmentService.findByLicensePlateNumber(deviceInfo.getPlateNumber());
+        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(deviceInfo.getPlateNumber());
         String deviceId;
-        if(equipmentDto.isPresent()){
-            deviceId = equipmentDto.get().getImei();
+        if(equipment.isPresent()){
+            deviceId = equipment.get().getImei();
         }else{
             String message = "No binding device found for the plate number : " + deviceInfo.getPlateNumber();
             logger.debug(message);
             deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
+        EquipmentOperationRecord equipmentOperationRecord = new EquipmentOperationRecord();
+        equipmentOperationRecord.setOperationSourceType(OperationSourceType.APP);
+        equipmentOperationRecord.setEventType(EventCategory.TOKEN);
+        equipmentOperationRecord.setEquipment(equipment.get());
+        equipmentOperationRecord.setVehicle(equipment.get().getVehicle());
+        equipmentOperationRecord.setEventDesc(EventType.RELEASE);
+
         //生成md5 token: deviceId + expire time
         String expireDateTime = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now().plusDays(7));
         StringBuffer md5OrigValue = new StringBuffer().append(deviceId).append(expireDateTime);
@@ -209,6 +229,23 @@ public class EquipmentExtController {
             //remove from local store if timeout
             logger.warn("Gen device token time out, maybe device is disconnecting, device: {}", deviceId);
             LocalEquipmentStroe.get(deviceId,EventEnum.SETKEY);
+            equipmentOperationRecord.setResult(OperationResult.FAILURE);
+            dataCollectService.insertEventLog(equipmentOperationRecord);
+        });
+        deferredResult.setResultHandler((result) ->{
+            if(result != null && result instanceof ResponseEntity){
+                ResponseEntity responseEntity = (ResponseEntity) result;
+                if(responseEntity !=null && responseEntity.getBody() !=null && responseEntity.getBody() instanceof ResponseDTO){
+                    int code = ((ResponseDTO)responseEntity.getBody()).getCode();
+                    String message = ((ResponseDTO)responseEntity.getBody()).getMessage();
+                    if(code == 0){
+                        equipmentOperationRecord.setResult(OperationResult.SUCCESS);
+                    }else{
+                        equipmentOperationRecord.setResult(OperationResult.FAILURE);
+                    }
+                    dataCollectService.insertEventLog(equipmentOperationRecord);
+                }
+            }
         });
         return deferredResult;
     }
@@ -267,5 +304,57 @@ public class EquipmentExtController {
             return new ResponseEntity<>(new TrajectoryResponseDTO(1, e.getMessage()), HttpStatus.OK);
         }
         return new ResponseEntity<>(trajectoryResponseDTO, HttpStatus.OK);
+    }
+
+    /**
+     *
+     * @param uploadEventLogReq
+     * @param bindingResult
+     * @return
+     */
+    @PostMapping("/uploadEventLog")
+    @ApiOperation("上传蓝牙开锁/关锁日志")
+    @Transactional
+    public ResponseEntity<ResponseDTO> uploadEventLog(@RequestBody @Valid UploadEventLogReq uploadEventLogReq, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/external/equipment/uploadEventLog validate error: {}", message);
+            return new ResponseEntity<>(new ResponseDTO(1, message), HttpStatus.OK);
+        }
+        logger.debug("Start to process event log upload: {}", uploadEventLogReq.toString());
+
+        if(EventType.resolve(uploadEventLogReq.getMode()) == null){
+            return new ResponseEntity<>(new ResponseDTO(1, "Lock mode should be lock or unlock"), HttpStatus.OK);
+        }
+
+        if(OperationResult.resolve(uploadEventLogReq.getEventResult()) == null){
+            return new ResponseEntity<>(new ResponseDTO(1, "Lock or unlock result should be success or failure"), HttpStatus.OK);
+        }
+
+        //get device info
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(uploadEventLogReq.getImei());
+        if (!equipment.isPresent()) {
+            return new ResponseEntity<>(new ResponseDTO(1, "Equipment not maintained yet, imei:" + uploadEventLogReq.getImei()), HttpStatus.OK);
+        } else if (equipment.get().getVehicle() == null) {
+            return new ResponseEntity<>(new ResponseDTO(1, "Vehicle not bound yet, imei:" + uploadEventLogReq.getImei()), HttpStatus.OK);
+        }
+        ResponseDTO responseDTO = new ResponseDTO(0, "Event log is successfully uploaded!");
+        try {
+            //Insert event log
+            EquipmentOperationRecord equipmentOperationRecord = new EquipmentOperationRecord();
+            equipmentOperationRecord.setOperationSourceType(OperationSourceType.APP);
+            equipmentOperationRecord.setEventType(EventCategory.LOCK);
+            equipmentOperationRecord.setEventDesc(EventType .resolve(uploadEventLogReq.getMode()));
+            equipmentOperationRecord.setResult(OperationResult.resolve(uploadEventLogReq.getEventResult()));
+            equipmentOperationRecord.setEquipment(equipment.get());
+            equipmentOperationRecord.setVehicle(equipment.get().getVehicle());
+            dataCollectService.insertEventLog(equipmentOperationRecord);
+            logger.debug("insert app event log success, imie: {}", uploadEventLogReq.getImei());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            responseDTO = new ResponseDTO(1, e.getMessage());
+        }
+
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 }

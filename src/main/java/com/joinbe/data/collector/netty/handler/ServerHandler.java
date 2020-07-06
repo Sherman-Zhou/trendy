@@ -304,7 +304,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         if(c.isWritable()){
             boolean putResult = LocalEquipmentStroe.put(deviceId, eventEnum, deferredResult);
             if(!putResult){
-                deferredResult.setErrorResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1, "Large concurrency, please try later: " + deviceId), HttpStatus.OK));
+                deferredResult.setResult(new ResponseEntity<>(this.genCommonResponseByEvent(eventEnum,1, "Large concurrency, please try later: " + deviceId), HttpStatus.OK));
             }
             c.writeAndFlush(event).addListener(future -> {
                 if(!future.isSuccess()){
