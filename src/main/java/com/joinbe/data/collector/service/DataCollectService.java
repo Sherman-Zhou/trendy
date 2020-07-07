@@ -3,13 +3,13 @@ package com.joinbe.data.collector.service;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventIDEnum;
 import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
-import com.joinbe.data.collector.service.dto.UploadEventLogReq;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.domain.VehicleTrajectory;
 import com.joinbe.domain.VehicleTrajectoryDetails;
-import com.joinbe.domain.enumeration.*;
+import com.joinbe.domain.enumeration.IbuttonStatusEnum;
+import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import com.joinbe.repository.EquipmentOperationRecordRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleTrajectoryRepository;
@@ -173,6 +173,9 @@ public class DataCollectService {
             log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
         }
     }
+
+
+
 
     /**
      * 车辆实时状态监控

@@ -10,17 +10,14 @@ import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
+import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.domain.VehicleTrajectoryDetails;
-import com.joinbe.domain.enumeration.EventCategory;
-import com.joinbe.domain.enumeration.EventType;
-import com.joinbe.domain.enumeration.OperationResult;
-import com.joinbe.domain.enumeration.OperationSourceType;
+import com.joinbe.domain.enumeration.*;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
 import com.joinbe.service.EquipmentService;
-import com.joinbe.service.dto.EquipmentDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -73,6 +70,9 @@ public class EquipmentExtController {
 
     @Autowired
     private DataCollectService dataCollectService;
+
+    @Autowired
+    private RedissonEquipmentStore redissonEquipmentStore;
 
     @Value("${netty.query-timeout}")
     private Long queryTimeout;
@@ -356,5 +356,38 @@ public class EquipmentExtController {
         }
 
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
+    }
+
+
+    /**
+     *
+     * @param ibuttonReq
+     * @param bindingResult
+     * @return
+     */
+    @PostMapping("/iButtonStatus")
+    @ApiOperation("根据设备的imie查询ibutton的状态")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> getIButtonStatus(@RequestBody @Valid IButtonReq ibuttonReq, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/external/equipment/iButtonStatus validate error: {}", message);
+            return new ResponseEntity<>(new IButtonResponseDTO(1, message), HttpStatus.OK);
+        }
+
+        logger.debug("REST request to get iButton status : {}", ibuttonReq.toString());
+        IButtonResponseDTO iButtonResponseDTO = new IButtonResponseDTO(0, "success");
+        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(ibuttonReq.getPlateNumber());
+        if(equipment.isPresent()){
+            IButtonResponseItem iButtonResponseItem = new IButtonResponseItem();
+            iButtonResponseItem.setImei(equipment.get().getImei());
+            IbuttonStatusEnum deviceIButtonStatus = redissonEquipmentStore.getDeviceIButtonStatus(equipment.get().getImei());
+            iButtonResponseItem.setiButtonStatus(deviceIButtonStatus !=null ? deviceIButtonStatus.getCode() : IbuttonStatusEnum.UNKNOWN.getCode());
+            iButtonResponseItem.setiButtonId(redissonEquipmentStore.getDeviceIButtonId(equipment.get().getImei()));
+            iButtonResponseDTO.setData(iButtonResponseItem);
+        }else{
+            iButtonResponseDTO.setMessage("No binding device found for the plate number: " + ibuttonReq.getPlateNumber() );
+        }
+        return new ResponseEntity<>(iButtonResponseDTO, HttpStatus.OK);
     }
 }
