@@ -3,13 +3,12 @@ package com.joinbe.data.collector.service;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventIDEnum;
 import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
+import com.joinbe.data.collector.service.dto.ResponseDTO;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
-import com.joinbe.domain.Equipment;
-import com.joinbe.domain.EquipmentOperationRecord;
-import com.joinbe.domain.VehicleTrajectory;
-import com.joinbe.domain.VehicleTrajectoryDetails;
+import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.IbuttonStatusEnum;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
+import com.joinbe.repository.EquipmentFaultRepository;
 import com.joinbe.repository.EquipmentOperationRecordRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleTrajectoryRepository;
@@ -17,6 +16,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,8 @@ public class DataCollectService {
     private EquipmentRepository equipmentRepository;
     @Autowired
     private  EquipmentOperationRecordRepository equipmentOperationRecordRepository;
+    @Autowired
+    private EquipmentFaultRepository equipmentFaultRepository;
 
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void saveTrajectory(PositionProtocol msg) {
@@ -54,7 +57,7 @@ public class DataCollectService {
             return;
         }
         //处理event
-        handleEvent(msg);
+        handleEvent(msg, equipment.get());
         //之前状态
         VehicleStatusEnum previousDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
         //状态处理
@@ -157,25 +160,44 @@ public class DataCollectService {
      * 处理Event
      * @param msg
      */
-    private void handleEvent(PositionProtocol msg) {
+    @Transactional(rollbackFor = Exception.class)
+    public void handleEvent(PositionProtocol msg, Equipment equipment) {
         Integer eventId = msg.getEventId();
+        if(equipment == null || eventId == null){
+            return;
+        }
+        //generate event log
+        EquipmentFault equipmentFault = new EquipmentFault();
+        equipmentFault.setIsRead(false);
+        equipmentFault.setVehicle(equipment.getVehicle());
+        equipmentFault.setEquipment(equipment);
+
         if(EventIDEnum.IBUTTON_ATTACHED.getEventId().equals(eventId)){
             log.info("IButton is attached, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
             redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED,msg.getIbuttonId());
             //for debug
             log.debug("IButton current status in redis, iButtonStatus:{}", redissonEquipmentStore.getDeviceIButtonStatus(msg.getUnitId()));
             log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
+            /*equipmentFault.setAlertType("Event");
+            equipmentFault.setAlertType("IButton Attached");
+            insertFaultLog(equipmentFault);*/
         }else if(EventIDEnum.IBUTTON_REMOVED.getEventId().equals(eventId)){
             log.info("IButton is removed, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
             redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED,msg.getIbuttonId());
             //for debug
             log.debug("IButton current status in redis, iButtonStatus:{}", redissonEquipmentStore.getDeviceIButtonStatus(msg.getUnitId()));
             log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
+            //TODO: change to enum
+            equipmentFault.setAlertType("Event");
+            equipmentFault.setAlertType("IButton Removed");
+            insertFaultLog(equipmentFault);
+        }else if (EventIDEnum.MAIN_POWER_LOW_EVENT.getEventId().equals(eventId)){
+            log.info("MAIN_POWER_LOW_EVENT, device:{}", msg.getUnitId());
+            //TODO: change to enum
+            equipmentFault.setAlertType("Event");
+            equipmentFault.setAlertType("Main power low event");
         }
     }
-
-
-
 
     /**
      * 车辆实时状态监控
@@ -219,5 +241,17 @@ public class DataCollectService {
             return;
         }
         equipmentOperationRecordRepository.save(equipmentOperationRecord);
+    }
+
+    /**
+     *
+     * @param equipmentFault
+     */
+    @Transactional
+    public void insertFaultLog(EquipmentFault equipmentFault){
+        if(equipmentFault == null){
+            return;
+        }
+        equipmentFaultRepository.save(equipmentFault);
     }
 }
