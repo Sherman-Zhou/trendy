@@ -405,12 +405,12 @@ public class EquipmentExtController {
     @ApiOperation("根据车牌号进行开锁/关锁")
     @PostMapping("/lockVehicle")
     public DeferredResult<ResponseEntity<ResponseDTO>> lock(@RequestBody @Valid LockVehicleReq lockVehicleReq, BindingResult bindingResult) {
-        ResponseEntity<LockResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new LockResponseDTO(1, "Lock/Unlock time out, maybe device is disconnecting, please try later, vehicle: " + lockVehicleReq.getPlateNumber()), HttpStatus.OK);
+        ResponseEntity<DoorResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new DoorResponseDTO(1, "Lock/Unlock time out, maybe device is disconnecting, please try later, vehicle: " + lockVehicleReq.getPlateNumber()), HttpStatus.OK);
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/equipment/lockVehicle validate error: {}", message);
-            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, message), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
         Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(lockVehicleReq.getPlateNumber());
@@ -420,7 +420,7 @@ public class EquipmentExtController {
         }else{
             String message = "No binding device found for the plate number : " + lockVehicleReq.getPlateNumber();
             logger.debug(message);
-            deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(1, message), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
 
@@ -438,12 +438,12 @@ public class EquipmentExtController {
             params.put(DoorCmd.MODE, "0");
             equipmentOperationRecord.setEventDesc(EventType.LOCK);
         } else {
-            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, "Unknown lock mode."), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unknown lock mode."), HttpStatus.OK));
             return deferredResult;
         }
         Cmd cmd = factory.createInstance(EventEnum.DOOR.getEvent());
         if (cmd == null) {
-            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
             return deferredResult;
         }
         String doorStr = cmd.initCmd(params);
@@ -470,6 +470,51 @@ public class EquipmentExtController {
                     dataCollectService.insertEventLog(equipmentOperationRecord);
                 }
             }
+        });
+        return deferredResult;
+    }
+
+    /**
+     *
+     * @param lockVehicleReq
+     * @param bindingResult
+     * @return
+     */
+    @ApiOperation("根据车牌号查询锁的状态")
+    @PostMapping("/queryLock")
+    public DeferredResult<ResponseEntity<ResponseDTO>> queryLock(@RequestBody @Valid LockVehicleReq lockVehicleReq, BindingResult bindingResult) {
+        ResponseEntity<DoorResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new DoorResponseDTO(1, "Query Lock time out, maybe device is disconnecting, please try later, vehicle: " + lockVehicleReq.getPlateNumber()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/equipment/queryLock validate error: {}", message);
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(lockVehicleReq.getPlateNumber());
+        String deviceId;
+        if(equipment.isPresent()){
+            deviceId = equipment.get().getImei();
+        }else{
+            String message = "No binding device found for the plate number : " + lockVehicleReq.getPlateNumber();
+            logger.debug(message);
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+
+        HashMap<String, String> params = new HashMap<>(8);
+        Cmd cmd = factory.createInstance(EventEnum.DOOR_QRY.getEvent());
+        if (cmd == null) {
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
+            return deferredResult;
+        }
+        String doorStr = cmd.initCmd(params);
+        logger.debug("REST request for query lock/unlock from app, command: {}", doorStr);
+        serverHandler.sendCommonQueryMessage(deviceId, doorStr, EventEnum.DOOR, deferredResult);
+        deferredResult.onTimeout(() -> {
+            //remove from local store if timeout
+            logger.warn("App query Lock time out, maybe device is disconnecting, device: {}", deviceId);
+            LocalEquipmentStroe.get(deviceId, EventEnum.DOOR);
         });
         return deferredResult;
     }

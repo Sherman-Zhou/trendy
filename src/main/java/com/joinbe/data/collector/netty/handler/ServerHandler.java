@@ -10,6 +10,7 @@ import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.enumeration.IbuttonStatusEnum;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
+import com.joinbe.service.dto.DoorResponseItemDTO;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -145,9 +146,16 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         }
                     }else if(msg instanceof DoorProtocol){
                         DoorProtocol doorProtocol = (DoorProtocol)msg;
+                        DoorResponseItemDTO doorResponseItemDTO = new DoorResponseItemDTO();
+                        doorResponseItemDTO.setData(doorProtocol.getData());
+                        doorResponseItemDTO.setOk(doorProtocol.getOk());
+                        doorResponseItemDTO.setType(doorProtocol.getType());
+                        doorResponseItemDTO.setMode(doorProtocol.getMode());
+                        doorResponseItemDTO.setModeStatus(doorProtocol.getMode() == 1 ? "OPEN" : "CLOSE");
+                        doorResponseItemDTO.setImei(deviceNo);
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.DOOR);
                         if(deferredResult != null){
-                            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(0, "success", doorProtocol), HttpStatus.OK));
+                            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(0, "success", doorResponseItemDTO), HttpStatus.OK));
                         }
                     }else if(msg instanceof SetKeyProtocol){
                         SetKeyProtocol setKeyProtocol = (SetKeyProtocol)msg;

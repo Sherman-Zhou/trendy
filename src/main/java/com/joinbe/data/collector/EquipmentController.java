@@ -9,10 +9,7 @@ import com.joinbe.data.collector.cmd.register.impl.SetUserEventCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.DataCollectService;
-import com.joinbe.data.collector.service.dto.LockDeviceReq;
-import com.joinbe.data.collector.service.dto.LockResponseDTO;
-import com.joinbe.data.collector.service.dto.ResponseDTO;
-import com.joinbe.data.collector.service.dto.TokenResponseDTO;
+import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.domain.Vehicle;
@@ -116,12 +113,12 @@ public class EquipmentController {
     @ApiOperation("开锁/关锁")
     @PostMapping("/lock")
     public DeferredResult<ResponseEntity<ResponseDTO>> lock(@RequestBody @Valid LockDeviceReq lockDeviceReq, BindingResult bindingResult) {
-        ResponseEntity<LockResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new LockResponseDTO(1, "Lock/Unlock time out, maybe device is disconnecting, please try later, vehicleId: " + lockDeviceReq.getVehicleId()), HttpStatus.OK);
+        ResponseEntity<DoorResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new DoorResponseDTO(1, "Lock/Unlock time out, maybe device is disconnecting, please try later, vehicleId: " + lockDeviceReq.getVehicleId()), HttpStatus.OK);
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/equipment/lock validate error: {}", message);
-            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, message), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
         //get device id
@@ -131,7 +128,7 @@ public class EquipmentController {
             deviceId = vehicle.get().getEquipment().getImei();
         } else {
             String message = "No binding device found for the vehicle ID: " + lockDeviceReq.getVehicleId();
-            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, message), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
         EquipmentOperationRecord equipmentOperationRecord = new EquipmentOperationRecord();
@@ -148,12 +145,12 @@ public class EquipmentController {
             params.put(DoorCmd.MODE, "0");
             equipmentOperationRecord.setEventDesc(EventType.LOCK);
         } else {
-            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, "Unknown lock mode."), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unknown lock mode."), HttpStatus.OK));
             return deferredResult;
         }
         Cmd cmd = factory.createInstance(EventEnum.DOOR.getEvent());
         if (cmd == null) {
-            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
+            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
             return deferredResult;
         }
         String doorStr = cmd.initCmd(params);

@@ -133,6 +133,11 @@ public enum EventEnum {
      * 1-开门
      */
     DOOR("DOOR"),
+
+    /**
+     * 开锁查询
+     */
+    DOOR_QRY("DOOR_QRY"),
     ;
 
 
