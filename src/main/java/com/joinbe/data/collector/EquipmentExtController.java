@@ -482,7 +482,7 @@ public class EquipmentExtController {
      */
     @ApiOperation("根据车牌号查询锁的状态")
     @PostMapping("/queryLock")
-    public DeferredResult<ResponseEntity<ResponseDTO>> queryLock(@RequestBody @Valid LockVehicleReq lockVehicleReq, BindingResult bindingResult) {
+    public DeferredResult<ResponseEntity<ResponseDTO>> queryLock(@RequestBody @Valid LockVehicleQueryReq lockVehicleReq, BindingResult bindingResult) {
         ResponseEntity<DoorResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new DoorResponseDTO(1, "Query Lock time out, maybe device is disconnecting, please try later, vehicle: " + lockVehicleReq.getPlateNumber()), HttpStatus.OK);
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
