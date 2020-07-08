@@ -12,6 +12,7 @@ import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.LockDeviceReq;
 import com.joinbe.data.collector.service.dto.LockResponseDTO;
 import com.joinbe.data.collector.service.dto.ResponseDTO;
+import com.joinbe.data.collector.service.dto.TokenResponseDTO;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.domain.Vehicle;
@@ -115,7 +116,8 @@ public class EquipmentController {
     @ApiOperation("开锁/关锁")
     @PostMapping("/lock")
     public DeferredResult<ResponseEntity<ResponseDTO>> lock(@RequestBody @Valid LockDeviceReq lockDeviceReq, BindingResult bindingResult) {
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Lock/Unlock time out, maybe device is disconnecting, please try later, vehicleId: " + lockDeviceReq.getVehicleId());
+        ResponseEntity<TokenResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new TokenResponseDTO(1, "Lock/Unlock time out, maybe device is disconnecting, please try later, vehicleId: " + lockDeviceReq.getVehicleId()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/equipment/lock validate error: {}", message);

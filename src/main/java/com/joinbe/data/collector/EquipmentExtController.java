@@ -80,7 +80,8 @@ public class EquipmentExtController {
     @PostMapping("/location/device")
     @ApiOperation("根据设备IMEI获取设备的实时位置")
     public DeferredResult<ResponseEntity<ResponseDTO>> getLocation(@RequestBody @Valid LocationDeviceReq locationReq, BindingResult bindingResult) {
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Get location timout, maybe device is disconnecting, please try later, device: " + locationReq.getImei());
+        ResponseEntity<TokenResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new TokenResponseDTO(1, "Get location timout, maybe device is disconnecting, please try later, device: " + locationReq.getImei()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/external/equipment/location/device validate error: {}", message);
@@ -114,7 +115,8 @@ public class EquipmentExtController {
     @ApiOperation("根据车牌号获取设备的实时位置")
     @Transactional(readOnly = true)
     public DeferredResult<ResponseEntity<ResponseDTO>> getLocation(@RequestBody @Valid LocationVehicleReq locationReq, BindingResult bindingResult) {
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Get location timout, maybe device is disconnecting, please try later, plateNumber :"+ locationReq.getPlateNumber());
+        ResponseEntity<TokenResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new TokenResponseDTO(1, "Get location timout, maybe device is disconnecting, please try later, plateNumber :" + locationReq.getPlateNumber()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/external/equipment/location/vehicle validate error: {}", message);
@@ -184,7 +186,8 @@ public class EquipmentExtController {
     @PostMapping("/token")
     @ApiOperation("生成设备的密钥")
     public DeferredResult<ResponseEntity<ResponseDTO>> genDeviceToken(@RequestBody @Valid DeviceReq deviceInfo, BindingResult bindingResult) {
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, "Gen device token time out, maybe device is disconnecting, please try later, Plate Number: " + deviceInfo.getPlateNumber());
+        ResponseEntity<TokenResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new TokenResponseDTO(1, "Gen device token time out, maybe device is disconnecting, please try later, Plate Number: " + deviceInfo.getPlateNumber()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/external/equipment/token validate error: {}", message);
