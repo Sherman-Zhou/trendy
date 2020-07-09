@@ -141,8 +141,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                     if(msg instanceof LockUnlockProtocol){
                         LockUnlockProtocol lockUnlockProtocol = (LockUnlockProtocol)msg;
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SGPO);
-                        if(deferredResult != null){
+                        if(deferredResult != null && "$OK".equals(lockUnlockProtocol.getOk())){
                             deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(0, "success", lockUnlockProtocol), HttpStatus.OK));
+                        }else if (deferredResult != null && "$ERR".equals(lockUnlockProtocol.getOk())){
+                            deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, "Get ERR response from device, device: " + deviceNo, lockUnlockProtocol), HttpStatus.OK));
                         }
                     }else if(msg instanceof DoorProtocol){
                         DoorProtocol doorProtocol = (DoorProtocol)msg;
@@ -154,8 +156,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         doorResponseItemDTO.setModeStatus(doorProtocol.getMode() == 1 ? "OPEN" : "CLOSE");
                         doorResponseItemDTO.setImei(deviceNo);
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.DOOR);
-                        if(deferredResult != null){
+                        if(deferredResult != null && "$OK".equals(doorProtocol.getOk())){
                             deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(0, "success", doorResponseItemDTO), HttpStatus.OK));
+                        }else if (deferredResult != null && "$ERR".equals(doorProtocol.getOk())){
+                            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Get ERR response from device, device: " + deviceNo, doorResponseItemDTO), HttpStatus.OK));
                         }
                     }else if(msg instanceof SetKeyProtocol){
                         SetKeyProtocol setKeyProtocol = (SetKeyProtocol)msg;
@@ -165,14 +169,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         tokenResponseItem.setToken(setKeyProtocol.getDeviceToken());
                         tokenResponseItem.setExpireDate(expireDateTime);
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SETKEY);
-                        if(deferredResult != null){
+                        if(deferredResult != null && "$OK".equals(setKeyProtocol.getOk())){
                             deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(0, "success", tokenResponseItem), HttpStatus.OK));
+                        }else if(deferredResult != null && "$ERR".equals(setKeyProtocol.getOk())){
+                            deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(1, "Get ERR response from device, device: " + deviceNo, tokenResponseItem), HttpStatus.OK));
                         }
                     }else if(msg instanceof CommonProtocol){
                         CommonProtocol commonProtocol = (CommonProtocol)msg;
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.getCommonResult(deviceNo);
-                        if(deferredResult != null){
+                        if(deferredResult != null && commonProtocol != null && StringUtils.isNotEmpty(commonProtocol.getData()) && commonProtocol.getData().startsWith("$OK")){
                             deferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(0, "success", commonProtocol), HttpStatus.OK));
+                        }else if (deferredResult != null && commonProtocol != null && StringUtils.isNotEmpty(commonProtocol.getData()) && commonProtocol.getData().startsWith("$ERR")){
+                            deferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(1, "Get ERR response from device, device: " + deviceNo, commonProtocol), HttpStatus.OK));
                         }
                     }
                 }

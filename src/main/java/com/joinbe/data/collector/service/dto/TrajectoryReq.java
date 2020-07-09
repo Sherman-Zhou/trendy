@@ -30,7 +30,7 @@ public class TrajectoryReq {
     /**
      * 结束日期From - 时间戳
      */
-    @ApiModelProperty(value = "结束时间，时间戳格式，结束时间为空则默认为当前系统时间")
+    @ApiModelProperty(value = "结束时间，时间戳格式")
     @NotEmpty(message = "end date cant not be empty")
     private Date endDateFrom;
 
