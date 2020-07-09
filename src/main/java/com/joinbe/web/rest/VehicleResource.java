@@ -79,6 +79,7 @@ public class VehicleResource {
     @ApiOperation("同步车辆")
     public ResponseEntity<PageData<VehicleDetailsDTO>> syncVehicle(Pageable pageable) {
         log.debug("sync cars from app backend..."); //TODO: to implement...
+        vehicleService.syncVehicle();
         Page<VehicleDetailsDTO> page = vehicleService.findAll(pageable, new VehicleVM());
         return ResponseUtil.toPageData(page);
     }

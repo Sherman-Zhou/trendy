@@ -21,9 +21,9 @@ public class EquipmentFaultVM implements Serializable {
     /**
      * 报警内容：\nMain power low event\nDevice Lost
      */
-    @Size(max = 200)
-    @ApiModelProperty(value = "报警内容")
-    private String alertContent;
+//    @Size(max = 200)
+//    @ApiModelProperty(value = "报警内容")
+//    private String alertContent;
 
     /**
      * 是否已读
@@ -31,7 +31,7 @@ public class EquipmentFaultVM implements Serializable {
     @ApiModelProperty(value = "是否已读")
     private Boolean isRead;
 
-    @ApiModelProperty(value = "设备ID")
+    @ApiModelProperty(value = "设备ID或者报警内容")
     private String equipmentIdNum;
 
     @ApiModelProperty(value = "车辆主键")

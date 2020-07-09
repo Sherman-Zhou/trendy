@@ -1,8 +1,11 @@
 package com.joinbe.service.impl.jpa;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
+import com.joinbe.config.ApplicationProperties;
 import com.joinbe.domain.Division;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
@@ -13,10 +16,8 @@ import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.VehicleService;
-import com.joinbe.service.dto.RowParseError;
-import com.joinbe.service.dto.UploadResponse;
-import com.joinbe.service.dto.VehicleDetailsDTO;
-import com.joinbe.service.dto.VehicleSummaryDTO;
+import com.joinbe.service.dto.*;
+import com.joinbe.service.util.RestfulClient;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
 import com.joinbe.web.rest.vm.VehicleBindingVM;
@@ -28,10 +29,13 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -52,12 +56,23 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final MessageSource messageSource;
 
+    private final RestfulClient restfulClient;
+
+    private final ApplicationProperties applicationProperties;
+
+    private ObjectMapper mapper;
+
     public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
-                              DivisionRepository divisionRepository, MessageSource messageSource) {
+                              DivisionRepository divisionRepository, MessageSource messageSource,
+                              RestfulClient restfulClient, ApplicationProperties applicationProperties) {
         this.vehicleRepository = vehicleRepository;
         this.equipmentRepository = equipmentRepository;
         this.divisionRepository = divisionRepository;
         this.messageSource = messageSource;
+        this.restfulClient = restfulClient;
+        this.applicationProperties = applicationProperties;
+        mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
 
     /**
@@ -249,6 +264,98 @@ public class VehicleServiceImpl implements VehicleService {
             }
         }
 
+    }
+
+    @Override
+    public void syncVehicle() {
+            int fetchSize  = 9999 ;
+            Map<String, Division> divisionMap = new HashMap<>();
+            Division root = new Division();
+            root.setId(1L);
+            Map<String, String> urlParams = new HashMap<>();
+            urlParams.put("pagesize", String.valueOf(fetchSize));
+            ApplicationProperties.TrendyConfig trendyConfig = applicationProperties.getTrendy();
+            TrendyResponse response = restfulClient.getForObject(trendyConfig.getUrl() + trendyConfig.getVehiclePath(), TrendyResponse.class,urlParams);
+            if(response.getStatus() != HttpStatus.OK.value()) {
+                throw new BadRequestAlertException(response.getInfo(), "vehicle.sync", "vehicle.sync.error");
+            }
+           List<TrendyResponse.Car> cars =   response.getData().getList();
+            for(TrendyResponse.Car car : cars) {
+                Division shop = null;
+                Division city = null;
+                if(car.getCitylist()!=null) {
+                    Division cityInDb = divisionMap.get(car.getCitylist().getName());
+                    if(cityInDb == null) {
+                        Optional<Division> division = divisionRepository.findByNameAndStatus(car.getCitylist().getName(), RecordStatus.ACTIVE);
+                        if(division.isPresent()) {
+                            cityInDb = division.get();
+                        }
+                    }
+
+                    if(cityInDb != null){
+                        city = cityInDb;
+                        divisionMap.put(car.getCitylist().getName(), cityInDb);
+                        city.setTrendyId(car.getCitylist().getId());
+                    }else {
+                        city = new Division();
+                        city.setName(car.getCitylist().getName());
+                        city.setDescription(city.getName());
+                        city.setStatus(RecordStatus.ACTIVE);
+                        city.setParent(root);
+                        city.setTrendyId(car.getCitylist().getId());
+                        divisionRepository.save(city);
+                        divisionMap.put(car.getCitylist().getName(), city);
+                    }
+                }
+                if(car.getShoplist()!= null) {
+                    Division shopInDb = divisionMap.get(car.getShoplist().getTitle());
+                    if(shopInDb == null) {
+                        Optional<Division> division = divisionRepository.findByNameAndStatus(car.getShoplist().getTitle(), RecordStatus.ACTIVE);
+                        if(division.isPresent()) {
+                            shopInDb = division.get();
+                        }
+                    }
+
+                    if(shopInDb !=null){
+                        shop = shopInDb;
+                        shop.setTrendyId(car.getShoplist().getId());
+                        divisionMap.put(car.getShoplist().getTitle(), shop);
+                        log.debug("the shop's city in db is {}, the city in trendy: {}", shop.getParent(), car.getCitylist());
+                    }else {
+                        shop = new Division();
+                        shop.setName(car.getShoplist().getTitle());
+                        shop.setDescription(shop.getName());
+                        shop.setStatus(RecordStatus.ACTIVE);
+                        shop.setTrendyId(car.getShoplist().getId());
+                        if(city!=null) {
+                            shop.setParent(city);
+                        }
+                        divisionRepository.save(shop);
+                        divisionMap.put(car.getShoplist().getTitle(), shop);
+                    }
+                }
+
+                Optional<Vehicle> vehicleOptional = vehicleRepository.findOneByLicensePlateNumberAndStatus(car.getPlate_number(), RecordStatus.ACTIVE);
+                Vehicle vehicle;
+                if(vehicleOptional.isPresent()){
+                      vehicle = vehicleOptional.get();
+                }else {
+                    vehicle = new Vehicle();
+                }
+                vehicle.setLicensePlateNumber(car.getPlate_number());
+                vehicle.setBrand(car.getBrand_name());
+                vehicle.setStyle(car.getBrand_style());
+                vehicle.setType(car.getBrand_model());
+                vehicle.setProdYear(car.getYear());
+                vehicle.setName(car.getTitle());
+                vehicle.setContactName(car.getUser_name());
+                vehicle.setDivision(divisionMap.get(car.getShoplist().getTitle()));
+                vehicle.setTrendyId(car.getId());
+                vehicle.setStatus(RecordStatus.ACTIVE);
+                vehicle.setBounded(false);
+                vehicle.setIsMoving(false);
+                vehicleRepository.save(vehicle);
+            }
     }
 
     private void createResult(String msgKey, int rowIdx, boolean success, List<RowParseError> results) {

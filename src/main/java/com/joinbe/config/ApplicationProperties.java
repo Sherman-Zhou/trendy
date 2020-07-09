@@ -10,4 +10,37 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties(prefix = "application", ignoreUnknownFields = false)
 public class ApplicationProperties {
+
+    private TrendyConfig trendy;
+
+    public TrendyConfig getTrendy() {
+        return trendy;
+    }
+
+    public void setTrendy(TrendyConfig trendy) {
+        this.trendy = trendy;
+    }
+
+    public static class TrendyConfig {
+
+        private String url;
+
+        private String vehiclePath;
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+
+        public String getVehiclePath() {
+            return vehiclePath;
+        }
+
+        public void setVehiclePath(String vehiclePath) {
+            this.vehiclePath = vehiclePath;
+        }
+    }
 }

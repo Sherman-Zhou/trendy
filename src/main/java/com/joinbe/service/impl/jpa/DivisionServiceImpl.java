@@ -110,16 +110,16 @@ public class DivisionServiceImpl implements DivisionService {
 
     @Override
     public List<DivisionDTO> findCurrentUserDivisions() {
-   /*     List<DivisionDTO> divisions = divisionRepository.findAll().stream()
+        List<DivisionDTO> divisions = divisionRepository.findAll().stream()
                 .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
                 .map(DivisionService::toDto)
-                .collect(Collectors.toList());*/
+                .collect(Collectors.toList());
 
-        List<DivisionDTO> divisions = SecurityUtils.getCurrentUserDivisionIds().stream()
-            .map(divisionRepository::getOne)
-            .map(DivisionService::toDto)
-            .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
-            .collect(Collectors.toList());
+//        List<DivisionDTO> divisions = SecurityUtils.getCurrentUserDivisionIds().stream()
+//            .map(divisionRepository::getOne)
+//            .map(DivisionService::toDto)
+//            .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+//            .collect(Collectors.toList());
 
         //group by parentId
         List<DivisionDTO> children = divisions.stream()

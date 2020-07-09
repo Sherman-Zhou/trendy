@@ -123,7 +123,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> requestPasswordReset(Long userId) {
         return userRepository.findOneWithRolesById(userId)
-            .filter(User::getActivated)
+            .filter(user-> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 user.setResetKey(RandomUtil.generateResetKey());
                 user.setResetDate(Instant.now());
@@ -221,8 +221,10 @@ public class UserServiceImpl implements UserService {
         }
         user.setSex(Sex.resolve(userDTO.getSex()));
         user.setMobileNo(userDTO.getMobileNo());
-        String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
-        user.setPassword(encryptedPassword);
+        if(StringUtils.isNotEmpty(userDTO.getPassword())){
+            String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
+            user.setPassword(encryptedPassword);
+        }
         user.setRemark(userDTO.getRemark());
         user.setAddress(userDTO.getAddress());
 
@@ -382,6 +384,8 @@ public class UserServiceImpl implements UserService {
 //        Set<Division> userDivisions = SecurityUtils.getCurrentUserDivisionIds()
 //            .stream().map(id -> new Division(id)).collect(Collectors.toSet());
         //queryParams.and("divisions", Filter.Operator.in, userDivisions);
+        queryParams.and("status", Filter.Operator.ne, RecordStatus.DELETED);
+
         if (StringUtils.isNotEmpty(vm.getEmail())) {
             queryParams.and("email", Filter.Operator.eq, vm.getEmail());
         }

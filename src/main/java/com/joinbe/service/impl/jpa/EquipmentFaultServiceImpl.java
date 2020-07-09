@@ -4,6 +4,7 @@ import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.EquipmentFault;
+import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.repository.EquipmentFaultRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentFaultService;
@@ -15,9 +16,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.Predicate;
 import javax.swing.text.html.Option;
 import java.time.Instant;
 import java.util.Date;
@@ -94,9 +97,9 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
         if (vm.getIsRead() != null) {
             queryParams.and("isRead", Filter.Operator.eq, vm.getIsRead());
         }
-        if (StringUtils.isNotEmpty(vm.getEquipmentIdNum())) {
-            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentIdNum());
-        }
+//        if (StringUtils.isNotEmpty(vm.getEquipmentIdNum())) {
+//            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentIdNum());
+//        }
 
         if(vm.getVehicleId()!=null) {
             queryParams.and("vehicle.id", Filter.Operator.eq, vm.getVehicleId());
@@ -106,9 +109,9 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
             queryParams.and("alertType", Filter.Operator.like, vm.getAlertType());
         }
 
-        if (StringUtils.isNotEmpty(vm.getAlertContent())) {
-            queryParams.and("alertContent", Filter.Operator.like, vm.getAlertContent());
-        }
+//        if (StringUtils.isNotEmpty(vm.getAlertContent())) {
+//            queryParams.and("alertContent", Filter.Operator.like, vm.getAlertContent());
+//        }
         if (StringUtils.isNotEmpty(vm.getStartDate())) {
             Date startDate = DateUtils.parseDate(vm.getStartDate(), DateUtils.PATTERN_DATE);
             queryParams.and("createdDate", Filter.Operator.greaterThanOrEqualTo, startDate);
@@ -117,7 +120,18 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
             Date endDate = DateUtils.parseDate(vm.getEndDate() + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME);
             queryParams.and("createdDate", Filter.Operator.lessThanOrEqualTo, endDate);
         }
-        return equipmentFaultRepository.findAll(queryParams, pageable)
+        Specification<EquipmentFault> specification = Specification.where(queryParams);
+        if (StringUtils.isNotEmpty(vm.getEquipmentIdNum())) {
+
+            Specification<EquipmentFault> itemSpecification = (Specification<EquipmentFault>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate identifyNumberPredicate = criteriaBuilder.like(root.get("equipment").get("identifyNumber"), "%" + vm.getEquipmentIdNum().trim() + "%");
+                Predicate createdByPredicate = criteriaBuilder.like(root.get("alertContent"), "%" + vm.getEquipmentIdNum().trim() + "%");
+
+                return criteriaBuilder.or(identifyNumberPredicate, createdByPredicate);
+            };
+            specification = specification.and(itemSpecification);
+        }
+        return equipmentFaultRepository.findAll(specification, pageable)
             .map(EquipmentFaultService::toDto);
     }
 

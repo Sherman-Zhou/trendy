@@ -142,8 +142,10 @@ jasypt:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
-# application:
+application:
+  trendy:
+    url: https://app.trendycarshare.jp
+    vehicle-path: /api/car/carall
 netty:
   port: 17601
   boss-thread-count: 2

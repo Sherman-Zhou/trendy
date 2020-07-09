@@ -243,7 +243,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
                 vehicleStateDTO.setEquipment(equipment);
             }
-            //TODO: to calculate....
+            //TODO: to calculate....UserResource.java
             vehicleStateDTO.setRemainingFuel(BigDecimal.valueOf(60));
             vehicleStateDTO.setTotalMileage(vehicle.getTotalMileage());
 

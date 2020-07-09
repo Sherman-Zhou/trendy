@@ -85,4 +85,6 @@ public interface VehicleService {
 
     void binding(UploadResponse response, List<BindingData> data);
 
+    void syncVehicle();
+
 }

@@ -44,6 +44,10 @@ public class Division extends AbstractAuditingEntity {
     @Column(name = "status")
     private RecordStatus status;
 
+    @Size(max = 20)
+    @Column(name = "trendy_id", length = 20)
+    private String trendyId;
+
     @Column(name = "parent_id", updatable = false, insertable = false)
     private Long parentId;
 
@@ -124,5 +128,13 @@ public class Division extends AbstractAuditingEntity {
 
     public void setChildren(List<Division> children) {
         this.children = children;
+    }
+
+    public String getTrendyId() {
+        return trendyId;
+    }
+
+    public void setTrendyId(String trendyId) {
+        this.trendyId = trendyId;
     }
 }

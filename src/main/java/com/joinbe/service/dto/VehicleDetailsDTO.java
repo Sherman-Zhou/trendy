@@ -110,8 +110,11 @@ public class VehicleDetailsDTO implements Serializable {
     @ApiModelProperty(value = "联系电话")
     private String contactNumber;
 
-    @ApiModelProperty(value = "是否行驶中", hidden = true)
+    @ApiModelProperty(value = "是否行驶中")
     private Boolean isMoving;
+
+    @ApiModelProperty(value = "是否已绑定")
+    private Boolean bounded;
 
     @Size(max = 1)
     @Pattern(regexp = "[AD]")

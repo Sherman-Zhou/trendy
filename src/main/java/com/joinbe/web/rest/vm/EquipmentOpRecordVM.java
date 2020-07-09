@@ -10,14 +10,14 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 public class EquipmentOpRecordVM implements Serializable {
 
-    @ApiModelProperty(value = "设备ID")
-    private String equipmentId;
+//    @ApiModelProperty(value = "设备ID")
+//    private String equipmentId;
+//
+//    @ApiModelProperty(value = "车牌")
+//    private String licensePlateNumber;
 
-    @ApiModelProperty(value = "车牌")
-    private String licensePlateNumber;
 
-
-    @ApiModelProperty(value = "用戶登陆名")
+    @ApiModelProperty(value = "用戶登陆名，设备ID或者车牌")
     private String userId;
 
     @ApiModelProperty(value = "描述")

@@ -4,6 +4,7 @@ import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.EquipmentOperationRecord;
+import com.joinbe.domain.User;
 import com.joinbe.repository.EquipmentOperationRecordRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentOperationRecordService;
@@ -14,9 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.Predicate;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -67,21 +70,21 @@ public class EquipmentOperationRecordServiceImpl implements EquipmentOperationRe
 
         queryParams.and("vehicle.division.id", Filter.Operator.in, userDivisionIds);
 
-        if (StringUtils.isNotEmpty(vm.getEquipmentId())) {
-            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentId());
-        }
+//        if (StringUtils.isNotEmpty(vm.getEquipmentId())) {
+//            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentId());
+//        }
 
         if (StringUtils.isNotEmpty(vm.getDesc())) {
             queryParams.and("eventDesc", Filter.Operator.like, vm.getDesc());
         }
 
-        if (StringUtils.isNotEmpty(vm.getUserId())) {
-            queryParams.and("createdBy", Filter.Operator.like, vm.getUserId());
-        }
+//        if (StringUtils.isNotEmpty(vm.getUserId())) {
+//            queryParams.and("createdBy", Filter.Operator.like, vm.getUserId());
+//        }
 
-        if (StringUtils.isNotEmpty(vm.getLicensePlateNumber())) {
-            queryParams.and("vehicle.licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
-        }
+//        if (StringUtils.isNotEmpty(vm.getLicensePlateNumber())) {
+//            queryParams.and("vehicle.licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
+//        }
 
         if (StringUtils.isNotEmpty(vm.getStartDate())) {
             Date startDate = DateUtils.parseDate(vm.getStartDate(), DateUtils.PATTERN_DATE);
@@ -91,7 +94,19 @@ public class EquipmentOperationRecordServiceImpl implements EquipmentOperationRe
             Date endDate = DateUtils.parseDate(vm.getEndDate() + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME);
             queryParams.and("createdDate", Filter.Operator.lessThanOrEqualTo, endDate);
         }
-        return equipmentOperationRecordRepository.findAll(queryParams, pageable)
+
+        Specification<EquipmentOperationRecord> specification = Specification.where(queryParams);
+        if (StringUtils.isNotEmpty(vm.getUserId())) {
+            Specification<EquipmentOperationRecord> itemSpecification = (Specification<EquipmentOperationRecord>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate identifyNumberPredicate = criteriaBuilder.like(root.get("equipment").get("identifyNumber"), "%" + vm.getUserId().trim() + "%");
+                Predicate createdByPredicate = criteriaBuilder.like(root.get("createdBy"), "%" + vm.getUserId().trim() + "%");
+                Predicate licensePlateNumberPredicate = criteriaBuilder.like(root.get("vehicle").get("licensePlateNumber"), "%" + vm.getUserId().trim() + "%");
+                return criteriaBuilder.or(identifyNumberPredicate, createdByPredicate, licensePlateNumberPredicate);
+            };
+            specification = specification.and(itemSpecification);
+        }
+
+        return equipmentOperationRecordRepository.findAll(specification, pageable)
             .map(EquipmentOperationRecordService::toDto);
     }
 

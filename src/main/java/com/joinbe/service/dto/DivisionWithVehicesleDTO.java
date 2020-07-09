@@ -16,6 +16,8 @@ public class DivisionWithVehicesleDTO extends DivisionDTO {
         this.setId(division.getId());
         this.setName(division.getName());
         this.setDescription(division.getDescription());
+        this.setParentId(division.getParentId());
+
         this.setCode(division.getCode());
         this.setStatus(division.getStatus());
     }

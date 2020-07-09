@@ -124,6 +124,10 @@ public class Vehicle extends AbstractAuditingEntity {
     @OneToOne(mappedBy = "vehicle")
     private Equipment equipment;
 
+    @Size(max = 20)
+    @Column(name = "trendy_id", length = 20)
+    private String trendyId;
+
 
     @OneToMany(mappedBy = "vehicle")
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -336,6 +340,14 @@ public class Vehicle extends AbstractAuditingEntity {
         this.trajectories.remove(vehicleTrajectory);
         vehicleTrajectory.setVehicle(null);
         return this;
+    }
+
+    public String getTrendyId() {
+        return trendyId;
+    }
+
+    public void setTrendyId(String trendyId) {
+        this.trendyId = trendyId;
     }
 
     public Division getDivision() {
