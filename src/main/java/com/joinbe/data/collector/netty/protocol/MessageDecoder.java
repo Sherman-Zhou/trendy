@@ -37,7 +37,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
             return;
         }
         ProtocolMessage message;
-        if (data.startsWith("$OK")) {
+        if (data.startsWith("$OK") || data.startsWith("$ERR")) {
             //TODO - handle query response
             String[] splitEventType = data.split(StrUtil.COMMA);
             String eventType = null;
@@ -51,6 +51,10 @@ public class MessageDecoder extends ByteToMessageDecoder {
                 case "SGPO":
                     message = new LockUnlockProtocol(data);
                     message.initData(LockUnlockProtocol.class);
+                    break;
+                case "DOOR":
+                    message = new DoorProtocol(data);
+                    message.initData(DoorProtocol.class);
                     break;
                 case "SETKEY":
                     message = new SetKeyProtocol(data);
