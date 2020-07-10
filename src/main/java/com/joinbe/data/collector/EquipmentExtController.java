@@ -43,11 +43,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.validation.Valid;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/external/equipment")
@@ -266,7 +267,7 @@ public class EquipmentExtController {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
             logger.warn("In /api/external/equipment/trajectory validate error: {}", message);
-            return new ResponseEntity<>(new DeviceResponseDTO(1, message), HttpStatus.OK);
+            return new ResponseEntity<>(new TrajectoryResponseDTO(1, message), HttpStatus.OK);
         }
 
         logger.debug("REST request to get trajectory : {}", trajectoryReq.toString());
@@ -517,5 +518,78 @@ public class EquipmentExtController {
             LocalEquipmentStroe.get(deviceId, EventEnum.DOOR);
         });
         return deferredResult;
+    }
+
+    /**
+     * @param trajectoryInfoReq
+     * @param bindingResult
+     * @return
+     */
+    @PostMapping("/trajectoryInfo")
+    @ApiOperation("根据时间段查询车辆的轨迹列表")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> getTrajectoryInfo(@RequestBody @Valid TrajectoryInfoReq trajectoryInfoReq, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/external/equipment/trajectoryInfo validate error: {}", message);
+            return new ResponseEntity<>(new TrajectoryInfoResponseDTO(1, message), HttpStatus.OK);
+        }
+
+        logger.debug("REST request to get trajectory : {}", trajectoryInfoReq.toString());
+        TrajectoryInfoResponseDTO trajectoryInfoResponseDTO  = new TrajectoryInfoResponseDTO(0, "success");
+        try {
+            QueryParams<VehicleTrajectoryDetails> queryParams = new QueryParams<>();
+            queryParams.setDistinct(true);
+            if (StringUtils.isNotBlank(trajectoryInfoReq.getPlateNumber())) {
+                queryParams.and(new Filter("vehicleTrajectory.vehicle.licensePlateNumber", Filter.Operator.eq, trajectoryInfoReq.getPlateNumber()));
+            }
+            if (trajectoryInfoReq.getStartDateFrom() != null && trajectoryInfoReq.getEndDateFrom() != null) {
+                queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(trajectoryInfoReq.getStartDateFrom(), trajectoryInfoReq.getEndDateFrom())));
+            }
+
+            Specification<VehicleTrajectoryDetails> specification = Specification.where(queryParams);
+            List<VehicleTrajectoryDetails> trajectoryDetailList = vehicleTrajectoryDetailsRepository.findAll(specification);
+            if(trajectoryDetailList != null && trajectoryDetailList.size() > 0){
+                TrajectoryInfoResponseItemDTO trajectoryInfoResponseItemDTO = new TrajectoryInfoResponseItemDTO();
+                BigDecimal fuelConsumption = BigDecimal.ZERO;
+                Optional<VehicleTrajectoryDetails> oneTrajectoryDetail = trajectoryDetailList.stream().findAny();
+                if(oneTrajectoryDetail.get().getVehicleTrajectory() != null && oneTrajectoryDetail.get().getVehicleTrajectory().getEquipment() !=null){
+                    //set imei
+                    trajectoryInfoResponseItemDTO.setImei(oneTrajectoryDetail.get().getVehicleTrajectory().getEquipment().getImei());
+                    fuelConsumption = oneTrajectoryDetail.get().getVehicleTrajectory().getVehicle().getFuelConsumption();
+
+                }
+                //set plat number
+                trajectoryInfoResponseItemDTO.setPlateNumber(trajectoryInfoReq.getPlateNumber());
+                List<VehicleTrajectoryDetails> sortedList = trajectoryDetailList.stream().filter(detail -> detail.getReceivedTime() != null)
+                    .sorted(Comparator.comparing(VehicleTrajectoryDetails::getReceivedTime)).collect(Collectors.toList());
+                BigDecimal totalMilage = BigDecimal.ZERO;
+                //calculate mileage
+                if(sortedList.size() > 1){
+                    for (int i = 1; i < sortedList.size(); i++) {
+                        BigDecimal lastOne = sortedList.get(i-1).getMileage() != null ? sortedList.get(i-1).getMileage() : BigDecimal.ZERO;
+                        BigDecimal currentOne = sortedList.get(i).getMileage() != null ? sortedList.get(i).getMileage() : BigDecimal.ZERO;
+                        BigDecimal subtract = currentOne.subtract(lastOne);
+                        if(subtract.compareTo(BigDecimal.ZERO) == 1){
+                            totalMilage = totalMilage.add(subtract);
+                        }
+                    }
+                }
+                trajectoryInfoResponseItemDTO.setTotalMileageInKM(totalMilage);
+                //calculate fuelConsumption;
+                BigDecimal totalFuelConsumption = BigDecimal.ZERO;
+                if(fuelConsumption !=null && fuelConsumption.compareTo(BigDecimal.ZERO) == 1){
+                    totalFuelConsumption = totalMilage.divide(fuelConsumption,2, BigDecimal.ROUND_HALF_UP);
+                }
+                trajectoryInfoResponseItemDTO.setVehicleFuelConsumptionInKMPerLiter(fuelConsumption);
+                trajectoryInfoResponseItemDTO.setTotalFuelConsumptionInLiter(totalFuelConsumption);
+                trajectoryInfoResponseDTO.setData(trajectoryInfoResponseItemDTO);
+            }
+            logger.debug("End process trajectory info query: {}", trajectoryInfoResponseDTO.toString());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new TrajectoryInfoResponseDTO(1, e.getMessage()), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(trajectoryInfoResponseDTO, HttpStatus.OK);
     }
 }

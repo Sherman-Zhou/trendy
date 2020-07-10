@@ -3,7 +3,9 @@ package com.joinbe.web.rest;
 import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.excel.BindingDataListener;
 import com.joinbe.common.util.ExcelUtil;
+import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.Vehicle;
+import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.EquipmentService;
@@ -23,6 +25,7 @@ import io.swagger.annotations.ApiParam;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
@@ -38,6 +41,7 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -57,6 +61,8 @@ public class BindingResource {
     private final EquipmentService equipmentService;
 
     private final MessageSource messageSource;
+    @Autowired
+    private RedissonEquipmentStore redissonEquipmentStore;
 
     public BindingResource(VehicleService vehicleService, DivisionService divisionService,
                            EquipmentService equipmentService, MessageSource messageSource) {
@@ -114,7 +120,14 @@ public class BindingResource {
     @ApiOperation("连通测试")
     public ResponseEntity<String> connTesting(@PathVariable @ApiParam(value = "设备主键", required = true)  Long equipmentId) {
         log.debug("Connection testing with equipment: {}", equipmentId); //TODO: to implement...
-        return ResponseEntity.ok().body("Successful");
+        Optional<EquipmentDTO> equipmentDto = equipmentService.findOne(equipmentId);
+        if(equipmentDto.isPresent()){
+            VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(equipmentDto.get().getImei());
+            if(!VehicleStatusEnum.UNKNOWN.equals(currentDeviceStatus)){
+                return ResponseEntity.ok().body("Successful");
+            }
+        }
+        return ResponseEntity.ok().body("Device is offline");
     }
 
     @GetMapping("/binding/user/divisions")

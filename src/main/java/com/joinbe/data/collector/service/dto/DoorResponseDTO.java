@@ -1,8 +1,5 @@
 package com.joinbe.data.collector.service.dto;
 
-import com.joinbe.data.collector.netty.protocol.message.DoorProtocol;
-import com.joinbe.service.dto.DoorResponseItemDTO;
-
 import java.io.Serializable;
 
 public class DoorResponseDTO extends ResponseDTO implements Serializable {

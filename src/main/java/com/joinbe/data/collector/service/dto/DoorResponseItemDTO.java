@@ -1,4 +1,4 @@
-package com.joinbe.service.dto;
+package com.joinbe.data.collector.service.dto;
 
 import cn.hutool.core.util.ReflectUtil;
 import com.joinbe.data.collector.netty.protocol.annotation.DataOrder;

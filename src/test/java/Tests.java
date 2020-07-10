@@ -3,22 +3,29 @@ import com.joinbe.config.Constants;
 import org.junit.Test;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.Arrays;
+import java.util.Date;
 
 public class Tests {
 
 
     @Test
     public void today() {
-        LocalDate today = LocalDate.now();
+        /*LocalDate today = LocalDate.now();
         System.out.println(today);
         String str = "A,640000016DA85401";
 
         String[] split = str.split(",");
-        System.out.println(split[1]);
+        System.out.println(split[1]);*/
+
+        Long now = System.currentTimeMillis();
+        Long daysAgo = new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24).getTime();
+        System.out.println(now);
+        System.out.println(daysAgo);
     }
 
     @Test

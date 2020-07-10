@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import java.util.Date;
 
-public class TrajectoryReq {
+public class TrajectoryInfoReq {
 
     /**
      * 车牌号
@@ -34,20 +34,6 @@ public class TrajectoryReq {
     @NotNull(message = "end date cant not be empty")
     private Date endDateFrom;
 
-    /**
-     * 页序号
-     */
-    @ApiModelProperty(value = "页序号")
-    @NotNull(message = "页序号不能为空")
-    @Min(value = 0, message = "页序号要大于0")
-    private Integer pageNum;
-    /**
-     * 每页显示记录数
-     */
-    @ApiModelProperty(value = "每页显示记录数")
-    @NotNull(message = "每页显示记录数不能为空")
-    @Min(value = 1, message = "每页显示记录数要大于1")
-    private Integer pageSize;
 
     public String getPlateNumber() {
         return plateNumber;
@@ -73,30 +59,12 @@ public class TrajectoryReq {
         this.endDateFrom = endDateFrom;
     }
 
-    public Integer getPageNum() {
-        return pageNum;
-    }
-
-    public void setPageNum(Integer pageNum) {
-        this.pageNum = pageNum;
-    }
-
-    public Integer getPageSize() {
-        return pageSize;
-    }
-
-    public void setPageSize(Integer pageSize) {
-        this.pageSize = pageSize;
-    }
-
     @Override
     public String toString() {
-        return "TrajectoryReq{" +
+        return "TrajectoryInfoReq{" +
             "plateNumber='" + plateNumber + '\'' +
             ", startDateFrom=" + startDateFrom +
             ", endDateFrom=" + endDateFrom +
-            ", pageNum=" + pageNum +
-            ", pageSize=" + pageSize +
             '}';
     }
 }
