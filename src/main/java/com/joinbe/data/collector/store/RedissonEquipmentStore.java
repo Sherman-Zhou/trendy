@@ -5,6 +5,7 @@ import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.dto.ResponseDTO;
 import com.joinbe.domain.enumeration.IbuttonStatusEnum;
+import com.joinbe.domain.enumeration.VehicleDoorStatusEnum;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RAtomicLong;
@@ -46,6 +47,9 @@ public class RedissonEquipmentStore {
     //Ibutton状态相关
     private static final String DEVICE_REAL_TIME_IBUTTON_STATUS_KEY = "DEVICE_ID_IBUTTON_STATUS_KEY";
     private static final String DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX = "DEVICE_ID|IBUTTON_STATUS:";
+    //Door状态相关
+    private static final String DEVICE_REAL_TIME_DOOR_STATUS_KEY = "DEVICE_ID_DOOR_STATUS_KEY";
+    private static final String DEVICE_REAL_TIME_DOOR_STATUS_KEY_PREFIX = "DEVICE_ID_DOOR:";
 
     private final RedissonClient redissonClient;
 
@@ -268,6 +272,30 @@ public class RedissonEquipmentStore {
         log.debug("last trajectoryId in redis for deviceId {}:{}", deviceId, trajectoryId);
         return trajectoryId;
     }
+
+    /**
+     * save real-time status
+     * @param deviceId
+     * @param status: OPEN/CLOSE/UNKNOWN
+     */
+    public void putInRedisForDoorStatus(String deviceId, VehicleDoorStatusEnum status) {
+        RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_DOOR_STATUS_KEY);
+        deviceServerMap.put(DEVICE_REAL_TIME_DOOR_STATUS_KEY_PREFIX + deviceId, status.getCode());
+    }
+
+    /**
+     * Get real time status
+     * @param deviceId
+     * @return
+     */
+    public VehicleDoorStatusEnum getDeviceDoorStatus(String deviceId) {
+        RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_DOOR_STATUS_KEY);
+        String status = deviceServerMap.get(DEVICE_REAL_TIME_DOOR_STATUS_KEY_PREFIX + deviceId);
+        log.debug("Door status in redis for deviceId {}:{}", deviceId, status);
+        return VehicleDoorStatusEnum.getByCode(status);
+    }
+
+
 
     /**
      * @return

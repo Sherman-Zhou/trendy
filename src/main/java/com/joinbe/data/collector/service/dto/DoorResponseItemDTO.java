@@ -1,12 +1,6 @@
 package com.joinbe.data.collector.service.dto;
 
-import cn.hutool.core.util.ReflectUtil;
-import com.joinbe.data.collector.netty.protocol.annotation.DataOrder;
-import com.joinbe.data.collector.netty.protocol.message.ProtocolMessage;
 import io.swagger.annotations.ApiModelProperty;
-
-import java.lang.reflect.Field;
-import java.util.List;
 
 public class DoorResponseItemDTO {
 
@@ -19,7 +13,7 @@ public class DoorResponseItemDTO {
     @ApiModelProperty(value = "锁的状态码, 1:打开状态; 0: 关闭状态")
     private Integer mode;
 
-    @ApiModelProperty(value = "锁的状态, OPEN:打开状态; CLOSE: 关闭状态")
+    @ApiModelProperty(value = "锁的状态, OPEN:打开状态; CLOSE: 关闭状态; UNKNOWN: 未知状态")
     private String modeStatus;
 
     @ApiModelProperty(value = "设备的imei")

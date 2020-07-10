@@ -3,10 +3,10 @@ package com.joinbe.data.collector.service;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventIDEnum;
 import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
-import com.joinbe.data.collector.service.dto.ResponseDTO;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.IbuttonStatusEnum;
+import com.joinbe.domain.enumeration.VehicleDoorStatusEnum;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import com.joinbe.repository.EquipmentFaultRepository;
 import com.joinbe.repository.EquipmentOperationRecordRepository;
@@ -16,8 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +56,7 @@ public class DataCollectService {
         }
         //处理event
         handleEvent(msg, equipment.get());
+        handleInputStatus(msg);
         //之前状态
         VehicleStatusEnum previousDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
         //状态处理
@@ -66,6 +65,12 @@ public class DataCollectService {
         VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
 
         log.debug("DeviceId: {}, previousDeviceStatus: {},  currentDeviceStatus: {}",msg.getUnitId(), previousDeviceStatus.getCode(), currentDeviceStatus.getCode());
+
+        //更新车辆状态
+        if(previousDeviceStatus == null || !previousDeviceStatus.equals(currentDeviceStatus)){
+            boolean isRunning = VehicleStatusEnum.RUNNING.getCode().equals(currentDeviceStatus.getCode());
+            this.updateStatus(msg.getUnitId(),true,isRunning);
+        }
 
         String existTrajectoryId = redissonEquipmentStore.getDeviceTrajectory(msg.getUnitId());
         VehicleTrajectory existTrajectory = null;
@@ -124,6 +129,22 @@ public class DataCollectService {
         }
         if(newVehicleTrajectory != null){
             vehicleTrajectoryRepository.save(newVehicleTrajectory);
+        }
+    }
+
+    /**
+     * handle door status
+     * @param msg
+     */
+    private void handleInputStatus(PositionProtocol msg) {
+        Integer inputStatus = msg.getInputStatus();
+        if(msg == null ||inputStatus == null){
+            return;
+        }
+        if(inputStatus == 2 || inputStatus == 3 || inputStatus == 7){
+            redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.OPEN);
+        }else{
+            redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.CLOSE);
         }
     }
 
@@ -253,5 +274,21 @@ public class DataCollectService {
             return;
         }
         equipmentFaultRepository.save(equipmentFault);
+    }
+
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+    public void updateStatus(String deviceNo, boolean isOnLine, boolean isMoving) {
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(deviceNo);
+        if (!equipment.isPresent()) {
+            log.warn("Refused to update status, equipment not maintained yet, imei: {}", deviceNo);
+            return;
+        } else if (equipment.get().getVehicle() == null) {
+            log.warn("Refused to update status, vehicle not bound yet, imei: {}", deviceNo);
+            return;
+        }
+        Equipment ept = equipment.get();
+        ept.setOnline(isOnLine);
+        ept.getVehicle().setIsMoving(isMoving);
+        equipmentRepository.save(ept);
     }
 }

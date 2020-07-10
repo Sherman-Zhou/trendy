@@ -73,7 +73,7 @@ public class Equipment extends AbstractAuditingEntity {
     @JsonIgnoreProperties("vehicles")
     private Division division;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(unique = true)
     private Vehicle vehicle;
 

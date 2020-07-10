@@ -9,6 +9,7 @@ import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.enumeration.IbuttonStatusEnum;
+import com.joinbe.domain.enumeration.VehicleDoorStatusEnum;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import com.joinbe.data.collector.service.dto.DoorResponseItemDTO;
 import io.netty.channel.Channel;
@@ -91,6 +92,16 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
         //Ibutton状态设置为未知
         redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN,null);
+        //锁的状态设置为未知
+        redissonEquipmentStore.putInRedisForDoorStatus(deviceNo, VehicleDoorStatusEnum.UNKNOWN);
+        //更新设备的状态为离线，车辆的行驶状态为未知
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                dataCollectService.updateStatus(deviceNo, false, false);
+            }
+        });
+
         super.channelUnregistered(ctx);
     }
 

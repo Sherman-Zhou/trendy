@@ -48,7 +48,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/external/equipment")
@@ -475,6 +474,7 @@ public class EquipmentExtController {
         return deferredResult;
     }
 
+
     /**
      *
      * @param lockVehicleReq
@@ -483,41 +483,27 @@ public class EquipmentExtController {
      */
     @ApiOperation("根据车牌号查询锁的状态")
     @PostMapping("/queryLock")
-    public DeferredResult<ResponseEntity<ResponseDTO>> queryLock(@RequestBody @Valid LockVehicleQueryReq lockVehicleReq, BindingResult bindingResult) {
-        ResponseEntity<DoorResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new DoorResponseDTO(1, "Query Lock time out, maybe device is disconnecting, please try later, vehicle: " + lockVehicleReq.getPlateNumber()), HttpStatus.OK);
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> queryLock(@RequestBody @Valid LockVehicleQueryReq lockVehicleReq, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
-            logger.warn("In /api/equipment/queryLock validate error: {}", message);
-            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
-            return deferredResult;
-        }
-        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(lockVehicleReq.getPlateNumber());
-        String deviceId;
-        if(equipment.isPresent()){
-            deviceId = equipment.get().getImei();
-        }else{
-            String message = "No binding device found for the plate number : " + lockVehicleReq.getPlateNumber();
-            logger.debug(message);
-            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
-            return deferredResult;
+            logger.warn("In /api/external/equipment/queryLock validate error: {}", message);
+            return new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK);
         }
 
-        HashMap<String, String> params = new HashMap<>(8);
-        Cmd cmd = factory.createInstance(EventEnum.DOOR_QRY.getEvent());
-        if (cmd == null) {
-            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
-            return deferredResult;
+        logger.debug("REST request to query lock status : {}", lockVehicleReq.toString());
+        DoorResponseDTO doorResponseDTO = new DoorResponseDTO(0, "success");
+        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(lockVehicleReq.getPlateNumber());
+        if(equipment.isPresent()){
+            DoorResponseItemDTO doorResponseItemDTO = new DoorResponseItemDTO();
+            doorResponseItemDTO.setImei(equipment.get().getImei());
+            VehicleDoorStatusEnum vehicleDoorStatusEnum = redissonEquipmentStore.getDeviceDoorStatus(equipment.get().getImei());
+            doorResponseItemDTO.setModeStatus(vehicleDoorStatusEnum != null ? vehicleDoorStatusEnum.getCode() : VehicleDoorStatusEnum.UNKNOWN.getCode());
+            doorResponseDTO.setData(doorResponseItemDTO);
+        }else{
+            doorResponseDTO.setMessage("No binding device found for the plate number: " + lockVehicleReq.getPlateNumber() );
         }
-        String doorStr = cmd.initCmd(params);
-        logger.debug("REST request for query lock/unlock from app, command: {}", doorStr);
-        serverHandler.sendCommonQueryMessage(deviceId, doorStr, EventEnum.DOOR, deferredResult);
-        deferredResult.onTimeout(() -> {
-            //remove from local store if timeout
-            logger.warn("App query Lock time out, maybe device is disconnecting, device: {}", deviceId);
-            LocalEquipmentStroe.get(deviceId, EventEnum.DOOR);
-        });
-        return deferredResult;
+        return new ResponseEntity<>(doorResponseDTO, HttpStatus.OK);
     }
 
     /**
