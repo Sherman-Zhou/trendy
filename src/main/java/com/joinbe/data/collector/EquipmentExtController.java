@@ -543,8 +543,8 @@ public class EquipmentExtController {
             if (StringUtils.isNotBlank(trajectoryInfoReq.getPlateNumber())) {
                 queryParams.and(new Filter("vehicleTrajectory.vehicle.licensePlateNumber", Filter.Operator.eq, trajectoryInfoReq.getPlateNumber()));
             }
-            if (trajectoryInfoReq.getStartDateFrom() != null && trajectoryInfoReq.getEndDateFrom() != null) {
-                queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(trajectoryInfoReq.getStartDateFrom(), trajectoryInfoReq.getEndDateFrom())));
+            if (trajectoryInfoReq.getStartDate() != null && trajectoryInfoReq.getEndDate() != null) {
+                queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(trajectoryInfoReq.getStartDate(), trajectoryInfoReq.getEndDate())));
             }
 
             Specification<VehicleTrajectoryDetails> specification = Specification.where(queryParams);
