@@ -1,6 +1,5 @@
 package com.joinbe.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.EquipmentStatus;
 
 import javax.persistence.*;
@@ -68,10 +67,6 @@ public class Equipment extends AbstractAuditingEntity {
 
     @Column(name = "is_online")
     private Boolean isOnline;
-
-    @ManyToOne
-    @JsonIgnoreProperties("vehicles")
-    private Division division;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(unique = true)
@@ -193,13 +188,6 @@ public class Equipment extends AbstractAuditingEntity {
         return this;
     }
 
-    public Division getDivision() {
-        return division;
-    }
-
-    public void setDivision(Division division) {
-        this.division = division;
-    }
 
     public Equipment addTrajectories(VehicleTrajectory vehicleTrajectory) {
         this.trajectories.add(vehicleTrajectory);

@@ -97,6 +97,20 @@ public class BindingResource {
     }
 
     /**
+     * {@code GET  /binding/vehicle/:id/unbound} : get the "id" vehicle.
+     *
+     * @param id the id of the vehicleDTO to unbound.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the vehicleDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/binding/vehicle/{id}/unbound")
+    @ApiOperation("车辆解绑设备")
+    public ResponseEntity<VehicleDetailsDTO> unbound(@PathVariable @ApiParam(value = "车辆主键", required = true) Long id) {
+        log.debug("REST request to get Vehicle : {}", id);
+        Optional<VehicleDetailsDTO> vehicleDTO = vehicleService.unbound(id);
+        return ResponseUtil.wrapOrNotFound(vehicleDTO);
+    }
+
+    /**
      * {@code Post  /binding} :bind vehicle and equipment.
      *
      * @param vm the id of the vehicle and equipment for binding.

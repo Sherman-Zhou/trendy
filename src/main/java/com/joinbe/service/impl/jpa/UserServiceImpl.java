@@ -111,7 +111,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> requestPasswordReset(String mail) {
         return userRepository.findOneByEmailIgnoreCaseAndStatusNot(mail, RecordStatus.DELETED)
-            .filter(User::getActivated)
+            .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 user.setResetKey(RandomUtil.generateResetKey());
                 user.setResetDate(Instant.now());

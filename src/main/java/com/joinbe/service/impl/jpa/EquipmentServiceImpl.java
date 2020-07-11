@@ -7,7 +7,6 @@ import com.joinbe.domain.Division;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.EquipmentStatus;
-import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.DivisionRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.service.EquipmentService;
@@ -76,6 +75,7 @@ public class EquipmentServiceImpl implements EquipmentService {
     public Page<EquipmentDTO> findAll(Pageable pageable, EquipmentVM vm) {
         log.debug("Request to get all Equipment");
         QueryParams<Equipment> queryParams = new QueryParams<>();
+        queryParams.and("status", Filter.Operator.ne, EquipmentStatus.DELETED);
         if (StringUtils.isNotEmpty(vm.getIdentifyNumber())) {
             queryParams.and("identifyNumber", Filter.Operator.like, vm.getIdentifyNumber());
         }
@@ -166,22 +166,22 @@ public class EquipmentServiceImpl implements EquipmentService {
                 createResult("equipment.upload.equipmentId.exists", equipmentData.getRowIdx(), false, response.getErrors());
                 hasError = true;
             }
-            Optional<Division> divisionOptional = divisionRepository.findByNameAndStatus(equipmentData.getDivName(), RecordStatus.ACTIVE);
-            if (divisionOptional.isPresent()) {
-                List<Division> orgs = divisionOptional.get().getChildren().stream()
-                    .filter(division -> equipmentData.getOrgName().equalsIgnoreCase(division.getName()))
-                    .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
-                    .collect(Collectors.toList());
-                if (orgs.isEmpty()) {
-                    createResult("equipment.upload.division.not.exists", equipmentData.getRowIdx(), false, response.getErrors());
-                    hasError = true;
-                } else {
-                    org = orgs.get(0);
-                }
-            } else {
-                createResult("equipment.upload.division.not.exists", equipmentData.getRowIdx(), false, response.getErrors());
-                hasError = true;
-            }
+//            Optional<Division> divisionOptional = divisionRepository.findByNameAndStatus(equipmentData.getDivName(), RecordStatus.ACTIVE);
+//            if (divisionOptional.isPresent()) {
+//                List<Division> orgs = divisionOptional.get().getChildren().stream()
+//                    .filter(division -> equipmentData.getOrgName().equalsIgnoreCase(division.getName()))
+//                    .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+//                    .collect(Collectors.toList());
+//                if (orgs.isEmpty()) {
+//                    createResult("equipment.upload.division.not.exists", equipmentData.getRowIdx(), false, response.getErrors());
+//                    hasError = true;
+//                } else {
+//                    org = orgs.get(0);
+//                }
+//            } else {
+//                createResult("equipment.upload.division.not.exists", equipmentData.getRowIdx(), false, response.getErrors());
+//                hasError = true;
+//            }
             if (!hasError) {
                 // createResult("excel.upload.success", equipmentData.getRowIdx(), true, results);
                 Equipment equipment = new Equipment();
@@ -192,7 +192,7 @@ public class EquipmentServiceImpl implements EquipmentService {
                 equipment.setRemark(equipmentData.getRemark());
                 equipment.setOnline(false);
                 equipment.setStatus(EquipmentStatus.UNBOUND);
-                equipment.setDivision(org);
+
                 equipments.add(equipment);
             } else {
                 response.successToError();

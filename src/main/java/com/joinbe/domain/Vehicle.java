@@ -31,6 +31,20 @@ public class Vehicle extends AbstractAuditingEntity {
     private String licensePlateNumber;
 
     /**
+     * 车牌
+     */
+    @Size(max = 20)
+    @Column(name = "license_plate_number_cn", length = 20)
+    private String licensePlateNumberCn;
+
+    /**
+     * 车牌
+     */
+    @Size(max = 20)
+    @Column(name = "license_plate_number_jp", length = 20)
+    private String licensePlateNumberJp;
+
+    /**
      * 车架号
      */
     @Size(max = 50)
@@ -45,11 +59,41 @@ public class Vehicle extends AbstractAuditingEntity {
     private String brand;
 
     /**
+     * 品牌
+     */
+    @Size(max = 50)
+    @Column(name = "brand_cn", length = 50)
+    private String brandCn;
+
+
+    /**
+     * 品牌
+     */
+    @Size(max = 50)
+    @Column(name = "brand_jp", length = 50)
+    private String brandJp;
+
+
+    /**
      * 名称
      */
     @Size(max = 50)
     @Column(name = "name", length = 50)
     private String name;
+
+    /**
+     * 名称
+     */
+    @Size(max = 50)
+    @Column(name = "name_cn", length = 50)
+    private String nameCn;
+
+    /**
+     * 名称
+     */
+    @Size(max = 50)
+    @Column(name = "name_jp", length = 50)
+    private String nameJp;
 
     /**
      * 车型
@@ -59,11 +103,39 @@ public class Vehicle extends AbstractAuditingEntity {
     private String type;
 
     /**
+     * 车型
+     */
+    @Size(max = 50)
+    @Column(name = "type_cn", length = 50)
+    private String typeCn;
+
+    /**
+     * 车型
+     */
+    @Size(max = 50)
+    @Column(name = "type_jp", length = 50)
+    private String typeJp;
+
+    /**
      * 款式
      */
     @Size(max = 20)
     @Column(name = "style", length = 20)
     private String style;
+
+    /**
+     * 款式
+     */
+    @Size(max = 20)
+    @Column(name = "style_cn", length = 20)
+    private String styleCn;
+
+    /**
+     * 款式
+     */
+    @Size(max = 20)
+    @Column(name = "style_jp", length = 20)
+    private String styleJp;
 
     /**
      * 年份
@@ -105,6 +177,20 @@ public class Vehicle extends AbstractAuditingEntity {
     private String contactName;
 
     /**
+     * 负责人
+     */
+    @Size(max = 20)
+    @Column(name = "contact_name_cn", length = 20)
+    private String contactNameCn;
+
+    /**
+     * 负责人
+     */
+    @Size(max = 20)
+    @Column(name = "contact_name_jp", length = 20)
+    private String contactNameJp;
+
+    /**
      * 联系电话
      */
     @Size(max = 20)
@@ -121,7 +207,7 @@ public class Vehicle extends AbstractAuditingEntity {
     @Column(name = "is_moving")
     private Boolean isMoving;
 
-    @OneToOne(mappedBy = "vehicle")
+    @OneToOne(mappedBy = "vehicle", fetch = FetchType.LAZY)
     private Equipment equipment;
 
     @Size(max = 20)
@@ -361,6 +447,110 @@ public class Vehicle extends AbstractAuditingEntity {
     public Vehicle division(Division division) {
         this.division = division;
         return this;
+    }
+
+    public String getLicensePlateNumberCn() {
+        return licensePlateNumberCn;
+    }
+
+    public void setLicensePlateNumberCn(String licensePlateNumberCn) {
+        this.licensePlateNumberCn = licensePlateNumberCn;
+    }
+
+    public String getLicensePlateNumberJp() {
+        return licensePlateNumberJp;
+    }
+
+    public void setLicensePlateNumberJp(String licensePlateNumberJp) {
+        this.licensePlateNumberJp = licensePlateNumberJp;
+    }
+
+    public String getBrandCn() {
+        return brandCn;
+    }
+
+    public void setBrandCn(String brandCn) {
+        this.brandCn = brandCn;
+    }
+
+    public String getBrandJp() {
+        return brandJp;
+    }
+
+    public void setBrandJp(String brandJp) {
+        this.brandJp = brandJp;
+    }
+
+    public String getNameCn() {
+        return nameCn;
+    }
+
+    public void setNameCn(String nameCn) {
+        this.nameCn = nameCn;
+    }
+
+    public String getNameJp() {
+        return nameJp;
+    }
+
+    public void setNameJp(String nameJp) {
+        this.nameJp = nameJp;
+    }
+
+    public String getTypeCn() {
+        return typeCn;
+    }
+
+    public void setTypeCn(String typeCn) {
+        this.typeCn = typeCn;
+    }
+
+    public String getTypeJp() {
+        return typeJp;
+    }
+
+    public void setTypeJp(String typeJp) {
+        this.typeJp = typeJp;
+    }
+
+    public String getStyleCn() {
+        return styleCn;
+    }
+
+    public void setStyleCn(String styleCn) {
+        this.styleCn = styleCn;
+    }
+
+    public String getStyleJp() {
+        return styleJp;
+    }
+
+    public void setStyleJp(String styleJp) {
+        this.styleJp = styleJp;
+    }
+
+    public String getContactNameCn() {
+        return contactNameCn;
+    }
+
+    public void setContactNameCn(String contactNameCn) {
+        this.contactNameCn = contactNameCn;
+    }
+
+    public String getContactNameJp() {
+        return contactNameJp;
+    }
+
+    public void setContactNameJp(String contactNameJp) {
+        this.contactNameJp = contactNameJp;
+    }
+
+    public Boolean getMoving() {
+        return isMoving;
+    }
+
+    public void setMoving(Boolean moving) {
+        isMoving = moving;
     }
 
     public Boolean getIsMoving() {

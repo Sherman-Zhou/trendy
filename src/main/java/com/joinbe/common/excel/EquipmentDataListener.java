@@ -68,17 +68,17 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
             recordError(message, rowIdx);
             hasError = true;
         }
-        if (StringUtils.isBlank(data.getOrgName())) {
-
-            String message = messageSource.getMessage("equipment.upload.division.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
-            recordError(message, rowIdx);
-            hasError = true;
-        }
-        if (StringUtils.isBlank(data.getDivName())) {
-            String message = messageSource.getMessage("equipment.upload.division.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
-            recordError(message, rowIdx);
-            hasError = true;
-        }
+//        if (StringUtils.isBlank(data.getOrgName())) {
+//
+//            String message = messageSource.getMessage("equipment.upload.division.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+//            recordError(message, rowIdx);
+//            hasError = true;
+//        }
+//        if (StringUtils.isBlank(data.getDivName())) {
+//            String message = messageSource.getMessage("equipment.upload.division.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+//            recordError(message, rowIdx);
+//            hasError = true;
+//        }
 
         data.setRowIdx(rowIdx);
         response.increaseTotalRowsNum();

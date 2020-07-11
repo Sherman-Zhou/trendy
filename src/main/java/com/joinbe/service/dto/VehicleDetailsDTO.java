@@ -116,6 +116,12 @@ public class VehicleDetailsDTO implements Serializable {
     @ApiModelProperty(value = "是否已绑定")
     private Boolean bounded;
 
+    @ApiModelProperty(value = "是否在线")
+    private Boolean isOnline;
+
+    @ApiModelProperty(value = "设备ID")
+    private String identifyNumber;
+
     @Size(max = 1)
     @Pattern(regexp = "[AD]")
     @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除", required = true)

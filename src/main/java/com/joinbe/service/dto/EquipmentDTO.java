@@ -63,16 +63,18 @@ public class EquipmentDTO implements Serializable {
     @Pattern(regexp = "[BUD]")
     private String status;
 
+    @ApiModelProperty(value = "是否在线")
+    private Boolean isOnline;
 
     @Size(max = 20)
-    @ApiModelProperty(value = "创建者",hidden = true )
+    @ApiModelProperty(value = "创建者", hidden = true)
     private String createdBy;
 
-    @ApiModelProperty(value = "创建时间",hidden = true )
+    @ApiModelProperty(value = "创建时间", hidden = true)
     private Instant createdDate;
 
     @Size(max = 20)
-    @ApiModelProperty(value = "更新者",hidden = true )
+    @ApiModelProperty(value = "更新者", hidden = true)
     private String lastModifiedBy;
 
     @ApiModelProperty(value = "更新时间",hidden = true )

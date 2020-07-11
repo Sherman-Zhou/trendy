@@ -4,7 +4,6 @@ import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.EquipmentFault;
-import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.repository.EquipmentFaultRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentFaultService;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Predicate;
-import javax.swing.text.html.Option;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
@@ -124,6 +122,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
         if (StringUtils.isNotEmpty(vm.getEquipmentIdNum())) {
 
             Specification<EquipmentFault> itemSpecification = (Specification<EquipmentFault>) (root, criteriaQuery, criteriaBuilder) -> {
+
                 Predicate identifyNumberPredicate = criteriaBuilder.like(root.get("equipment").get("identifyNumber"), "%" + vm.getEquipmentIdNum().trim() + "%");
                 Predicate createdByPredicate = criteriaBuilder.like(root.get("alertContent"), "%" + vm.getEquipmentIdNum().trim() + "%");
 
@@ -131,6 +130,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
             };
             specification = specification.and(itemSpecification);
         }
+
         return equipmentFaultRepository.findAll(specification, pageable)
             .map(EquipmentFaultService::toDto);
     }

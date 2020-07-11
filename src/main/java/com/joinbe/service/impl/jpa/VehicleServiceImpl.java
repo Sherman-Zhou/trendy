@@ -33,6 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.JoinType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +61,7 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final ApplicationProperties applicationProperties;
 
-    private ObjectMapper mapper;
+    private final ObjectMapper mapper;
 
     public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
                               DivisionRepository divisionRepository, MessageSource messageSource,
@@ -147,7 +148,7 @@ public class VehicleServiceImpl implements VehicleService {
                 queryParams.and("equipment.identifyNumber", Filter.Operator.like, bindingVM.getIdentifyNumber());
             }
         }
-
+        queryParams.addJoihFetch("equipment", JoinType.LEFT);
 
         return vehicleRepository.findAll(queryParams, pageable)
             .map(VehicleService::toDto);
@@ -192,6 +193,22 @@ public class VehicleServiceImpl implements VehicleService {
         equipment.setVehicle(vehicle);
         equipment.setStatus(EquipmentStatus.BOUND);
         vehicle.setBounded(true);
+    }
+
+    @Override
+    public Optional<VehicleDetailsDTO> unbound(Long vehicleId) {
+        return vehicleRepository.findById(vehicleId)
+            .map(vehicle -> {
+                vehicle.setBounded(false);
+                Equipment equipment = vehicle.getEquipment();
+                if (equipment != null) {
+                    equipment.setVehicle(null);
+                    equipment.setStatus(EquipmentStatus.UNBOUND);
+                } else {
+                    log.warn("no equipment is found for vehiche: {}", vehicleId);
+                }
+                return VehicleService.toDto(vehicle);
+            });
     }
 
     /**

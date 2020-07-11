@@ -30,15 +30,15 @@ public class EquipmentData {
      */
     private String remark;
 
-    /**
-     * 組織
-     */
-    private String orgName;
-
-    /**
-     * 区域
-     */
-    private String divName;
+//    /**
+//     * 組織
+//     */
+//    private String orgName;
+//
+//    /**
+//     * 区域
+//     */
+//    private String divName;
 
     private Integer rowIdx;
 

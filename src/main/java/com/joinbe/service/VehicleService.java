@@ -3,6 +3,7 @@ package com.joinbe.service;
 import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Division;
+import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.UploadResponse;
@@ -28,6 +29,12 @@ public interface VehicleService {
         SecurityUtils.checkDataPermission(division);
         dto.setDivisionId(division.getId());
         dto.setOrgName(division.getName());
+        Equipment equipment = vehicle.getEquipment();
+        if (equipment != null) {
+            dto.setIsOnline(vehicle.getEquipment().getOnline());
+            dto.setIdentifyNumber(equipment.getIdentifyNumber());
+        }
+
         if (division.getParent() != null) {
             dto.setDivName(division.getParent().getName());
         }
@@ -73,6 +80,8 @@ public interface VehicleService {
 
 
     void binding(EquipmentVehicleBindingVM vm);
+
+    Optional<VehicleDetailsDTO> unbound(Long vehicleId);
 
     /**
      * Delete the "id" vehicle.

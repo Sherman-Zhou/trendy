@@ -29,7 +29,9 @@ public class QueryParams<T> implements Specification<T> {
 
     private static final String ENCODING_UTF8 = "UTF-8";
 
-    private List<Filter> andFilters = new ArrayList<>();
+    private final List<Filter> andFilters = new ArrayList<>();
+
+    private final Map<String, JoinType> joinFetch = new HashMap<>();
 
     private boolean isDistinct = false;
 
@@ -43,6 +45,7 @@ public class QueryParams<T> implements Specification<T> {
 
     }
 
+
     public QueryParams(String params, List<Filter> additionalFilters) {
         if (StringUtils.isNotEmpty(params)) {
             toFilters(params);
@@ -55,6 +58,10 @@ public class QueryParams<T> implements Specification<T> {
 
     public void setDistinct(boolean distinct) {
         isDistinct = distinct;
+    }
+
+    public void addJoihFetch(String association, JoinType joinType) {
+        this.joinFetch.put(association, joinType);
     }
 
     private void toFilters(String params) {
@@ -214,6 +221,11 @@ public class QueryParams<T> implements Specification<T> {
     @Override
     public Predicate toPredicate(Root<T> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         query.distinct(this.isDistinct);
+        if (Long.class != query.getResultType()) {
+            joinFetch.forEach((key, joinType) -> {
+                root.fetch(key, joinType);
+            });
+        }
         Predicate restrictions = cb.conjunction();
         return cb.and(applySearchConditions(root, cb, restrictions));
     }
