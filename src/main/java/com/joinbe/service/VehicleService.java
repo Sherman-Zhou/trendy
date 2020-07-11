@@ -119,7 +119,7 @@ public interface VehicleService {
      */
     void delete(Long id);
 
-    List<VehicleSummaryDTO> findVehicleByDivisionId(Long divisionId);
+    List<VehicleSummaryDTO> findVehicleByDivisionId(String divisionId);
 
     void binding(UploadResponse response, List<BindingData> data);
 

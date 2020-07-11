@@ -243,7 +243,7 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
-    public List<VehicleSummaryDTO> findVehicleByDivisionId(Long divisionId) {
+    public List<VehicleSummaryDTO> findVehicleByDivisionId(String divisionId) {
         List<VehicleSummaryDTO> vehicles = vehicleRepository.findByShopIdAndStatus(divisionId, RecordStatus.ACTIVE)
             .stream().map(VehicleService::toSummaryDto).collect(Collectors.toList());
         return vehicles;

@@ -1,6 +1,8 @@
 package com.joinbe.config;
 
 import com.joinbe.security.AuthoritiesConstants;
+import com.joinbe.security.CustomAuthenticationConfigurer;
+import com.joinbe.security.CustomAuthenticationProvider;
 import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.jwt.JWTConfigurer;
 import com.joinbe.security.jwt.TokenProvider;
@@ -10,14 +12,17 @@ import com.joinbe.security.permission.PermissionFilterSecurityInterceptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.data.repository.query.SecurityEvaluationContextExtension;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
@@ -39,14 +44,22 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private final SecurityProblemSupport problemSupport;
 
+    private final UserDetailsService userDetailsService;
+
+    private final CustomAuthenticationProvider provider;
+
+
     public SecurityConfiguration(TokenProvider tokenProvider, RedissonTokenStore tokenStore, CorsFilter corsFilter,
-                                 SecurityProblemSupport problemSupport, CustomSecurityMetadataSource securityMetadataSource) {
+                                 SecurityProblemSupport problemSupport, CustomSecurityMetadataSource securityMetadataSource,
+                                 UserDetailsService userDetailsService, CustomAuthenticationProvider provider) {
         this.tokenProvider = tokenProvider;
         this.corsFilter = corsFilter;
         this.problemSupport = problemSupport;
         this.tokenStore = tokenStore;
         this.securityMetadataSource = securityMetadataSource;
+        this.userDetailsService = userDetailsService;
 
+        this.provider = provider;
     }
 
     @Bean
@@ -115,5 +128,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     private JWTConfigurer securityConfigurerAdapter() {
         return new JWTConfigurer(tokenProvider, tokenStore);
+    }
+
+    @Bean
+    public SecurityEvaluationContextExtension securityEvaluationContextExtension() {
+        return new SecurityEvaluationContextExtension();
+    }
+
+    @Bean
+    CustomAuthenticationConfigurer<AuthenticationManagerBuilder, UserDetailsService> customoAuthenticationConfigurer() {
+        return new CustomAuthenticationConfigurer<>(userDetailsService, provider, passwordEncoder());
     }
 }
