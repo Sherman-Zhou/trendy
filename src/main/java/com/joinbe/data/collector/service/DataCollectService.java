@@ -56,6 +56,7 @@ public class DataCollectService {
         }
         //处理event
         handleEvent(msg, equipment.get());
+        //处理锁的状态
         handleInputStatus(msg);
         //之前状态
         VehicleStatusEnum previousDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());

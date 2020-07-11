@@ -124,9 +124,15 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 channelIdAndDeviceIdMap.put(channel.id().asLongText(), deviceNo);
                 deviceIdAndChannelMap.put(deviceNo, channel);
                 redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
+                //更新设备的状态为在线，车辆的行驶状态为未知
+                channel.eventLoop().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        dataCollectService.updateStatus(deviceNo, true, false);
+                    }
+                });
             }
             //handle event
-
         }else{
             deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
             log.debug("query result, device:data {}:{}", deviceNo, msg.getData());
