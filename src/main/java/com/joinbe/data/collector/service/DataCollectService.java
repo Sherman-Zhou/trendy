@@ -69,6 +69,7 @@ public class DataCollectService {
 
         //更新车辆状态
         if(previousDeviceStatus == null || !previousDeviceStatus.equals(currentDeviceStatus)){
+            log.debug("Vehicle's status is changed, update status, deviceNo: {}", msg.getUnitId());
             boolean isRunning = VehicleStatusEnum.RUNNING.getCode().equals(currentDeviceStatus.getCode());
             this.updateStatus(msg.getUnitId(),true,isRunning);
         }

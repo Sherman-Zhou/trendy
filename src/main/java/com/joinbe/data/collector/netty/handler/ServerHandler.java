@@ -98,6 +98,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
         new Thread(new Runnable() {
             @Override
             public void run() {
+                log.debug("ChannelUnregistered, Device is offline, set status to offline, deviceNo: {}", deviceNo);
                 dataCollectService.updateStatus(deviceNo, false, false);
             }
         });
@@ -128,6 +129,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 channel.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
+                        log.debug("Get device's connection, set status to online, deviceNo: {}", deviceNo);
                         dataCollectService.updateStatus(deviceNo, true, false);
                     }
                 });
