@@ -6,7 +6,7 @@ import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.MailService;
 import com.joinbe.service.PermissionService;
-import com.joinbe.service.UserService;
+import com.joinbe.service.StaffService;
 import com.joinbe.service.dto.PasswordChangeDTO;
 import com.joinbe.service.dto.PermissionDTO;
 import com.joinbe.service.dto.UserAccountDTO;
@@ -53,15 +53,15 @@ public class AccountResource {
     private final Logger log = LoggerFactory.getLogger(AccountResource.class);
 
 
-    private final UserService userService;
+    private final StaffService staffService;
 
     private final MailService mailService;
 
     private final PermissionService permissionService;
 
-    public AccountResource(@Qualifier("JpaUserService") UserService userService, MailService mailService, PermissionService permissionService) {
+    public AccountResource(@Qualifier("JpaUserService") StaffService staffService, MailService mailService, PermissionService permissionService) {
 
-        this.userService = userService;
+        this.staffService = staffService;
         this.mailService = mailService;
         this.permissionService = permissionService;
     }
@@ -102,10 +102,11 @@ public class AccountResource {
     @GetMapping("/account")
     @ApiOperation("获取当前登陆用户信息")
     public UserDetailsDTO getAccount() {
-        return userService.getUserWithAuthorities()
+        return staffService.getUserWithAuthorities()
             .map(userDTO -> {
-                List<PermissionDTO> permissionAndMenu = userService.findAllUserPermissionsByLogin(userDTO.getLogin()).stream()
+                List<PermissionDTO> permissionAndMenu = staffService.findAllUserPermissionsByLogin(userDTO.getLogin()).stream()
                     .map(permissionService::toDto).collect(Collectors.toList());
+
                 Map<Long, List<PermissionDTO>> children = permissionAndMenu.stream()
                     .filter(menu -> (menu.getParentId() != null && !PermissionType.OPERATION.equals(menu.getPermissionType()))).
                         collect(Collectors.groupingBy(PermissionDTO::getParentId));
@@ -137,15 +138,15 @@ public class AccountResource {
     @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新用户姓名， 用户邮件， 用户语言，手机号码和 地址")
     public void saveAccount(@Valid @RequestBody UserAccountDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
-        Optional<Staff> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
+        Optional<Staff> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
             throw new EmailAlreadyUsedException();
         }
-        Optional<Staff> user = userService.findOneByLogin(userLogin);
+        Optional<Staff> user = staffService.findOneByLogin(userLogin);
         if (!user.isPresent()) {
             throw new AccountResourceException("User could not be found");
         }
-        userService.updateUser(userDTO.getName(), userDTO.getEmail(),
+        staffService.updateUser(userDTO.getName(), userDTO.getEmail(),
             userDTO.getLangKey(), userDTO.getAddress(), userDTO.getMobileNo());
     }
 
@@ -161,7 +162,7 @@ public class AccountResource {
         if (!checkPasswordLength(passwordChangeDto.getNewPassword())) {
             throw new InvalidPasswordException();
         }
-        userService.changePassword(passwordChangeDto.getCurrentPassword(), passwordChangeDto.getNewPassword());
+        staffService.changePassword(passwordChangeDto.getCurrentPassword(), passwordChangeDto.getNewPassword());
     }
 
     /**
@@ -175,10 +176,10 @@ public class AccountResource {
     public ResponseEntity<UserDetailsDTO> forgotPassword(@PathVariable @ApiParam(value = "用户登陆id", required = true) String login) {
         log.debug("REST request to get User {} email", login);
 
-        Optional<UserDetailsDTO> userDetailsDTO = userService.getUserWithAuthoritiesByLogin(login);
+        Optional<UserDetailsDTO> userDetailsDTO = staffService.getUserWithAuthoritiesByLogin(login);
 
         if (userDetailsDTO.isPresent()) {
-            Optional<Staff> user = userService.requestPasswordReset(userDetailsDTO.get().getEmail());
+            Optional<Staff> user = staffService.requestPasswordReset(userDetailsDTO.get().getEmail());
             mailService.sendPasswordResetMail(user.get());
         } else {
             // Pretend the request has been successful to prevent checking which emails really exist
@@ -220,7 +221,7 @@ public class AccountResource {
             throw new InvalidPasswordException();
         }
         Optional<Staff> user =
-            userService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey());
+            staffService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey());
 
         if (!user.isPresent()) {
             throw new AccountResourceException("No user was found for this reset key");
@@ -238,7 +239,7 @@ public class AccountResource {
     @ApiOperation("注册用户邮件")
     public void registerEmail(@Valid @RequestBody UserRegisterVM managedUserVM) {
 
-        Optional<Staff> userOptional = userService.registerUserEmail(managedUserVM);
+        Optional<Staff> userOptional = staffService.registerUserEmail(managedUserVM);
         if (userOptional.isPresent()) {
             Staff staff = userOptional.get();
             log.debug("user is registered with email: {}", staff.getEmail());
@@ -272,7 +273,7 @@ public class AccountResource {
     @PostMapping(path = "/account/change-email")
     @ApiOperation("修改绑定邮箱")
     public void changeEmail(@RequestBody ChangeEmailVM registerVM) {
-        Optional<Staff> userOptional = userService.changeUserEmail(registerVM);
+        Optional<Staff> userOptional = staffService.changeUserEmail(registerVM);
         userOptional.ifPresent(user -> {
             log.debug("user is changed email: {}", user.getEmail());
             mailService.sendEmailChangeEmail(user);

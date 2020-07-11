@@ -18,7 +18,7 @@ import java.util.Optional;
  * Spring Data JPA repository for the {@link Staff} entity.
  */
 @Repository
-public interface UserRepository extends JpaRepository<Staff, Long>, JpaSpecificationExecutor<Staff> {
+public interface StaffRepository extends JpaRepository<Staff, Long>, JpaSpecificationExecutor<Staff> {
 
     String USERS_BY_LOGIN_CACHE = "usersByLogin";
 
@@ -35,28 +35,32 @@ public interface UserRepository extends JpaRepository<Staff, Long>, JpaSpecifica
     Optional<Staff> findOneByLoginAndStatusNot(String login, RecordStatus status);
 
 
-    @EntityGraph(attributePaths = {"roles", "divisions"})
+    @EntityGraph(attributePaths = {"roles"})
     Optional<Staff> findOneWithRolesById(Long id);
 
-    @EntityGraph(attributePaths = {"roles", "divisions"})
+    @EntityGraph(attributePaths = {"cities", "shops"})
+    Optional<Staff> findOneWithShopsAndCitiesByLogin(String login);
+
+    @EntityGraph(attributePaths = {"roles"})
         //@Cacheable(cacheNames = USERS_BY_LOGIN_CACHE)
     Optional<Staff> findOneWithRolesByLogin(String login);
 
-    @EntityGraph(attributePaths = {"roles", "divisions"})
+    @EntityGraph(attributePaths = {"roles"})
         //@Cacheable(cacheNames = USERS_BY_EMAIL_CACHE)
     Optional<Staff> findOneWithRolesByEmailIgnoreCase(String email);
 
     Page<Staff> findAllByLoginNot(Pageable pageable, String login);
 
-    @EntityGraph(attributePaths = {"roles", "divisions"})
+    @EntityGraph(attributePaths = {"roles"})
     Optional<Staff> findOneWithRolesByLoginAndStatus(String login, RecordStatus recordStatus);
 
     @EntityGraph(attributePaths = {"divisions"})
     Optional<Staff> findOneWithDivisionsById(Long id);
 
+
     @Query("select user from Staff user join user.roles roles where roles.id =:roleId and user.status <> 'D'")
     List<Staff> findUsersByRoleId(@Param("roleId") Long roleId);
 
-    @EntityGraph(attributePaths = {"divisions"})
+    @EntityGraph(attributePaths = {"cities", "shops"})
     Optional<Staff> findOneWithDivisionsByLogin(String login);
 }

@@ -46,11 +46,13 @@ public class City implements Serializable {
 
 
     @Column(name = "parent_id", updatable = false, insertable = false)
-    private Long parentId;
+    private String parentId;
+
     @ManyToOne
     @JsonIgnoreProperties("divisions")
     @TableField(exist = false)
     private City parent;
+
     @OneToMany(mappedBy = "parent")
     @TableField(exist = false)
     private List<City> children = new ArrayList<>();
@@ -118,11 +120,11 @@ public class City implements Serializable {
         this.status = status;
     }
 
-    public Long getParentId() {
+    public String getParentId() {
         return parentId;
     }
 
-    public void setParentId(Long parentId) {
+    public void setParentId(String parentId) {
         this.parentId = parentId;
     }
 

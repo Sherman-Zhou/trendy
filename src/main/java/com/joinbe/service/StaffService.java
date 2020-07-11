@@ -15,7 +15,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserService {
+public interface StaffService {
     Optional<Staff> activateRegistration(String key);
 
     Optional<Staff> completePasswordReset(String newPassword, String key);
@@ -50,7 +50,11 @@ public interface UserService {
 
     Optional<UserDetailsDTO> getUserWithAuthorities();
 
-    List<RoleDTO> getRoles();
+    Optional<Staff> getUserWithShopsAndCities();
+
+    Optional<UserDetailsDTO> getSystemUserWithAuthorities();
+
+    List<RoleDTO> getRolesForMerchant();
 
     Optional<Staff> findOneByEmailIgnoreCase(String email);
 
@@ -58,10 +62,12 @@ public interface UserService {
 
     List<Permission> findAllUserPermissionsByLogin(String login);
 
-    UserDTO assignDivision(Long userId, List<Long> divisionIds);
+    UserDTO assignDivision(Long userId, List<String> divisionIds);
 
-    List<Long> findAllUserDivisionIds(Long userId);
+    UserDTO assignMerchant(Long userId, Long merchantId);
 
-    List<Long> findAllUserDivisionIds(String login);
+    List<String> findAllUserDivisionIds(Long userId);
+
+    List<String> findAllUserDivisionIds(String login);
 
 }

@@ -80,7 +80,7 @@ public class UserDTO implements Serializable {
     private List<Long> roleIds;
 
     @ApiModelProperty("部门id列表")
-    private List<Long> divisionIds;
+    private List<String> divisionIds;
 
     public UserDTO() {
     }

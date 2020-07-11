@@ -22,6 +22,9 @@ public interface PermissionRepository extends JpaRepository<Permission, Long>,
     @Query("select distinct perm from Staff u join u.roles r join r.permissions perm where u.login =:login and r.status ='A' and perm.status ='A'")
     List<Permission> findAllByUserLogin(@Param("login") String login);
 
+    @Query("select distinct perm from SystemUser u join u.role r join r.permissions perm where u.login =:login and r.status ='A' and perm.status ='A'")
+    List<Permission> findAllBySystemUserLogin(@Param("login") String login);
+
     @EntityGraph(attributePaths = "children")
     List<Permission> findAllByStatus(RecordStatus status);
 

@@ -1,6 +1,5 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.service.DivisionService;
 import com.joinbe.service.VehicleService;
 import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
@@ -33,12 +32,10 @@ public class VehicleResource {
     private static final String ENTITY_NAME = "vehicle";
     private final Logger log = LoggerFactory.getLogger(VehicleResource.class);
     private final VehicleService vehicleService;
-    private final DivisionService divisionService;
 
 
-    public VehicleResource(VehicleService vehicleService, DivisionService divisionService) {
+    public VehicleResource(VehicleService vehicleService) {
         this.vehicleService = vehicleService;
-        this.divisionService = divisionService;
     }
 
 

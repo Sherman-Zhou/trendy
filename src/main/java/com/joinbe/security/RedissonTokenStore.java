@@ -51,13 +51,13 @@ public class RedissonTokenStore {
         tokenMap.remove(TOKEN_KEY_PREFIX + login);
     }
 
-    public void storeUserDivision(String login, List<Long> divisionIds) {
-        RMapCache<String, List<Long>> divisionMap = redissonClient.getMapCache(DIVISION_KEY);
+    public void storeUserDivision(String login, List<String> divisionIds) {
+        RMapCache<String, List<String>> divisionMap = redissonClient.getMapCache(DIVISION_KEY);
         divisionMap.put(login, divisionIds);
     }
 
-    public List<Long> getUserDivisionIds(String login) {
-        RMapCache<String, List<Long>> divisionMap = redissonClient.getMapCache(DIVISION_KEY);
+    public List<String> getUserDivisionIds(String login) {
+        RMapCache<String, List<String>> divisionMap = redissonClient.getMapCache(DIVISION_KEY);
         return divisionMap.get(login);
     }
 

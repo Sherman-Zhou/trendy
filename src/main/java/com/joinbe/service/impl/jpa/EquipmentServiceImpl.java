@@ -3,11 +3,9 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.excel.EquipmentData;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
-import com.joinbe.domain.Division;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.EquipmentStatus;
-import com.joinbe.repository.DivisionRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
@@ -40,13 +38,12 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
 
-    private final DivisionRepository divisionRepository;
 
     private final MessageSource messageSource;
 
-    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, DivisionRepository divisionRepository, MessageSource messageSource) {
+    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, MessageSource messageSource) {
         this.equipmentRepository = equipmentRepository;
-        this.divisionRepository = divisionRepository;
+
         this.messageSource = messageSource;
     }
 
@@ -157,7 +154,7 @@ public class EquipmentServiceImpl implements EquipmentService {
 
         for (EquipmentData equipmentData : equipmentDataList) {
             boolean hasError = false;
-            Division org = null;
+
             if (equipmentRepository.findOneByImeiAndStatusNot(equipmentData.getImei(), EquipmentStatus.DELETED).isPresent()) {
                 createResult("equipment.upload.imei.exists", equipmentData.getRowIdx(), false, response.getErrors());
                 hasError = true;

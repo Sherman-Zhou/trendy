@@ -2,14 +2,15 @@ package com.joinbe.service.dto;
 
 import com.joinbe.domain.Role;
 import com.joinbe.domain.Staff;
+import com.joinbe.domain.SystemUser;
 import com.joinbe.domain.enumeration.RecordStatus;
-import com.joinbe.service.DivisionService;
 import com.joinbe.service.RoleService;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -70,10 +71,25 @@ public class UserDetailsDTO extends UserDTO {
         this.authorities = staff.getRoles().stream()
             .map(Role::getName)
             .collect(Collectors.toSet());
-        this.divisions = staff.getDivisions().stream()
-            .map(DivisionService::toDto)
-            .collect(Collectors.toSet());
+//        this.divisions = staff.getDivisions().stream()
+//            .map(DivisionService::toDto)
+//            .collect(Collectors.toSet());
     }
+
+    public UserDetailsDTO(SystemUser staff) {
+        this.setId(staff.getId());
+        this.setLogin(staff.getLogin());
+        this.setName(staff.getName());
+        this.setEmail(staff.getEmail());
+        this.setStatus(staff.getStatus() != null ? staff.getStatus().getCode() : null);
+        this.roles = new HashSet<>();
+        this.roles.add(RoleService.toDto(staff.getRole()));
+        this.authorities = this.roles.stream()
+            .map(RoleDTO::getName)
+            .collect(Collectors.toSet());
+
+    }
+
 
     public Boolean getActivated() {
         return RecordStatus.ACTIVE.getCode().equals(this.getStatus());

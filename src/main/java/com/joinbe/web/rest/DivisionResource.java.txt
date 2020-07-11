@@ -1,6 +1,5 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.service.DivisionService;
 import com.joinbe.service.dto.DivisionDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.DivisionVM;

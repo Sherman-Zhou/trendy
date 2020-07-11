@@ -6,7 +6,7 @@ import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.jwt.JWTFilter;
 import com.joinbe.security.jwt.TokenProvider;
-import com.joinbe.service.UserService;
+import com.joinbe.service.StaffService;
 import com.joinbe.web.rest.vm.LoginVM;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
@@ -42,16 +42,16 @@ public class UserJWTController {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
 
     private final RedissonTokenStore redissonTokenStore;
-    private final UserService userService;
+    private final StaffService staffService;
 
     public UserJWTController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder,
                              RedissonTokenStore redissonTokenStore,
-                             @Qualifier("JpaUserService") UserService userService) {
+                             @Qualifier("JpaUserService") StaffService staffService) {
         this.tokenProvider = tokenProvider;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.redissonTokenStore = redissonTokenStore;
 
-        this.userService = userService;
+        this.staffService = staffService;
     }
 
     @PostMapping("/authenticate")
@@ -59,7 +59,7 @@ public class UserJWTController {
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
         Optional<Staff> userOptional;
         if (new EmailValidator().isValid(loginVM.getUsername(), null)) {
-            userOptional = userService.findOneByEmailIgnoreCase(loginVM.getUsername());
+            userOptional = staffService.findOneByEmailIgnoreCase(loginVM.getUsername());
             if (userOptional.isPresent()) {
                 if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
                     JWTToken token = new JWTToken();
@@ -69,7 +69,7 @@ public class UserJWTController {
             }
         } else {
             String lowercaseLogin = loginVM.getUsername().toLowerCase(Locale.ENGLISH);
-            userOptional = userService.findOneByLogin(lowercaseLogin);
+            userOptional = staffService.findOneByLogin(lowercaseLogin);
             if (userOptional.isPresent()) {
                 if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
                     JWTToken token = new JWTToken();
@@ -89,7 +89,7 @@ public class UserJWTController {
         String login = userOptional.get().getLogin();
         redissonTokenStore.putInRedis(login, jwt);
 
-        List<Long> userDivisionIds = userService.findAllUserDivisionIds(login);
+        List<String> userDivisionIds = staffService.findAllUserDivisionIds(login);
         redissonTokenStore.storeUserDivision(login, userDivisionIds);
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, "Bearer " + jwt);

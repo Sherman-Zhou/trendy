@@ -10,7 +10,7 @@ import com.joinbe.domain.UserRole;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.mp.mapper.UserMapper;
 import com.joinbe.service.UserRoleService;
-import com.joinbe.service.UserService;
+import com.joinbe.service.StaffService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;

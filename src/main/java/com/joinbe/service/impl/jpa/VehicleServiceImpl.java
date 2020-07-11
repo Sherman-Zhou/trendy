@@ -6,7 +6,6 @@ import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.ApplicationProperties;
-import com.joinbe.domain.Division;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.EquipmentStatus;
@@ -294,18 +293,18 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public void syncVehicle() {
-            int fetchSize  = 9999 ;
-            Map<String, Division> divisionMap = new HashMap<>();
-            Division root = new Division();
-            root.setId(1L);
-            Map<String, String> urlParams = new HashMap<>();
-            urlParams.put("pagesize", String.valueOf(fetchSize));
-            ApplicationProperties.TrendyConfig trendyConfig = applicationProperties.getTrendy();
-            TrendyResponse response = restfulClient.getForObject(trendyConfig.getUrl() + trendyConfig.getVehiclePath(), TrendyResponse.class,urlParams);
-            if(response.getStatus() != HttpStatus.OK.value()) {
-                throw new BadRequestAlertException(response.getInfo(), "vehicle.sync", "vehicle.sync.error");
-            }
-           List<TrendyResponse.Car> cars =   response.getData().getList();
+        int fetchSize = 9999;
+//            Map<String, Division> divisionMap = new HashMap<>();
+//            Division root = new Division();
+//            root.setId(1L);
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("pagesize", String.valueOf(fetchSize));
+        ApplicationProperties.TrendyConfig trendyConfig = applicationProperties.getTrendy();
+        TrendyResponse response = restfulClient.getForObject(trendyConfig.getUrl() + trendyConfig.getVehiclePath(), TrendyResponse.class, urlParams);
+        if (response.getStatus() != HttpStatus.OK.value()) {
+            throw new BadRequestAlertException(response.getInfo(), "vehicle.sync", "vehicle.sync.error");
+        }
+        List<TrendyResponse.Car> cars = response.getData().getList();
         /*    for(TrendyResponse.Car car : cars) {
                 Division shop = null;
                 Division city = null;

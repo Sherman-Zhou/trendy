@@ -5,20 +5,18 @@ import com.joinbe.common.error.InvalidPasswordException;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.Constants;
-import com.joinbe.domain.Division;
-import com.joinbe.domain.Permission;
-import com.joinbe.domain.Role;
-import com.joinbe.domain.Staff;
+import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.domain.enumeration.Sex;
 import com.joinbe.repository.PermissionRepository;
 import com.joinbe.repository.RoleRepository;
-import com.joinbe.repository.UserRepository;
+import com.joinbe.repository.StaffRepository;
+import com.joinbe.repository.SystemUserRepository;
 import com.joinbe.security.AuthoritiesConstants;
 import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.RoleService;
-import com.joinbe.service.UserService;
+import com.joinbe.service.StaffService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
@@ -50,11 +48,13 @@ import java.util.stream.Collectors;
  */
 @Service("JpaUserService")
 @Transactional
-public class UserServiceImpl implements UserService {
+public class StaffServiceImpl implements StaffService {
 
-    private final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+    private final Logger log = LoggerFactory.getLogger(StaffServiceImpl.class);
 
-    private final UserRepository userRepository;
+    private final StaffRepository staffRepository;
+
+    private final SystemUserRepository systemUserRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -68,10 +68,11 @@ public class UserServiceImpl implements UserService {
 
     private final RedissonTokenStore redissonTokenStore;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository,
-                           CacheManager cacheManager, RoleService roleService, PermissionRepository permissionRepository,
-                           RedissonTokenStore redissonTokenStore) {
-        this.userRepository = userRepository;
+    public StaffServiceImpl(StaffRepository staffRepository, SystemUserRepository systemUserRepository, PasswordEncoder passwordEncoder, RoleRepository roleRepository,
+                            CacheManager cacheManager, RoleService roleService, PermissionRepository permissionRepository,
+                            RedissonTokenStore redissonTokenStore) {
+        this.staffRepository = staffRepository;
+        this.systemUserRepository = systemUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.roleRepository = roleRepository;
         this.cacheManager = cacheManager;
@@ -83,7 +84,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<Staff> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
-        return userRepository.findOneByActivationKey(key)
+        return staffRepository.findOneByActivationKey(key)
             .map(user -> {
                 // activate given user for the registration key.
                 user.setStatus(RecordStatus.ACTIVE);
@@ -97,7 +98,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<Staff> completePasswordReset(String newPassword, String key) {
         log.debug("Reset user password for reset key {}", key);
-        return userRepository.findOneByResetKey(key)
+        return staffRepository.findOneByResetKey(key)
             .filter(user -> user.getResetDate().isAfter(Instant.now().minusSeconds(86400)))
             .map(user -> {
                 user.setPassword(passwordEncoder.encode(newPassword));
@@ -110,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<Staff> requestPasswordReset(String mail) {
-        return userRepository.findOneByEmailIgnoreCaseAndStatusNot(mail, RecordStatus.DELETED)
+        return staffRepository.findOneByEmailIgnoreCaseAndStatusNot(mail, RecordStatus.DELETED)
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 user.setResetKey(RandomUtil.generateResetKey());
@@ -122,7 +123,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<Staff> requestPasswordReset(Long userId) {
-        return userRepository.findOneWithRolesById(userId)
+        return staffRepository.findOneWithRolesById(userId)
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 user.setResetKey(RandomUtil.generateResetKey());
@@ -134,13 +135,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<Staff> registerUserEmail(UserRegisterVM userDTO) {
-        userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
+        staffRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
             if (!existingUser.getLogin().equals(userDTO.getLogin()) && existingUser.getActivated()) {
                 throw new EmailAlreadyUsedException();
             }
         });
 
-        return Optional.of(userRepository
+        return Optional.of(staffRepository
             .findOneWithRolesByLogin(userDTO.getLogin()))
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -150,7 +151,7 @@ public class UserServiceImpl implements UserService {
                 user.setEmail(userDTO.getEmail().toLowerCase());
                 user.setStatus(RecordStatus.ACTIVE);
                 user.setActivationKey(null);
-                userRepository.save(user);
+                staffRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Created Information for User: {}", user);
                 return user;
@@ -160,12 +161,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<Staff> changeUserEmail(ChangeEmailVM userDTO) {
 
-        userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
+        staffRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
             if (!existingUser.getLogin().equals(userDTO.getLogin()) && existingUser.getActivated()) {
                 throw new EmailAlreadyUsedException();
             }
         });
-        Optional<Staff> userInDb = userRepository.findOneWithRolesByLogin(userDTO.getLogin())
+        Optional<Staff> userInDb = staffRepository.findOneWithRolesByLogin(userDTO.getLogin())
             //not allow to update deleted user
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()));
         if (!userInDb.isPresent()) {
@@ -185,7 +186,7 @@ public class UserServiceImpl implements UserService {
                 user.setEmail(userDTO.getEmail().toLowerCase());
                 // user.setStatus(RecordStatus.ACTIVE);
                 // user.setActivationKey(null);
-                userRepository.save(user);
+                staffRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Created Information for User: {}", user);
                 return user;
@@ -197,8 +198,8 @@ public class UserServiceImpl implements UserService {
         if (existingStaff.getActivated()) {
             return false;
         }
-        userRepository.delete(existingStaff);
-        userRepository.flush();
+        staffRepository.delete(existingStaff);
+        staffRepository.flush();
         this.clearUserCaches(existingStaff);
         return true;
     }
@@ -246,7 +247,7 @@ public class UserServiceImpl implements UserService {
             roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.USER, RecordStatus.ACTIVE).ifPresent(roles::add);
             staff.setRoles(roles);
         }
-        userRepository.save(staff);
+        staffRepository.save(staff);
         this.clearUserCaches(staff);
         log.debug("Created Information for User: {}", staff);
         return staff;
@@ -263,7 +264,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateUser(String name, String email, String langKey, String address, String mobileNo) {
         SecurityUtils.getCurrentUserLogin()
-            .flatMap(login -> userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
+            .flatMap(login -> staffRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
             .ifPresent(user -> {
                 user.setName(name);
                 if (email != null) {
@@ -285,7 +286,7 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Optional<UserDTO> updateUser(UserDTO userDTO) {
-        return Optional.of(userRepository
+        return Optional.of(staffRepository
             .findById(userDTO.getId()))
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -320,7 +321,7 @@ public class UserServiceImpl implements UserService {
                     .map(Optional::get)
                     .forEach(managedAuthorities::add);
 
-                userRepository.save(user);
+                staffRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Changed Information for User: {}", user);
                 return user;
@@ -330,7 +331,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<UserDTO> updateUserStatus(Long id, RecordStatus status) {
-        return Optional.of(userRepository
+        return Optional.of(staffRepository
             .findById(id))
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -339,7 +340,7 @@ public class UserServiceImpl implements UserService {
             .map(user -> {
                 // SecurityUtils.checkDataPermission(user.getDivisions());
                 user.setStatus(status);
-                userRepository.save(user);
+                staffRepository.save(user);
                 this.clearUserCaches(user);
                 log.debug("Disabled/enable User: {}: {}", user.getLogin(), status);
                 return user;
@@ -349,7 +350,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        userRepository.findById(id).ifPresent(user -> {
+        staffRepository.findById(id).ifPresent(user -> {
             // userRepository.delete(user);
             // SecurityUtils.checkDataPermission(user.getDivisions());
             user.setStatus(RecordStatus.DELETED);
@@ -363,7 +364,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void changePassword(String currentClearTextPassword, String newPassword) {
         SecurityUtils.getCurrentUserLogin()
-            .flatMap(login -> userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
+            .flatMap(login -> staffRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
             .ifPresent(user -> {
                 String currentEncryptedPassword = user.getPassword();
                 if (!passwordEncoder.matches(currentClearTextPassword, currentEncryptedPassword)) {
@@ -417,14 +418,14 @@ public class UserServiceImpl implements UserService {
 //             return root.join("divisions").in(userDivisions);
 //        };
 //        specification = specification.and(divisionSpecification);
-        return userRepository.findAll(specification, pageable).map(UserDTO::new);
+        return staffRepository.findAll(specification, pageable).map(UserDTO::new);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDetailsDTO> getUserWithAuthoritiesByLogin(String login) {
 
-        Optional<UserDetailsDTO> userOptional = userRepository.findOneWithRolesByLogin(login).map(UserDetailsDTO::new);
+        Optional<UserDetailsDTO> userOptional = staffRepository.findOneWithRolesByLogin(login).map(UserDetailsDTO::new);
 //        if(userOptional.isPresent()){
 //            SecurityUtils.checkDataPermission(userOptional.get().getDivisions());
 //        }
@@ -434,13 +435,44 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Optional<Staff> getUserWithAuthorities(Long id) {
-        return userRepository.findOneWithRolesById(id);
+        return staffRepository.findOneWithRolesById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<Staff> getUserWithShopsAndCities() {
+        return staffRepository.findOneWithShopsAndCitiesByLogin(SecurityUtils.getCurrentUserLogin().get());
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<UserDetailsDTO> getUserWithAuthorities() {
-        return SecurityUtils.getCurrentUserLogin().flatMap(userRepository::findOneWithRolesByLogin).map(UserDetailsDTO::new);
+        Optional<String> userIdOptional = SecurityUtils.getCurrentUserLogin();
+        if (userIdOptional.isPresent()) {
+            String userId = userIdOptional.get();
+            if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(userId)) {
+                return SecurityUtils.getCurrentUserLogin()
+                    .flatMap(systemUserRepository::findOneWithRoleByLogin)
+                    .map(UserDetailsDTO::new);
+            } else {
+                return SecurityUtils.getCurrentUserLogin()
+                    .flatMap(staffRepository::findOneWithRolesByLogin)
+                    .map(UserDetailsDTO::new);
+            }
+
+        } else {
+            return Optional.empty();
+        }
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserDetailsDTO> getSystemUserWithAuthorities() {
+        return SecurityUtils.getCurrentUserLogin()
+            .flatMap(systemUserRepository::findOneWithRoleByLogin)
+            .map(UserDetailsDTO::new);
     }
 
     /**
@@ -465,43 +497,52 @@ public class UserServiceImpl implements UserService {
      * @return a list of all the authorities.
      */
     @Override
-    public List<RoleDTO> getRoles() {
-        return roleRepository.findAllByStatus(RecordStatus.ACTIVE).stream().map(RoleService::toDto).collect(Collectors.toList());
+    public List<RoleDTO> getRolesForMerchant() {
+        return roleRepository.findAllByRoleTypeAndStatus(Constants.ROLE_TYPE_MERCHANT, RecordStatus.ACTIVE)
+            .stream().map(RoleService::toDto).collect(Collectors.toList());
     }
 
     @Override
     public Optional<Staff> findOneByEmailIgnoreCase(String email) {
-        return userRepository.findOneByEmailIgnoreCaseAndStatusNot(email, RecordStatus.DELETED);
+        return staffRepository.findOneByEmailIgnoreCaseAndStatusNot(email, RecordStatus.DELETED);
     }
 
     @Override
     public Optional<Staff> findOneByLogin(String login) {
-        return userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED);
+        return staffRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED);
     }
 
     @Override
     public List<Permission> findAllUserPermissionsByLogin(String login) {
-        List<Permission> permissions = permissionRepository.findAllByUserLogin(login);
+        List<Permission> permissions = Constants.ADMIN_ACCOUNT.equalsIgnoreCase(login) ? permissionRepository.findAllBySystemUserLogin(login
+        ) : permissionRepository.findAllByUserLogin(login);
         log.debug("user permissions:{}", permissions.size());
         return permissions;
     }
 
     @Override
-    public UserDTO assignDivision(Long userId, List<Long> divisionIds) {
+    public UserDTO assignDivision(Long userId, List<String> divisionIds) {
         UserDTO userDTO;
-        Optional<Staff> userOptional = userRepository.findById(userId);
+        Optional<Staff> userOptional = staffRepository.findById(userId);
 
         if (userOptional.isPresent()) {
             Staff staff = userOptional.get();
             //to check if the admin user has the permission of the division Ids to be assign
 //            SecurityUtils.checkDataPermission(divisionIds);
 //            SecurityUtils.checkDataPermission(user.getDivisions());
-            staff.getDivisions().clear();
 
-            divisionIds.forEach(divisionId -> {
-                Division division = new Division();
-                division.setId(divisionId);
-                staff.addDivision(division);
+            staff.getShops().clear();
+            staff.getCities().clear();
+            divisionIds.forEach(id -> {
+                if (id.startsWith("C")) {
+                    City city = new City();
+                    city.setId(id);
+                    staff.getCities().add(city);
+                } else {
+                    Shop shop = new Shop();
+                    shop.setId(id);
+                    staff.getShops().add(shop);
+                }
             });
             this.clearUserCaches(staff);
             userDTO = new UserDTO(staff);
@@ -512,20 +553,42 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<Long> findAllUserDivisionIds(Long userId) {
-        Optional<Staff> user = userRepository.findOneWithDivisionsById(userId);
-        if(user.isPresent()){
-            List<Long > ids = user.get().getDivisions().stream().map(Division::getId).sorted().collect(Collectors.toList());
+    public UserDTO assignMerchant(Long userId, Long merchantId) {
+        UserDTO userDTO;
+        Optional<Staff> userOptional = staffRepository.findById(userId);
+
+        if (userOptional.isPresent()) {
+            Staff staff = userOptional.get();
+            Merchant merchant = new Merchant();
+            merchant.setId(merchantId);
+            staff.setMerchant(merchant);
+            this.clearUserCaches(staff);
+            userDTO = new UserDTO(staff);
+        } else {
+            throw new BadRequestAlertException("Invalid id", "User", "idnull");
+        }
+        return userDTO;
+    }
+
+    @Override
+    public List<String> findAllUserDivisionIds(Long userId) {
+        Optional<Staff> user = staffRepository.findOneWithDivisionsById(userId);
+        if (user.isPresent()) {
+            List<String> ids = user.get().getShops().stream().map(Shop::getId).collect(Collectors.toList());
+            List<String> cityIds = user.get().getCities().stream().map(City::getId).collect(Collectors.toList());
+            ids.addAll(cityIds);
             return ids;
         }
         return new ArrayList<>();
     }
 
     @Override
-    public List<Long> findAllUserDivisionIds(String login) {
-        Optional<Staff> user = userRepository.findOneWithDivisionsByLogin(login);
-        if(user.isPresent()){
-            List<Long > ids = user.get().getDivisions().stream().map(Division::getId).sorted().collect(Collectors.toList());
+    public List<String> findAllUserDivisionIds(String login) {
+        Optional<Staff> user = staffRepository.findOneWithDivisionsByLogin(login);
+        if (user.isPresent()) {
+            List<String> ids = user.get().getShops().stream().map(Shop::getId).collect(Collectors.toList());
+            List<String> cityIds = user.get().getCities().stream().map(City::getId).collect(Collectors.toList());
+            ids.addAll(cityIds);
             return ids;
         }
         return new ArrayList<>();

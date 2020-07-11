@@ -1,6 +1,6 @@
 package com.joinbe.security;
 
-import com.joinbe.domain.Division;
+
 import com.joinbe.domain.Shop;
 import com.joinbe.service.util.SpringContextUtils;
 import org.springframework.security.core.Authentication;
@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -46,9 +45,9 @@ public final class SecurityUtils {
         return null;
     }
 
-    public static List<Long> getCurrentUserDivisionIds() {
+    public static List<String> getCurrentUserDivisionIds() {
         Optional<String> currentUserLogin = getCurrentUserLogin();
-        if(!currentUserLogin.isPresent()){
+        if (!currentUserLogin.isPresent()) {
             return new ArrayList<>();
         }
         RedissonTokenStore redissonTokenStore = SpringContextUtils.getBean(RedissonTokenStore.class);
@@ -65,7 +64,7 @@ public final class SecurityUtils {
 //        if(division == null) {
 //            throw new AccessDeniedException("No Permission to view this record");
 //        }
-        checkDataPermission(division.getId());
+//        checkDataPermission(division.getId());
     }
 
     /**
@@ -80,18 +79,18 @@ public final class SecurityUtils {
     }
 
 
-    /**
-     * to check if the current user has the permission of all divisions
-     * @param divisions
-     */
-    public static void checkDataPermission(Set<Division> divisions) {
+    //    /**
+//     * to check if the current user has the permission of all divisions
+//     *
+//     * @param divisions
+//     */
+//    public static void checkDataPermission(Set<Division> divisions) {
 //        List<Long> userDivisionIds = getCurrentUserDivisionIds();
-//       boolean hasAllPermission= divisions.stream().allMatch(division -> userDivisionIds.contains(division.getId()));
-//       if(!hasAllPermission) {
-//           throw new AccessDeniedException("No Permission to view this record");
-//       }
-    }
-
+////       boolean hasAllPermission= divisions.stream().allMatch(division -> userDivisionIds.contains(division.getId()));
+////       if(!hasAllPermission) {
+////           throw new AccessDeniedException("No Permission to view this record");
+////       }
+//    }
     public static void checkDataPermission(List<Long> divisionIds) {
 //        List<Long> userDivisionIds = getCurrentUserDivisionIds();
 //        boolean hasAllPermission= divisionIds.stream().allMatch(divisionId -> userDivisionIds.contains(divisionId));

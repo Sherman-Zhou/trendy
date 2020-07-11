@@ -108,12 +108,22 @@ public class Staff extends AbstractAuditingEntity implements Serializable {
     @JsonIgnore
     @ManyToMany
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @JoinTable(name = "user_division",
-        joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
-        inverseJoinColumns = @JoinColumn(name = "division_id", referencedColumnName = "id"))
+    @JoinTable(name = "staff_shop",
+        joinColumns = @JoinColumn(name = "staff_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name = "shop_id", referencedColumnName = "id"))
     @BatchSize(size = 20)
     @TableField(exist = false)
-    private Set<Division> divisions = new HashSet<>();
+    private Set<Shop> shops = new HashSet<>();
+
+    @JsonIgnore
+    @ManyToMany
+//    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @JoinTable(name = "staff_city",
+        joinColumns = @JoinColumn(name = "staff_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name = "city", referencedColumnName = "id"))
+    @BatchSize(size = 20)
+    @TableField(exist = false)
+    private Set<City> cities = new HashSet<>();
 
     @JsonIgnore
     @ManyToMany
@@ -233,17 +243,7 @@ public class Staff extends AbstractAuditingEntity implements Serializable {
         this.status = status;
     }
 
-    public Set<Division> getDivisions() {
-        return divisions;
-    }
 
-    public void setDivisions(Set<Division> divisions) {
-        this.divisions = divisions;
-    }
-
-    public void addDivision(Division division) {
-        this.getDivisions().add(division);
-    }
 
     public Set<Role> getRoles() {
         return roles;
@@ -291,5 +291,21 @@ public class Staff extends AbstractAuditingEntity implements Serializable {
 
     public void setMerchant(Merchant merchant) {
         this.merchant = merchant;
+    }
+
+    public Set<Shop> getShops() {
+        return shops;
+    }
+
+    public void setShops(Set<Shop> shops) {
+        this.shops = shops;
+    }
+
+    public Set<City> getCities() {
+        return cities;
+    }
+
+    public void setCities(Set<City> cities) {
+        this.cities = cities;
     }
 }

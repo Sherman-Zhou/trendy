@@ -7,7 +7,7 @@ import com.joinbe.domain.Role;
 import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.RoleRepository;
-import com.joinbe.repository.UserRepository;
+import com.joinbe.repository.StaffRepository;
 import com.joinbe.service.RoleService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.RoleDetailsDTO;
@@ -35,12 +35,12 @@ public class RoleServiceImpl implements RoleService {
 
     private final RoleRepository roleRepository;
 
-    private final UserRepository userRepository;
+    private final StaffRepository staffRepository;
 
 
-    public RoleServiceImpl(RoleRepository roleRepository, UserRepository userRepository) {
+    public RoleServiceImpl(RoleRepository roleRepository, StaffRepository staffRepository) {
         this.roleRepository = roleRepository;
-        this.userRepository = userRepository;
+        this.staffRepository = staffRepository;
     }
 
     /**
@@ -149,7 +149,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public void delete(Long id) {
         log.debug("Request to delete Role : {}", id);
-        List<Staff> staff = userRepository.findUsersByRoleId(id);
+        List<Staff> staff = staffRepository.findUsersByRoleId(id);
         if (!staff.isEmpty()) {
             throw new BadRequestAlertException("Role is in use", "Role", "inuse");
         }

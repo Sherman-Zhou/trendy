@@ -41,6 +41,10 @@ public class Role extends AbstractAuditingEntity implements Serializable {
     @Column(name = "code", length = 20)
     private String code;
 
+    @Size(max = 1)
+    @Column(name = "role_type", length = 1)
+    private String roleType;
+
     @Column(name = "status")
     private RecordStatus status;
 
@@ -109,5 +113,13 @@ public class Role extends AbstractAuditingEntity implements Serializable {
 
     public void setPermissions(Set<Permission> permissions) {
         this.permissions = permissions;
+    }
+
+    public String getRoleType() {
+        return roleType;
+    }
+
+    public void setRoleType(String roleType) {
+        this.roleType = roleType;
     }
 }
