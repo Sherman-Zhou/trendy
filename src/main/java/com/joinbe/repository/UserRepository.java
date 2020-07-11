@@ -1,6 +1,6 @@
 package com.joinbe.repository;
 
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,48 +15,48 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Spring Data JPA repository for the {@link User} entity.
+ * Spring Data JPA repository for the {@link Staff} entity.
  */
 @Repository
-public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+public interface UserRepository extends JpaRepository<Staff, Long>, JpaSpecificationExecutor<Staff> {
 
     String USERS_BY_LOGIN_CACHE = "usersByLogin";
 
     String USERS_BY_EMAIL_CACHE = "usersByEmail";
 
-    Optional<User> findOneByActivationKey(String activationKey);
+    Optional<Staff> findOneByActivationKey(String activationKey);
 
 //    List<User> findAllByActivatedIsFalseAndActivationKeyIsNotNullAndCreatedDateBefore(Instant dateTime);
 
-    Optional<User> findOneByResetKey(String resetKey);
+    Optional<Staff> findOneByResetKey(String resetKey);
 
-    Optional<User> findOneByEmailIgnoreCaseAndStatusNot(String email, RecordStatus status);
+    Optional<Staff> findOneByEmailIgnoreCaseAndStatusNot(String email, RecordStatus status);
 
-    Optional<User> findOneByLoginAndStatusNot(String login, RecordStatus status);
+    Optional<Staff> findOneByLoginAndStatusNot(String login, RecordStatus status);
 
 
     @EntityGraph(attributePaths = {"roles", "divisions"})
-    Optional<User> findOneWithRolesById(Long id);
+    Optional<Staff> findOneWithRolesById(Long id);
 
     @EntityGraph(attributePaths = {"roles", "divisions"})
         //@Cacheable(cacheNames = USERS_BY_LOGIN_CACHE)
-    Optional<User> findOneWithRolesByLogin(String login);
+    Optional<Staff> findOneWithRolesByLogin(String login);
 
     @EntityGraph(attributePaths = {"roles", "divisions"})
         //@Cacheable(cacheNames = USERS_BY_EMAIL_CACHE)
-    Optional<User> findOneWithRolesByEmailIgnoreCase(String email);
+    Optional<Staff> findOneWithRolesByEmailIgnoreCase(String email);
 
-    Page<User> findAllByLoginNot(Pageable pageable, String login);
+    Page<Staff> findAllByLoginNot(Pageable pageable, String login);
 
     @EntityGraph(attributePaths = {"roles", "divisions"})
-    Optional<User> findOneWithRolesByLoginAndStatus(String login, RecordStatus recordStatus);
+    Optional<Staff> findOneWithRolesByLoginAndStatus(String login, RecordStatus recordStatus);
 
     @EntityGraph(attributePaths = {"divisions"})
-    Optional<User> findOneWithDivisionsById(Long id);
+    Optional<Staff> findOneWithDivisionsById(Long id);
 
-    @Query("select user from User user join user.roles roles where roles.id =:roleId and user.status <> 'D'")
-    List<User> findUsersByRoleId(@Param("roleId") Long roleId);
+    @Query("select user from Staff user join user.roles roles where roles.id =:roleId and user.status <> 'D'")
+    List<Staff> findUsersByRoleId(@Param("roleId") Long roleId);
 
     @EntityGraph(attributePaths = {"divisions"})
-    Optional<User> findOneWithDivisionsByLogin(String login);
+    Optional<Staff> findOneWithDivisionsByLogin(String login);
 }

@@ -8,7 +8,7 @@ import com.joinbe.config.Constants;
 import com.joinbe.domain.Division;
 import com.joinbe.domain.Permission;
 import com.joinbe.domain.Role;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.domain.enumeration.Sex;
 import com.joinbe.repository.PermissionRepository;
@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> activateRegistration(String key) {
+    public Optional<Staff> activateRegistration(String key) {
         log.debug("Activating user for activation key {}", key);
         return userRepository.findOneByActivationKey(key)
             .map(user -> {
@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> completePasswordReset(String newPassword, String key) {
+    public Optional<Staff> completePasswordReset(String newPassword, String key) {
         log.debug("Reset user password for reset key {}", key);
         return userRepository.findOneByResetKey(key)
             .filter(user -> user.getResetDate().isAfter(Instant.now().minusSeconds(86400)))
@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> requestPasswordReset(String mail) {
+    public Optional<Staff> requestPasswordReset(String mail) {
         return userRepository.findOneByEmailIgnoreCaseAndStatusNot(mail, RecordStatus.DELETED)
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
@@ -121,9 +121,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> requestPasswordReset(Long userId) {
+    public Optional<Staff> requestPasswordReset(Long userId) {
         return userRepository.findOneWithRolesById(userId)
-            .filter(user-> !RecordStatus.DELETED.equals(user.getStatus()))
+            .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 user.setResetKey(RandomUtil.generateResetKey());
                 user.setResetDate(Instant.now());
@@ -133,7 +133,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> registerUserEmail(UserRegisterVM userDTO) {
+    public Optional<Staff> registerUserEmail(UserRegisterVM userDTO) {
         userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
             if (!existingUser.getLogin().equals(userDTO.getLogin()) && existingUser.getActivated()) {
                 throw new EmailAlreadyUsedException();
@@ -158,17 +158,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> changeUserEmail(ChangeEmailVM userDTO) {
+    public Optional<Staff> changeUserEmail(ChangeEmailVM userDTO) {
 
         userRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
             if (!existingUser.getLogin().equals(userDTO.getLogin()) && existingUser.getActivated()) {
                 throw new EmailAlreadyUsedException();
             }
         });
-        Optional <User> userInDb = userRepository.findOneWithRolesByLogin(userDTO.getLogin())
+        Optional<Staff> userInDb = userRepository.findOneWithRolesByLogin(userDTO.getLogin())
             //not allow to update deleted user
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()));
-        if(!userInDb.isPresent()) {
+        if (!userInDb.isPresent()) {
             throw new InvalidPasswordException();
         }
 
@@ -193,45 +193,45 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private boolean removeNonActivatedUser(User existingUser) {
-        if (existingUser.getActivated()) {
+    private boolean removeNonActivatedUser(Staff existingStaff) {
+        if (existingStaff.getActivated()) {
             return false;
         }
-        userRepository.delete(existingUser);
+        userRepository.delete(existingStaff);
         userRepository.flush();
-        this.clearUserCaches(existingUser);
+        this.clearUserCaches(existingStaff);
         return true;
     }
 
     @Override
-    public User createUser(UserDTO userDTO) {
-        User user = new User();
-        user.setLogin(userDTO.getLogin().toLowerCase());
-        user.setName(userDTO.getName());
+    public Staff createUser(UserDTO userDTO) {
+        Staff staff = new Staff();
+        staff.setLogin(userDTO.getLogin().toLowerCase());
+        staff.setName(userDTO.getName());
 
         if (userDTO.getEmail() != null) {
-            user.setEmail(userDTO.getEmail().toLowerCase());
+            staff.setEmail(userDTO.getEmail().toLowerCase());
         }
 
-        user.setAvatar(userDTO.getAvatar());
+        staff.setAvatar(userDTO.getAvatar());
         if (userDTO.getLangKey() == null) {
-            user.setLangKey(Constants.DEFAULT_LANGUAGE); // default language
+            staff.setLangKey(Constants.DEFAULT_LANGUAGE); // default language
         } else {
-            user.setLangKey(userDTO.getLangKey());
+            staff.setLangKey(userDTO.getLangKey());
         }
-        user.setSex(Sex.resolve(userDTO.getSex()));
-        user.setMobileNo(userDTO.getMobileNo());
-        if(StringUtils.isNotEmpty(userDTO.getPassword())){
+        staff.setSex(Sex.resolve(userDTO.getSex()));
+        staff.setMobileNo(userDTO.getMobileNo());
+        if (StringUtils.isNotEmpty(userDTO.getPassword())) {
             String encryptedPassword = passwordEncoder.encode(userDTO.getPassword());
-            user.setPassword(encryptedPassword);
+            staff.setPassword(encryptedPassword);
         }
-        user.setRemark(userDTO.getRemark());
-        user.setAddress(userDTO.getAddress());
+        staff.setRemark(userDTO.getRemark());
+        staff.setAddress(userDTO.getAddress());
 
-        user.setResetKey(RandomUtil.generateResetKey());
-        user.setResetDate(Instant.now());
-        user.setStatus(RecordStatus.INACTIVE);
-        user.setActivationKey(RandomUtil.generateActivationKey());
+        staff.setResetKey(RandomUtil.generateResetKey());
+        staff.setResetDate(Instant.now());
+        staff.setStatus(RecordStatus.INACTIVE);
+        staff.setActivationKey(RandomUtil.generateActivationKey());
 
         if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
             Set<Role> roles = userDTO.getRoleIds().stream()
@@ -239,17 +239,17 @@ public class UserServiceImpl implements UserService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toSet());
-            user.setRoles(roles);
+            staff.setRoles(roles);
         } else {
             //if not selected any roles, set to user by default.
             Set<Role> roles = new HashSet<>();
             roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.USER, RecordStatus.ACTIVE).ifPresent(roles::add);
-            user.setRoles(roles);
+            staff.setRoles(roles);
         }
-        userRepository.save(user);
-        this.clearUserCaches(user);
-        log.debug("Created Information for User: {}", user);
-        return user;
+        userRepository.save(staff);
+        this.clearUserCaches(staff);
+        log.debug("Created Information for User: {}", staff);
+        return staff;
     }
 
     /**
@@ -379,7 +379,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public Page<UserDTO> getAllManagedUsers(Pageable pageable, UserVM vm) {
-        QueryParams<User> queryParams = new QueryParams<>();
+        QueryParams<Staff> queryParams = new QueryParams<>();
         queryParams.setDistinct(true);
 //        Set<Division> userDivisions = SecurityUtils.getCurrentUserDivisionIds()
 //            .stream().map(id -> new Division(id)).collect(Collectors.toSet());
@@ -401,10 +401,10 @@ public class UserServiceImpl implements UserService {
             queryParams.and("mobileNo", Filter.Operator.like, vm.getMobileNo());
         }
 
-        Specification<User> specification = Specification.where(queryParams);
+        Specification<Staff> specification = Specification.where(queryParams);
         if (StringUtils.isNotEmpty(vm.getName())) {
             //name or account search...
-            Specification<User> itemSpecification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
+            Specification<Staff> itemSpecification = (Specification<Staff>) (root, criteriaQuery, criteriaBuilder) -> {
                 Predicate namePredicate = criteriaBuilder.like(root.get("name"), "%" + vm.getName().trim() + "%");
                 Predicate loginPredicate = criteriaBuilder.like(root.get("login"), "%" + vm.getName().trim() + "%");
                 return criteriaBuilder.or(namePredicate, loginPredicate);
@@ -433,7 +433,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<User> getUserWithAuthorities(Long id) {
+    public Optional<Staff> getUserWithAuthorities(Long id) {
         return userRepository.findOneWithRolesById(id);
     }
 
@@ -470,12 +470,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Optional<User> findOneByEmailIgnoreCase(String email) {
+    public Optional<Staff> findOneByEmailIgnoreCase(String email) {
         return userRepository.findOneByEmailIgnoreCaseAndStatusNot(email, RecordStatus.DELETED);
     }
 
     @Override
-    public Optional<User> findOneByLogin(String login) {
+    public Optional<Staff> findOneByLogin(String login) {
         return userRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED);
     }
 
@@ -489,22 +489,22 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO assignDivision(Long userId, List<Long> divisionIds) {
         UserDTO userDTO;
-        Optional<User> userOptional = userRepository.findById(userId);
+        Optional<Staff> userOptional = userRepository.findById(userId);
 
         if (userOptional.isPresent()) {
-            User user = userOptional.get();
+            Staff staff = userOptional.get();
             //to check if the admin user has the permission of the division Ids to be assign
 //            SecurityUtils.checkDataPermission(divisionIds);
 //            SecurityUtils.checkDataPermission(user.getDivisions());
-            user.getDivisions().clear();
+            staff.getDivisions().clear();
 
             divisionIds.forEach(divisionId -> {
                 Division division = new Division();
                 division.setId(divisionId);
-                user.addDivision(division);
+                staff.addDivision(division);
             });
-            this.clearUserCaches(user);
-            userDTO = new UserDTO(user);
+            this.clearUserCaches(staff);
+            userDTO = new UserDTO(staff);
         } else {
             throw new BadRequestAlertException("Invalid id", "User", "idnull");
         }
@@ -513,7 +513,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Long> findAllUserDivisionIds(Long userId) {
-        Optional<User> user = userRepository.findOneWithDivisionsById(userId);
+        Optional<Staff> user = userRepository.findOneWithDivisionsById(userId);
         if(user.isPresent()){
             List<Long > ids = user.get().getDivisions().stream().map(Division::getId).sorted().collect(Collectors.toList());
             return ids;
@@ -523,7 +523,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Long> findAllUserDivisionIds(String login) {
-        Optional<User> user = userRepository.findOneWithDivisionsByLogin(login);
+        Optional<Staff> user = userRepository.findOneWithDivisionsByLogin(login);
         if(user.isPresent()){
             List<Long > ids = user.get().getDivisions().stream().map(Division::getId).sorted().collect(Collectors.toList());
             return ids;
@@ -532,7 +532,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    private void clearUserCaches(User user) {
+    private void clearUserCaches(Staff staff) {
 //        Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_LOGIN_CACHE)).evict(user.getLogin());
 //        if (user.getEmail() != null) {
 //            Objects.requireNonNull(cacheManager.getCache(UserRepository.USERS_BY_EMAIL_CACHE)).evict(user.getEmail());

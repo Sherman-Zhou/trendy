@@ -1,17 +1,20 @@
 package com.joinbe.service;
 
 import com.joinbe.common.util.BeanConverter;
-import com.joinbe.domain.Division;
+import com.joinbe.domain.City;
 import com.joinbe.domain.EquipmentFault;
+import com.joinbe.domain.Shop;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.EquipmentFaultDTO;
 import com.joinbe.service.dto.EquipmentFaultHandleDTO;
 import com.joinbe.web.rest.vm.EquipmentFaultVM;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -29,12 +32,21 @@ public interface EquipmentFaultService {
         Vehicle vehicle = equipmentFault.getVehicle();
         if(vehicle != null) {
             //dto.setLicensePlateNumber(vehicle.getLicensePlateNumber());
-            Division division = vehicle.getDivision();
-            SecurityUtils.checkDataPermission(division);
-            dto.setOrgName(division.getName());
             dto.setVehicleId(vehicle.getId());
-            if(division.getParent()!=null) {
-                dto.setDivName(division.getParent().getName());
+            Shop shop = vehicle.getShop();
+            City city = vehicle.getCity();
+            SecurityUtils.checkDataPermission(shop);
+            Locale locale = LocaleContextHolder.getLocale();
+            if (Locale.CHINESE.equals(locale)) {
+                //city & shop
+                dto.setOrgName(shop.getTitleCn());
+                dto.setDivName(city.getNameCn());
+            } else if (Locale.JAPANESE.equals(locale)) {
+                dto.setOrgName(shop.getTitleJp());
+                dto.setDivName(city.getNameJp());
+            } else {
+                dto.setOrgName(shop.getTitle());
+                dto.setDivName(city.getName());
             }
         }
         return  dto;

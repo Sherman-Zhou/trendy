@@ -25,7 +25,7 @@ public interface DivisionRepository extends JpaRepository<Division, Long>, JpaSp
     @EntityGraph(attributePaths = {"children"})
     List<Division> findAllRootDeptByParentIsNull();
 
-    @Query("select distinct d from User u join u.divisions d where u.login =:login and d.status ='A'")
+    @Query("select distinct d from Staff u join u.divisions d where u.login =:login and d.status ='A'")
     List<Division> findAllByUserLogin(@Param("login") String login);
 
     Optional<Division> findByNameAndStatus(String name, RecordStatus status);

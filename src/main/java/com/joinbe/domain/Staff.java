@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.domain.enumeration.Sex;
 import org.hibernate.annotations.BatchSize;
@@ -21,9 +22,9 @@ import java.util.Set;
  * A user.
  */
 @Entity
-@Table(name = "user")
+@Table(name = "staff")
 //@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-public class User extends AbstractAuditingEntity implements Serializable {
+public class Staff extends AbstractAuditingEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -33,7 +34,7 @@ public class User extends AbstractAuditingEntity implements Serializable {
     private Long id;
 
     @NotNull
-   // @Pattern(regexp = Constants.LOGIN_REGEX)
+    // @Pattern(regexp = Constants.LOGIN_REGEX)
     @Size(min = 1, max = 50)
     @Column(length = 50, unique = true, nullable = false)
     private String login;
@@ -98,6 +99,10 @@ public class User extends AbstractAuditingEntity implements Serializable {
     @Version
     //@com.baomidou.mybatisplus.annotation.Version
     private Integer version;
+
+    @ManyToOne
+    @JsonIgnoreProperties("staffs")
+    private Merchant merchant;
 
 
     @JsonIgnore
@@ -278,5 +283,13 @@ public class User extends AbstractAuditingEntity implements Serializable {
 
     public void setMobileNo(String mobileNo) {
         this.mobileNo = mobileNo;
+    }
+
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
     }
 }

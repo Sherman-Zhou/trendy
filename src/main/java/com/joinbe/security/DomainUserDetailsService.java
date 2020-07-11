@@ -2,7 +2,7 @@ package com.joinbe.security;
 
 import com.joinbe.common.error.UserNotActivatedException;
 import com.joinbe.domain.Permission;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.PermissionRepository;
 import com.joinbe.repository.UserRepository;
@@ -57,21 +57,21 @@ public class DomainUserDetailsService implements UserDetailsService {
 
     }
 
-    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, User user) {
-        if (!user.getActivated()) {
+    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, Staff staff) {
+        if (!staff.getActivated()) {
             throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
         }
-        List<Permission> permissions = permissionRepository.findAllByUserLogin(user.getLogin());
+        List<Permission> permissions = permissionRepository.findAllByUserLogin(staff.getLogin());
         List<GrantedAuthority> grantedAuthorities = permissions.stream()
             .filter(permission -> CollectionUtils.isEmpty(permission.getChildren())
-                || permission.getChildren().stream().allMatch(child -> !RecordStatus.ACTIVE.equals(child.getStatus())))
+                || permission.getChildren().stream().noneMatch(child -> RecordStatus.ACTIVE.equals(child.getStatus())))
             .map(permission -> new SimpleGrantedAuthority(permission.getPermissionKey())).collect(Collectors.toList());
 
 //        List<GrantedAuthority> grantedAuthorities = user.getRoles().stream()
 //            .map(authority -> new SimpleGrantedAuthority(authority.getCode()))
 //            .collect(Collectors.toList());
-        return new org.springframework.security.core.userdetails.User(user.getLogin(),
-            user.getPassword(),
+        return new org.springframework.security.core.userdetails.User(staff.getLogin(),
+            staff.getPassword(),
             grantedAuthorities);
     }
 }

@@ -6,10 +6,10 @@
         <link rel="shortcut icon" th:href="@{|${baseUrl}/favicon.ico|}" />
     </head>
     <body>
-        <p th:text="#{email.change.greeting(${user.login})}">
+        <p th:text="#{email.change.greeting(${staff.login})}">
             Dear
         </p>
-        <p th:text="#{email.change.text1(${user.email})}">
+        <p th:text="#{email.change.text1(${staff.email})}">
             Your email has been changed
         </p>
         <p>

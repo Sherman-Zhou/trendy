@@ -1,7 +1,7 @@
 package com.joinbe.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.jwt.JWTFilter;
@@ -57,7 +57,7 @@ public class UserJWTController {
     @PostMapping("/authenticate")
     @ApiOperation("用户登陆")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
-        Optional<User> userOptional;
+        Optional<Staff> userOptional;
         if (new EmailValidator().isValid(loginVM.getUsername(), null)) {
             userOptional = userService.findOneByEmailIgnoreCase(loginVM.getUsername());
             if (userOptional.isPresent()) {

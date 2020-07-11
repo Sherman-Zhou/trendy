@@ -1,7 +1,7 @@
 package com.joinbe.web.rest;
 
 import com.joinbe.config.Constants;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.service.DivisionService;
@@ -38,7 +38,7 @@ import java.util.Optional;
 /**
  * REST controller for managing users.
  * <p>
- * This class accesses the {@link User} entity, and needs to fetch its collection of authorities.
+ * This class accesses the {@link Staff} entity, and needs to fetch its collection of authorities.
  * <p>
  * For a normal use-case, it would be better to have an eager relationship between User and Authority,
  * and send everything to the client side: there would be no View Model and DTO, a lot less code, and an outer-join
@@ -98,7 +98,7 @@ public class UserResource {
     @PostMapping("/users")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     @ApiOperation(value = "创建新用户")
-    public ResponseEntity<User> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
+    public ResponseEntity<Staff> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
         log.debug("REST request to save User : {}", userDTO);
 
         if (userDTO.getId() != null) {
@@ -109,10 +109,10 @@ public class UserResource {
         } else if (userService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
         } else {
-            User newUser = userService.createUser(userDTO);
+            Staff newStaff = userService.createUser(userDTO);
             //mailService.sendCreationEmail(newUser);
-            return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
-                .body(newUser);
+            return ResponseEntity.created(new URI("/api/users/" + newStaff.getLogin()))
+                .body(newStaff);
         }
     }
 
@@ -129,7 +129,7 @@ public class UserResource {
     @ApiOperation(value = "更新新用户")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
-        Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
+        Optional<Staff> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new EmailAlreadyUsedException();
         }
@@ -167,7 +167,7 @@ public class UserResource {
     @GetMapping(path = "/user/{id}/reset")
     @ApiOperation(value = "重置用户密码")
     public ResponseEntity<UserDTO> requestPasswordReset(@PathVariable  @ApiParam(value ="用户主键", required = true ) Long id) {
-        Optional<User> user = userService.requestPasswordReset(id);
+        Optional<Staff> user = userService.requestPasswordReset(id);
         user.ifPresent(mailService::sendPasswordResetMail);
 
         return ResponseUtil.wrapOrNotFound(user.map(UserDTO::new));

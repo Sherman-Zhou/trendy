@@ -5,7 +5,6 @@ import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.EquipmentFault;
 import com.joinbe.repository.EquipmentFaultRepository;
-import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentFaultService;
 import com.joinbe.service.dto.EquipmentFaultDTO;
 import com.joinbe.service.dto.EquipmentFaultHandleDTO;
@@ -88,9 +87,10 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
     public Page<EquipmentFaultDTO> findAll(Pageable pageable, EquipmentFaultVM vm) {
         log.debug("Request to get all EquipmentFaults");
         QueryParams<EquipmentFault> queryParams = new QueryParams<>();
-        List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
-
-        queryParams.and("vehicle.division.id", Filter.Operator.in, userDivisionIds);
+//        List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+//
+//        queryParams.and("vehicle.division.id", Filter.Operator.in, userDivisionIds);
+        //FIXME: permission
 
         if (vm.getIsRead() != null) {
             queryParams.and("isRead", Filter.Operator.eq, vm.getIsRead());
@@ -99,7 +99,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
 //            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentIdNum());
 //        }
 
-        if(vm.getVehicleId()!=null) {
+        if (vm.getVehicleId() != null) {
             queryParams.and("vehicle.id", Filter.Operator.eq, vm.getVehicleId());
         }
 

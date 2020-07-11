@@ -175,13 +175,13 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
         QueryParams<Vehicle> queryParams = new QueryParams<>();
         queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
-        if (vm.getDivisionId() != null) {
-            SecurityUtils.checkDataPermission(vm.getDivisionId());
-            queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
-        } else {
-            // add user's division condition
-            queryParams.and("division.id", Filter.Operator.in, SecurityUtils.getCurrentUserDivisionIds());
-        }
+//        if (vm.getDivisionId() != null) {
+//            SecurityUtils.checkDataPermission(vm.getDivisionId());
+//            queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
+//        } else {
+//            // add user's division condition
+//            queryParams.and("division.id", Filter.Operator.in, SecurityUtils.getCurrentUserDivisionIds());
+//        } //FIXME: permission check
         if (vm.getOnlineOnly() != null) {
             queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
         }
@@ -196,13 +196,13 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             specification = specification.and(itemSpecification);
         }
 
-        Map<Long, List<VehicleSummaryDTO>> vehicleMap = vehicleRepository.findAll(specification).stream()
+        Map<String, List<VehicleSummaryDTO>> vehicleMap = vehicleRepository.findAll(specification).stream()
             .map(vehicle -> {
                 VehicleSummaryDTO dto = new VehicleSummaryDTO();
                 dto.setLicensePlateNumber(vehicle.getLicensePlateNumber());
                 dto.setIsMoving(vehicle.getIsMoving());
                 dto.setId(vehicle.getId());
-                dto.setDivisionId(vehicle.getDivision().getId());
+                dto.setDivisionId(vehicle.getShop().getId());
                 return dto;
             })
             .collect(Collectors.groupingBy(VehicleSummaryDTO::getDivisionId));
@@ -236,7 +236,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         Optional<Vehicle> vehicleOptional = vehicleRepository.findById(vehicleId);
         if (vehicleOptional.isPresent()) {
             Vehicle vehicle = vehicleOptional.get();
-            SecurityUtils.checkDataPermission(vehicle.getDivision());
+            SecurityUtils.checkDataPermission(vehicle.getShop());
             VehicleStateDTO vehicleStateDTO = new VehicleStateDTO();
             if (vehicle.getEquipment() != null) {
                 EquipmentDTO equipment = EquipmentService.toDto(vehicle.getEquipment());

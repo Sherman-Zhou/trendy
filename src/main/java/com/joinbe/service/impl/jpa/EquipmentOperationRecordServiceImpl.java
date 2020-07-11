@@ -4,9 +4,7 @@ import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.EquipmentOperationRecord;
-import com.joinbe.domain.User;
 import com.joinbe.repository.EquipmentOperationRecordRepository;
-import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentOperationRecordService;
 import com.joinbe.service.dto.EquipmentOperationRecordDTO;
 import com.joinbe.web.rest.vm.EquipmentOpRecordVM;
@@ -21,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.Predicate;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -66,9 +63,10 @@ public class EquipmentOperationRecordServiceImpl implements EquipmentOperationRe
         log.debug("Request to get all EquipmentOperationRecords");
         QueryParams<EquipmentOperationRecord> queryParams = new QueryParams<>();
 
-        List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
-
-        queryParams.and("vehicle.division.id", Filter.Operator.in, userDivisionIds);
+//        List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+//
+//        queryParams.and("vehicle.division.id", Filter.Operator.in, userDivisionIds);
+        //FIXME: permission
 
 //        if (StringUtils.isNotEmpty(vm.getEquipmentId())) {
 //            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentId());

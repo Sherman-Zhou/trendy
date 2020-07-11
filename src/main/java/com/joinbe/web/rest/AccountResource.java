@@ -1,7 +1,7 @@
 package com.joinbe.web.rest;
 
 import com.joinbe.config.Constants;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.MailService;
@@ -137,11 +137,11 @@ public class AccountResource {
     @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新用户姓名， 用户邮件， 用户语言，手机号码和 地址")
     public void saveAccount(@Valid @RequestBody UserAccountDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
-        Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
+        Optional<Staff> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
             throw new EmailAlreadyUsedException();
         }
-        Optional<User> user = userService.findOneByLogin(userLogin);
+        Optional<Staff> user = userService.findOneByLogin(userLogin);
         if (!user.isPresent()) {
             throw new AccountResourceException("User could not be found");
         }
@@ -178,7 +178,7 @@ public class AccountResource {
         Optional<UserDetailsDTO> userDetailsDTO = userService.getUserWithAuthoritiesByLogin(login);
 
         if (userDetailsDTO.isPresent()) {
-            Optional<User> user = userService.requestPasswordReset(userDetailsDTO.get().getEmail());
+            Optional<Staff> user = userService.requestPasswordReset(userDetailsDTO.get().getEmail());
             mailService.sendPasswordResetMail(user.get());
         } else {
             // Pretend the request has been successful to prevent checking which emails really exist
@@ -219,7 +219,7 @@ public class AccountResource {
         if (!checkPasswordLength(keyAndPassword.getNewPassword())) {
             throw new InvalidPasswordException();
         }
-        Optional<User> user =
+        Optional<Staff> user =
             userService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey());
 
         if (!user.isPresent()) {
@@ -238,10 +238,10 @@ public class AccountResource {
     @ApiOperation("注册用户邮件")
     public void registerEmail(@Valid @RequestBody UserRegisterVM managedUserVM) {
 
-        Optional<User> userOptional = userService.registerUserEmail(managedUserVM);
+        Optional<Staff> userOptional = userService.registerUserEmail(managedUserVM);
         if (userOptional.isPresent()) {
-            User user = userOptional.get();
-            log.debug("user is registered with email: {}", user.getEmail());
+            Staff staff = userOptional.get();
+            log.debug("user is registered with email: {}", staff.getEmail());
             //mailService.sendActivationEmail(user);
         } else {
             log.warn("the user {} does not exist, just ignored", managedUserVM.getLogin());
@@ -272,7 +272,7 @@ public class AccountResource {
     @PostMapping(path = "/account/change-email")
     @ApiOperation("修改绑定邮箱")
     public void changeEmail(@RequestBody ChangeEmailVM registerVM) {
-        Optional<User> userOptional =  userService.changeUserEmail(registerVM);
+        Optional<Staff> userOptional = userService.changeUserEmail(registerVM);
         userOptional.ifPresent(user -> {
             log.debug("user is changed email: {}", user.getEmail());
             mailService.sendEmailChangeEmail(user);

@@ -20,7 +20,7 @@ public class Vehicle extends AbstractAuditingEntity {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     /**
@@ -210,18 +210,18 @@ public class Vehicle extends AbstractAuditingEntity {
     @OneToOne(mappedBy = "vehicle", fetch = FetchType.LAZY)
     private Equipment equipment;
 
-    @Size(max = 20)
-    @Column(name = "trendy_id", length = 20)
-    private String trendyId;
-
 
     @OneToMany(mappedBy = "vehicle")
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<VehicleTrajectory> trajectories = new HashSet<>();
 
     @ManyToOne
-    @JsonIgnoreProperties("vehicles")
-    private Division division;
+    @JsonIgnoreProperties("shops")
+    private Shop shop;
+
+    @ManyToOne
+    @JsonIgnoreProperties("city")
+    private City city;
 
     public Long getId() {
         return id;
@@ -428,25 +428,21 @@ public class Vehicle extends AbstractAuditingEntity {
         return this;
     }
 
-    public String getTrendyId() {
-        return trendyId;
+
+    public Shop getShop() {
+        return shop;
     }
 
-    public void setTrendyId(String trendyId) {
-        this.trendyId = trendyId;
+    public void setShop(Shop shop) {
+        this.shop = shop;
     }
 
-    public Division getDivision() {
-        return division;
+    public City getCity() {
+        return city;
     }
 
-    public void setDivision(Division division) {
-        this.division = division;
-    }
-
-    public Vehicle division(Division division) {
-        this.division = division;
-        return this;
+    public void setCity(City city) {
+        this.city = city;
     }
 
     public String getLicensePlateNumberCn() {

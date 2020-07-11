@@ -19,7 +19,7 @@ import java.util.List;
 public interface PermissionRepository extends JpaRepository<Permission, Long>,
     JpaSpecificationExecutor<Permission> {
 
-    @Query("select distinct perm from User u join u.roles r join r.permissions perm where u.login =:login and r.status ='A' and perm.status ='A'")
+    @Query("select distinct perm from Staff u join u.roles r join r.permissions perm where u.login =:login and r.status ='A' and perm.status ='A'")
     List<Permission> findAllByUserLogin(@Param("login") String login);
 
     @EntityGraph(attributePaths = "children")

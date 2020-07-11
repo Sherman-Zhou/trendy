@@ -1,7 +1,7 @@
 package com.joinbe.service.dto;
 
 import com.joinbe.domain.Role;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.DivisionService;
 import com.joinbe.service.RoleService;
@@ -55,22 +55,22 @@ public class UserDetailsDTO extends UserDTO {
         // Empty constructor needed for Jackson.
     }
 
-    public UserDetailsDTO(User user) {
-        this.setId(user.getId());
-        this.setLogin(user.getLogin());
-        this.setName(user.getName());
-        this.setEmail(user.getEmail());
-        this.setStatus(user.getStatus() != null ? user.getStatus().getCode() : null);
-        this.setAvatar(user.getAvatar());
-        this.setLangKey(user.getLangKey());
-        this.version = user.getVersion();
-        this.roles = user.getRoles().stream()
+    public UserDetailsDTO(Staff staff) {
+        this.setId(staff.getId());
+        this.setLogin(staff.getLogin());
+        this.setName(staff.getName());
+        this.setEmail(staff.getEmail());
+        this.setStatus(staff.getStatus() != null ? staff.getStatus().getCode() : null);
+        this.setAvatar(staff.getAvatar());
+        this.setLangKey(staff.getLangKey());
+        this.version = staff.getVersion();
+        this.roles = staff.getRoles().stream()
             .map(RoleService::toDto)
             .collect(Collectors.toSet());
-        this.authorities = user.getRoles().stream()
+        this.authorities = staff.getRoles().stream()
             .map(Role::getName)
             .collect(Collectors.toSet());
-        this.divisions = user.getDivisions().stream()
+        this.divisions = staff.getDivisions().stream()
             .map(DivisionService::toDto)
             .collect(Collectors.toSet());
     }

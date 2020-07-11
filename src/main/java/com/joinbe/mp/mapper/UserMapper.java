@@ -1,12 +1,12 @@
 package com.joinbe.mp.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper
-public interface UserMapper extends BaseMapper<User> {
+public interface UserMapper extends BaseMapper<Staff> {
 
-    User selectByLogin(String login);
+    Staff selectByLogin(String login);
 
 }

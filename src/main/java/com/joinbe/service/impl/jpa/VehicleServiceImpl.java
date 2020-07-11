@@ -11,8 +11,9 @@ import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.EquipmentStatus;
 import com.joinbe.domain.enumeration.RecordStatus;
-import com.joinbe.repository.DivisionRepository;
+import com.joinbe.repository.CityRepository;
 import com.joinbe.repository.EquipmentRepository;
+import com.joinbe.repository.ShopRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.VehicleService;
@@ -53,7 +54,9 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final EquipmentRepository equipmentRepository;
 
-    private final DivisionRepository divisionRepository;
+    private final ShopRepository shopRepository;
+
+    private final CityRepository cityRepository;
 
     private final MessageSource messageSource;
 
@@ -64,11 +67,12 @@ public class VehicleServiceImpl implements VehicleService {
     private final ObjectMapper mapper;
 
     public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
-                              DivisionRepository divisionRepository, MessageSource messageSource,
+                              ShopRepository shopRepository, CityRepository cityRepository, MessageSource messageSource,
                               RestfulClient restfulClient, ApplicationProperties applicationProperties) {
         this.vehicleRepository = vehicleRepository;
         this.equipmentRepository = equipmentRepository;
-        this.divisionRepository = divisionRepository;
+        this.shopRepository = shopRepository;
+        this.cityRepository = cityRepository;
         this.messageSource = messageSource;
         this.restfulClient = restfulClient;
         this.applicationProperties = applicationProperties;
@@ -86,17 +90,22 @@ public class VehicleServiceImpl implements VehicleService {
     public VehicleDetailsDTO save(VehicleDetailsDTO vehicleDetailsDTO) {
         log.debug("Request to save Vehicle : {}", vehicleDetailsDTO);
         Vehicle vehicle = VehicleService.toEntity(vehicleDetailsDTO);
-        Long divisionId = vehicleDetailsDTO.getDivisionId();
+        String shopId = vehicleDetailsDTO.getShopId();
+        String cityId = vehicleDetailsDTO.getCityId();
         if (vehicleDetailsDTO.getId() != null) {
-            divisionId = vehicleRepository.getOne(vehicleDetailsDTO.getId()).getDivision().getId();
-        }
-        Optional<Division> division = divisionRepository.findById(divisionId);
-        if (division.isPresent()) {
-            SecurityUtils.checkDataPermission(division.get());
-            vehicle.setDivision(division.get());
+            Vehicle vehicleInDb = vehicleRepository.getOne(vehicleDetailsDTO.getId());
+            shopId = vehicleInDb.getShop().getId();
+            cityId = vehicleInDb.getCity().getId();
         } else {
-            throw new BadRequestAlertException("Division does not exist", "Vehicle", "divnotexists");
+//            Optional<Division> division = divisionRepository.findById(divisionId);
+//            if (division.isPresent()) {
+//                SecurityUtils.checkDataPermission(division.get());
+//                vehicle.setShop(division.get());
+//            } else {
+//                throw new BadRequestAlertException("Division does not exist", "Vehicle", "divnotexists");
+//            }
         }
+
         vehicle = vehicleRepository.save(vehicle);
         return VehicleService.toDto(vehicle);
     }
@@ -112,13 +121,13 @@ public class VehicleServiceImpl implements VehicleService {
     public Page<VehicleDetailsDTO> findAll(Pageable pageable, VehicleVM vm) {
         log.debug("Request to get all Vehicles");
         QueryParams<Vehicle> queryParams = new QueryParams<>();
-        if (vm.getDivisionId() != null) {
-            SecurityUtils.checkDataPermission(vm.getDivisionId());
-            queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
+        if (vm.getShopId() != null) {
+            SecurityUtils.checkDataPermission(vm.getShopId());
+            queryParams.and("shop.id", Filter.Operator.eq, vm.getShopId());
         } else {
-            // add user's division condition
-            List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
-            queryParams.and("division.id", Filter.Operator.in, userDivisionIds);
+            // add user's division condition //FIXME: to change to shop id
+//            List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+//            queryParams.and("division.id", Filter.Operator.in, userDivisionIds);
         }
 
         // only active vehicle...
@@ -222,7 +231,7 @@ public class VehicleServiceImpl implements VehicleService {
         Optional<Vehicle> vehicleOptional = vehicleRepository.findById(id);
         if (vehicleOptional.isPresent()) {
             Vehicle vehicle = vehicleOptional.get();
-            SecurityUtils.checkDataPermission(vehicle.getDivision());
+            SecurityUtils.checkDataPermission(vehicle.getShop());
             vehicle.setStatus(RecordStatus.DELETED);
             vehicle.setBounded(false);
             if (vehicle.getEquipment() != null) {
@@ -235,7 +244,7 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public List<VehicleSummaryDTO> findVehicleByDivisionId(Long divisionId) {
-        List<VehicleSummaryDTO> vehicles = vehicleRepository.findByDivisionIdAndStatus(divisionId, RecordStatus.ACTIVE)
+        List<VehicleSummaryDTO> vehicles = vehicleRepository.findByShopIdAndStatus(divisionId, RecordStatus.ACTIVE)
             .stream().map(VehicleService::toSummaryDto).collect(Collectors.toList());
         return vehicles;
     }
@@ -297,7 +306,7 @@ public class VehicleServiceImpl implements VehicleService {
                 throw new BadRequestAlertException(response.getInfo(), "vehicle.sync", "vehicle.sync.error");
             }
            List<TrendyResponse.Car> cars =   response.getData().getList();
-            for(TrendyResponse.Car car : cars) {
+        /*    for(TrendyResponse.Car car : cars) {
                 Division shop = null;
                 Division city = null;
                 if(car.getCitylist()!=null) {
@@ -372,7 +381,7 @@ public class VehicleServiceImpl implements VehicleService {
                 vehicle.setBounded(false);
                 vehicle.setIsMoving(false);
                 vehicleRepository.save(vehicle);
-            }
+            }*/
     }
 
     private void createResult(String msgKey, int rowIdx, boolean success, List<RowParseError> results) {

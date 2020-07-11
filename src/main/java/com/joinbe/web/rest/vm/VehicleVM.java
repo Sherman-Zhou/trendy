@@ -14,8 +14,8 @@ public class VehicleVM implements Serializable {
     @ApiModelProperty(value = "品牌")
     private String brand;
 
-    @ApiModelProperty(value = "部门主键")
-    private Long divisionId;
+    @ApiModelProperty(value = "门店主键")
+    private String shopId;
 
 //    @ApiModelProperty(value = "年份")
 //    private String prodYear;

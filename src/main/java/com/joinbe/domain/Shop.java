@@ -1,16 +1,13 @@
 package com.joinbe.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.RecordStatus;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A Shop.
@@ -22,9 +19,8 @@ public class Shop implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    // @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String id;
 
     //    @NotNull
     @Size(max = 200)
@@ -61,28 +57,19 @@ public class Shop implements Serializable {
     private RecordStatus status;
 
 
-    @Column(name = "parent_id", updatable = false, insertable = false)
-    private Long parentId;
-    @ManyToOne
-    @JsonIgnoreProperties("divisions")
-    @TableField(exist = false)
-    private Shop parent;
-    @OneToMany(mappedBy = "parent")
-    @TableField(exist = false)
-    private List<Shop> children = new ArrayList<>();
 
     public Shop() {
     }
 
-    public Shop(Long id) {
+    public Shop(String id) {
         this.id = id;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -160,28 +147,5 @@ public class Shop implements Serializable {
         this.status = status;
     }
 
-    public Long getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
-    }
-
-    public Shop getParent() {
-        return parent;
-    }
-
-    public void setParent(Shop parent) {
-        this.parent = parent;
-    }
-
-    public List<Shop> getChildren() {
-        return children;
-    }
-
-    public void setChildren(List<Shop> children) {
-        this.children = children;
-    }
 
 }

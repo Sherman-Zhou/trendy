@@ -1,7 +1,7 @@
 package com.joinbe.service;
 
 import com.joinbe.domain.Permission;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
@@ -16,19 +16,19 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserService {
-    Optional<User> activateRegistration(String key);
+    Optional<Staff> activateRegistration(String key);
 
-    Optional<User> completePasswordReset(String newPassword, String key);
+    Optional<Staff> completePasswordReset(String newPassword, String key);
 
-    Optional<User> requestPasswordReset(String mail);
+    Optional<Staff> requestPasswordReset(String mail);
 
-    Optional<User> requestPasswordReset(Long userId);
+    Optional<Staff> requestPasswordReset(Long userId);
 
-    Optional<User> registerUserEmail(UserRegisterVM userDTO);
+    Optional<Staff> registerUserEmail(UserRegisterVM userDTO);
 
-    Optional<User> changeUserEmail(ChangeEmailVM userDTO);
+    Optional<Staff> changeUserEmail(ChangeEmailVM userDTO);
 
-    User createUser(UserDTO userDTO);
+    Staff createUser(UserDTO userDTO);
 
     void updateUser(String name, String email, String langKey, String address, String mobileNo);
 
@@ -46,15 +46,15 @@ public interface UserService {
 
     Optional<UserDetailsDTO> getUserWithAuthoritiesByLogin(String login);
 
-    Optional<User> getUserWithAuthorities(Long id);
+    Optional<Staff> getUserWithAuthorities(Long id);
 
     Optional<UserDetailsDTO> getUserWithAuthorities();
 
     List<RoleDTO> getRoles();
 
-    Optional<User> findOneByEmailIgnoreCase(String email);
+    Optional<Staff> findOneByEmailIgnoreCase(String email);
 
-    Optional<User> findOneByLogin(String login);
+    Optional<Staff> findOneByLogin(String login);
 
     List<Permission> findAllUserPermissionsByLogin(String login);
 
