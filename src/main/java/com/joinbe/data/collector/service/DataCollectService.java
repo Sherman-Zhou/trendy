@@ -288,7 +288,7 @@ public class DataCollectService {
             log.warn("Refused to update status, vehicle not bound yet, imei: {}", deviceNo);
             return;
         }
-        log.debug("In UpdateStatus, request for update equipment and vehicle , online: {},  vehicle: {}", isOnLine,isMoving);
+        log.debug("In UpdateStatus, request for update equipment and vehicle , deviceNo: {},  online: {},  isMoving: {}", deviceNo,isOnLine,isMoving);
         Equipment ept = equipment.get();
         ept.setOnline(isOnLine);
         ept.getVehicle().setIsMoving(isMoving);
