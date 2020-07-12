@@ -46,6 +46,8 @@ public interface StaffService {
 
     Optional<UserDetailsDTO> getUserWithAuthoritiesByLogin(String login);
 
+    Optional<UserDetailsDTO> getUserEmail(String login);
+
     Optional<Staff> getUserWithAuthorities(Long id);
 
     Optional<UserDetailsDTO> getUserWithAuthorities();

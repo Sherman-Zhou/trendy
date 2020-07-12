@@ -462,6 +462,21 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<UserDetailsDTO> getUserEmail(String login) {
+
+        return staffRepository.findOneWithRolesByLogin(login)
+            .map(staff -> {
+                UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
+                userDetailsDTO.setId(staff.getId());
+                userDetailsDTO.setLogin(staff.getLogin());
+                userDetailsDTO.setEmail(staff.getEmail());
+                return userDetailsDTO;
+            });
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
     public Optional<Staff> getUserWithAuthorities(Long id) {
         return staffRepository.findOneWithRolesById(id);
     }
