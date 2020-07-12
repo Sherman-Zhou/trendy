@@ -1,8 +1,11 @@
 package com.joinbe.security;
 
-import com.joinbe.domain.Division;
+
+import com.joinbe.domain.Merchant;
+import com.joinbe.domain.Shop;
 import com.joinbe.service.util.SpringContextUtils;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -12,7 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -46,56 +48,94 @@ public final class SecurityUtils {
         return null;
     }
 
-    public static List<Long> getCurrentUserDivisionIds() {
+    public static List<String> getCurrentUserDivisionIds() {
         Optional<String> currentUserLogin = getCurrentUserLogin();
-        if(!currentUserLogin.isPresent()){
+        if (!currentUserLogin.isPresent()) {
             return new ArrayList<>();
         }
         RedissonTokenStore redissonTokenStore = SpringContextUtils.getBean(RedissonTokenStore.class);
         return redissonTokenStore.getUserDivisionIds(currentUserLogin.get());
+    }
 
+    public static UserLoginInfo getCurrentUserLoginInfo() {
+        Optional<String> login = getCurrentUserLogin();
+        RedissonTokenStore redissonTokenStore = SpringContextUtils.getBean(RedissonTokenStore.class);
+        if (login.isPresent()) {
+            return redissonTokenStore.getUserLoginInfo(login.get());
+        } else {
+            throw new CredentialsExpiredException("User Login info is expired");
+        }
     }
 
     /**
      * to check if the user has the permission of Division
+     *
      * @param division
      */
-    public static void checkDataPermission(Division division) {
-        if(division == null) {
-            throw new AccessDeniedException("No Permission to view this record");
-        }
-       checkDataPermission(division.getId());
+    public static void checkDataPermission(Shop division) {
+//        if(division == null) {
+//            throw new AccessDeniedException("No Permission to view this record");
+//        }
+//        checkDataPermission(division.getId());
     }
 
     /**
      * to check if the user has the permission of Division
+     *
      * @param divisionId
      */
-    public static void checkDataPermission(Long divisionId) {
-        if(!getCurrentUserDivisionIds().contains(divisionId)) {
-            throw new AccessDeniedException("No Permission to view this record");
+    public static void checkDataPermission(String divisionId) {
+//        if(!getCurrentUserDivisionIds().contains(divisionId)) {
+//            throw new AccessDeniedException("No Permission to view this record");
+//        }
+    }
+
+    public static void checkMerchantPermission(Merchant merchant) {
+        UserLoginInfo loginInfo = getCurrentUserLoginInfo();
+        if (loginInfo.isSystemAdmin()) {
+            return;
+        }
+        if (merchant == null || !merchant.getId().equals(loginInfo.getMerchantId())) {
+            throw new AccessDeniedException("No Permission");
+        }
+    }
+
+    public static void checkMerchantPermission(Long merchantId) {
+        UserLoginInfo loginInfo = getCurrentUserLoginInfo();
+        if (loginInfo.isSystemAdmin()) {
+            return;
+        }
+        if (merchantId.equals(loginInfo.getMerchantId())) {
+            throw new AccessDeniedException("No Permission");
         }
     }
 
 
-    /**
-     * to check if the current user has the permission of all divisions
-     * @param divisions
-     */
-    public static void checkDataPermission(Set<Division> divisions) {
-        List<Long> userDivisionIds = getCurrentUserDivisionIds();
-       boolean hasAllPermission= divisions.stream().allMatch(division -> userDivisionIds.contains(division.getId()));
-       if(!hasAllPermission) {
-           throw new AccessDeniedException("No Permission to view this record");
-       }
+    public static void checkMerchantPermission(UserLoginInfo loginInfo, Merchant merchant) {
+        if (merchant == null || !merchant.getId().equals(loginInfo.getMerchantId())) {
+            throw new AccessDeniedException("No Permission");
+        }
     }
 
+
+    //    /**
+//     * to check if the current user has the permission of all divisions
+//     *
+//     * @param divisions
+//     */
+//    public static void checkDataPermission(Set<Division> divisions) {
+//        List<Long> userDivisionIds = getCurrentUserDivisionIds();
+////       boolean hasAllPermission= divisions.stream().allMatch(division -> userDivisionIds.contains(division.getId()));
+////       if(!hasAllPermission) {
+////           throw new AccessDeniedException("No Permission to view this record");
+////       }
+//    }
     public static void checkDataPermission(List<Long> divisionIds) {
-        List<Long> userDivisionIds = getCurrentUserDivisionIds();
-        boolean hasAllPermission= divisionIds.stream().allMatch(divisionId -> userDivisionIds.contains(divisionId));
-        if(!hasAllPermission) {
-            throw new AccessDeniedException("No Permission to view this record");
-        }
+//        List<Long> userDivisionIds = getCurrentUserDivisionIds();
+//        boolean hasAllPermission= divisionIds.stream().allMatch(divisionId -> userDivisionIds.contains(divisionId));
+//        if(!hasAllPermission) {
+//            throw new AccessDeniedException("No Permission to view this record");
+//        }
     }
 
 

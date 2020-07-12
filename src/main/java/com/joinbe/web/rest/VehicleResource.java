@@ -1,6 +1,5 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.service.DivisionService;
 import com.joinbe.service.VehicleService;
 import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
@@ -18,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Optional;
 
@@ -33,12 +31,10 @@ public class VehicleResource {
     private static final String ENTITY_NAME = "vehicle";
     private final Logger log = LoggerFactory.getLogger(VehicleResource.class);
     private final VehicleService vehicleService;
-    private final DivisionService divisionService;
 
 
-    public VehicleResource(VehicleService vehicleService, DivisionService divisionService) {
+    public VehicleResource(VehicleService vehicleService) {
         this.vehicleService = vehicleService;
-        this.divisionService = divisionService;
     }
 
 
@@ -78,30 +74,30 @@ public class VehicleResource {
     @GetMapping("/vehicles/sync")
     @ApiOperation("同步车辆")
     public ResponseEntity<PageData<VehicleDetailsDTO>> syncVehicle(Pageable pageable) {
-        log.debug("sync cars from app backend..."); //TODO: to implement...
+        log.debug("sync cars from app backend...");
         vehicleService.syncVehicle();
         Page<VehicleDetailsDTO> page = vehicleService.findAll(pageable, new VehicleVM());
         return ResponseUtil.toPageData(page);
     }
 
 
-    /**
-     * {@code POST  /vehicles} : Create a new vehicle.
-     *
-     * @param vehicleDetailsDTO the vehicleDTO to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new vehicleDTO, or with status {@code 400 (Bad Request)} if the vehicle has already an ID.
-     * @throws URISyntaxException if the Location URI syntax is incorrect.
-     */
-    @PostMapping("/vehicles")
-    public ResponseEntity<VehicleDetailsDTO> createVehicle(@Valid @RequestBody VehicleDetailsDTO vehicleDetailsDTO) throws URISyntaxException {
-        log.debug("REST request to save Vehicle : {}", vehicleDetailsDTO);
-        if (vehicleDetailsDTO.getId() != null) {
-            throw new BadRequestAlertException("A new vehicle cannot already have an ID", ENTITY_NAME, "idexists");
-        }
-        VehicleDetailsDTO result = vehicleService.save(vehicleDetailsDTO);
-        return ResponseEntity.created(new URI("/api/vehicles/" + result.getId()))
-            .body(result);
-    }
+//    /**
+//     * {@code POST  /vehicles} : Create a new vehicle.
+//     *
+//     * @param vehicleDetailsDTO the vehicleDTO to create.
+//     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new vehicleDTO, or with status {@code 400 (Bad Request)} if the vehicle has already an ID.
+//     * @throws URISyntaxException if the Location URI syntax is incorrect.
+//     */
+//    @PostMapping("/vehicles")
+//    public ResponseEntity<VehicleDetailsDTO> createVehicle(@Valid @RequestBody VehicleDetailsDTO vehicleDetailsDTO) throws URISyntaxException {
+//        log.debug("REST request to save Vehicle : {}", vehicleDetailsDTO);
+//        if (vehicleDetailsDTO.getId() != null) {
+//            throw new BadRequestAlertException("A new vehicle cannot already have an ID", ENTITY_NAME, "idexists");
+//        }
+//        VehicleDetailsDTO result = vehicleService.save(vehicleDetailsDTO);
+//        return ResponseEntity.created(new URI("/api/vehicles/" + result.getId()))
+//            .body(result);
+//    }
 
     /**
      * {@code PUT  /vehicles} : Updates an existing vehicle.

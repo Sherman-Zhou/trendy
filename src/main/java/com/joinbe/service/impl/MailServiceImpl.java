@@ -1,6 +1,6 @@
 package com.joinbe.service.impl;
 
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.service.MailService;
 import io.github.jhipster.config.JHipsterProperties;
 import org.apache.commons.lang3.StringUtils;
@@ -77,52 +77,52 @@ public class MailServiceImpl implements MailService {
 
     @Override
     @Async
-    public void sendEmailFromTemplate(User user, String templateName, String titleKey) {
-        if (user.getEmail() == null) {
-            log.debug("Email doesn't exist for user '{}'", user.getLogin());
+    public void sendEmailFromTemplate(Staff staff, String templateName, String titleKey) {
+        if (staff.getEmail() == null) {
+            log.debug("Email doesn't exist for user '{}'", staff.getLogin());
             return;
         }
-        Locale locale = Locale.forLanguageTag(user.getLangKey());
+        Locale locale = Locale.forLanguageTag(staff.getLangKey());
         Context context = new Context(locale);
-        context.setVariable(USER, user);
+        context.setVariable(USER, staff);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
         String content = templateEngine.process(templateName, context);
         String subject = messageSource.getMessage(titleKey, null, locale);
-        sendEmail(user.getEmail(), subject, content, false, true);
+        sendEmail(staff.getEmail(), subject, content, false, true);
     }
 
     @Override
     @Async
-    public void sendActivationEmail(User user) {
-        log.debug("Sending activation email to '{}'", user.getEmail());
-        sendEmailFromTemplate(user, "mail/activationEmail", "email.activation.title");
+    public void sendActivationEmail(Staff staff) {
+        log.debug("Sending activation email to '{}'", staff.getEmail());
+        sendEmailFromTemplate(staff, "mail/activationEmail", "email.activation.title");
     }
 
     @Override
     @Async
-    public void sendEmailChangeEmail(User user) {
-        log.debug("Sending change email notification to '{}'", user.getEmail());
+    public void sendEmailChangeEmail(Staff staff) {
+        log.debug("Sending change email notification to '{}'", staff.getEmail());
 
-        Locale locale = Locale.forLanguageTag(user.getLangKey());
+        Locale locale = Locale.forLanguageTag(staff.getLangKey());
         Context context = new Context(locale);
-        context.setVariable(USER, user);
+        context.setVariable(USER, staff);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
         String content = templateEngine.process("mail/changeEmail", context);
         String subject = messageSource.getMessage("email.change.title", null, locale);
-        sendEmail(user.getOldEmail(), subject, content, false, true);
+        sendEmail(staff.getOldEmail(), subject, content, false, true);
     }
 
     @Override
     @Async
-    public void sendCreationEmail(User user) {
-        log.debug("Sending creation email to '{}'", user.getEmail());
-        sendEmailFromTemplate(user, "mail/creationEmail", "email.activation.title");
+    public void sendCreationEmail(Staff staff) {
+        log.debug("Sending creation email to '{}'", staff.getEmail());
+        sendEmailFromTemplate(staff, "mail/creationEmail", "email.activation.title");
     }
 
     @Override
     @Async
-    public void sendPasswordResetMail(User user) {
-        log.debug("Sending password reset email to '{}'", user.getEmail());
-        sendEmailFromTemplate(user, "mail/passwordResetEmail", "email.reset.title");
+    public void sendPasswordResetMail(Staff staff) {
+        log.debug("Sending password reset email to '{}'", staff.getEmail());
+        sendEmailFromTemplate(staff, "mail/passwordResetEmail", "email.reset.title");
     }
 }

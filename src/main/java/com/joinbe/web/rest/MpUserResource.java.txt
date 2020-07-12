@@ -1,7 +1,7 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.domain.User;
-import com.joinbe.service.UserService;
+import com.joinbe.domain.Staff;
+import com.joinbe.service.StaffService;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
@@ -28,40 +28,40 @@ import java.net.URISyntaxException;
 @RequestMapping("/api/mp")
 public class MpUserResource {
     private final Logger log = LoggerFactory.getLogger(MpUserResource.class);
-    private final UserService userService;
+    private final UserService staffService;
 
-    public MpUserResource(@Qualifier("mpUserService") UserService userService) {
-        this.userService = userService;
+    public MpUserResource(@Qualifier("mpUserService") UserService staffService) {
+        this.staffService = staffService;
     }
 
     /**
-     * {@code GET /users} : get all users.
+     * {@code GET /staff} : get all staff.
      *
      * @param pageable the pagination information.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body all users.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body all staff.
      */
-    @GetMapping("/users")
+    @GetMapping("/staff")
     public ResponseEntity<PageData<UserDTO>> getAllUsers(Pageable pageable, UserVM userVM) {
-        final Page<UserDTO> page = userService.getAllManagedUsers(pageable, userVM);
+        final Page<UserDTO> page = staffService.getAllManagedUsers(pageable, userVM);
         return ResponseUtil.toPageData(page);
     }
 
-    @PostMapping("/users")
+    @PostMapping("/staff")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<User> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
 
         if (userDTO.getId() != null) {
-            throw new BadRequestAlertException("A new user cannot already have an ID", "userManagement", "idexists");
-            // Lowercase the user login before comparing with database
-        } else if (userService.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
+            throw new BadRequestAlertException("A new staff cannot already have an ID", "userManagement", "idexists");
+            // Lowercase the staff login before comparing with database
+        } else if (staffService.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
             throw new LoginAlreadyUsedException();
-        } else if (userService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
+        } else if (staffService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
         } else {
-            User newUser = userService.createUser(userDTO);
+            User newStaff = staffService.createUser(userDTO);
 
-            return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
-                .body(newUser);
+            return ResponseEntity.created(new URI("/api/staff/" + newStaff.getLogin()))
+                .body(newStaff);
         }
     }
 }

@@ -1,16 +1,10 @@
 package com.joinbe.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.RecordStatus;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A Shop.
@@ -22,9 +16,8 @@ public class Shop implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    // @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String id;
 
     //    @NotNull
     @Size(max = 200)
@@ -60,32 +53,45 @@ public class Shop implements Serializable {
     @Column(name = "status")
     private RecordStatus status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Merchant merchant;
 
-    @Column(name = "parent_id", updatable = false, insertable = false)
-    private Long parentId;
+//    @ManyToOne
+//    @JoinColumn(name= "area_id")
+//    private City area;
+
     @ManyToOne
-    @JsonIgnoreProperties("divisions")
-    @TableField(exist = false)
-    private Shop parent;
-    @OneToMany(mappedBy = "parent")
-    @TableField(exist = false)
-    private List<Shop> children = new ArrayList<>();
+    @JoinColumn(name = "city_id")
+    private City city;
+
+    @Column(name = "city_id", updatable = false, insertable = false)
+    private String cityId;
+
+//    @Column(name = "area_id", updatable = false, insertable = false)
+//    private String areaId;
 
     public Shop() {
     }
 
-    public Shop(Long id) {
+    public Shop(String id) {
         this.id = id;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
+    }
 
     public String getTitle() {
         return title;
@@ -160,28 +166,35 @@ public class Shop implements Serializable {
         this.status = status;
     }
 
-    public Long getParentId() {
-        return parentId;
+    public String getCityId() {
+        return cityId;
     }
 
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
+    public void setCityId(String cityId) {
+        this.cityId = cityId;
     }
 
-    public Shop getParent() {
-        return parent;
+//    public String getAreaId() {
+//        return areaId;
+//    }
+//
+//    public void setAreaId(String areaId) {
+//        this.areaId = areaId;
+//    }
+//
+//    public City getArea() {
+//        return area;
+//    }
+//
+//    public void setArea(City area) {
+//        this.area = area;
+//    }
+
+    public City getCity() {
+        return city;
     }
 
-    public void setParent(Shop parent) {
-        this.parent = parent;
+    public void setCity(City city) {
+        this.city = city;
     }
-
-    public List<Shop> getChildren() {
-        return children;
-    }
-
-    public void setChildren(List<Shop> children) {
-        this.children = children;
-    }
-
 }

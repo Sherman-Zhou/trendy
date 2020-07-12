@@ -15,7 +15,7 @@ public class VehicleSummaryDTO {
     @ApiModelProperty(value = "是否行驶中")
     private Boolean isMoving;
 
-    @ApiModelProperty(value = "部门主键")
-    private Long divisionId;
+    @ApiModelProperty(value = "门店主键")
+    private String divisionId;
 
 }

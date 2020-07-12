@@ -1,18 +1,18 @@
 package com.joinbe.service;
 
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 
 public interface MailService {
 
     void sendEmail(String to, String subject, String content, boolean isMultipart, boolean isHtml);
 
-    void sendEmailFromTemplate(User user, String templateName, String titleKey);
+    void sendEmailFromTemplate(Staff staff, String templateName, String titleKey);
 
-    void sendActivationEmail(User user);
+    void sendActivationEmail(Staff staff);
 
-    void sendEmailChangeEmail(User user);
+    void sendEmailChangeEmail(Staff staff);
 
-    void sendCreationEmail(User user);
+    void sendCreationEmail(Staff staff);
 
-    void sendPasswordResetMail(User user);
+    void sendPasswordResetMail(Staff staff);
 }

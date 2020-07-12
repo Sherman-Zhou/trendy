@@ -5,12 +5,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.joinbe.common.util.PageUtil;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Permission;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.UserRole;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.mp.mapper.UserMapper;
 import com.joinbe.service.UserRoleService;
-import com.joinbe.service.UserService;
+import com.joinbe.service.StaffService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.UserDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
@@ -33,7 +33,7 @@ import java.time.Instant;
 import java.util.*;
 
 /**
- * Service class for managing users.
+ * Service class for managing staff.
  */
 @Service("mpUserService")
 @Transactional
@@ -70,40 +70,40 @@ public class MpUserServiceImpl extends ServiceImpl<UserMapper, User> implements 
 
     @Override
     public User createUser(UserDTO userDTO) {
-        User user = new User();
-        user.setLogin(userDTO.getLogin().toLowerCase());
-        user.setName(userDTO.getName());
+        User staff = new User();
+        staff.setLogin(userDTO.getLogin().toLowerCase());
+        staff.setName(userDTO.getName());
         if (userDTO.getEmail() != null) {
-            user.setEmail(userDTO.getEmail().toLowerCase());
+            staff.setEmail(userDTO.getEmail().toLowerCase());
         }
-        user.setAvatar(userDTO.getAvatar());
+        staff.setAvatar(userDTO.getAvatar());
         if (userDTO.getLangKey() == null) {
-            user.setLangKey(Constants.DEFAULT_LANGUAGE); // default language
+            staff.setLangKey(Constants.DEFAULT_LANGUAGE); // default language
         } else {
-            user.setLangKey(userDTO.getLangKey());
+            staff.setLangKey(userDTO.getLangKey());
         }
         String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
-        user.setPassword(encryptedPassword);
-        user.setResetKey(RandomUtil.generateResetKey());
-        user.setResetDate(Instant.now());
-        user.setStatus(RecordStatus.ACTIVE);
-        user.setVersion(0);
+        staff.setPassword(encryptedPassword);
+        staff.setResetKey(RandomUtil.generateResetKey());
+        staff.setResetDate(Instant.now());
+        staff.setStatus(RecordStatus.ACTIVE);
+        staff.setVersion(0);
 
-        this.save(user);
+        this.save(staff);
 
         if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
             List<UserRole> userRoles = new ArrayList<>(userDTO.getRoleIds().size());
             Set<Long> roleIds = new HashSet<>(userDTO.getRoleIds());
             for (Long roleId : roleIds) {
                 UserRole userRole = new UserRole();
-                userRole.setUserId(user.getId());
+                userRole.setUserId(staff.getId());
                 userRole.setRoleId(roleId);
                 userRoles.add(userRole);
             }
             userRoleService.saveBatch(userRoles);
         }
-        log.debug("Created Information for User: {}", user);
-        return user;
+        log.debug("Created Information for User: {}", staff);
+        return staff;
     }
 
     @Override

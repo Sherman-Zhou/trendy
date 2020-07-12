@@ -4,10 +4,11 @@ import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.excel.BindingDataListener;
 import com.joinbe.common.util.ExcelUtil;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
+import com.joinbe.repository.StaffRepository;
 import com.joinbe.security.SecurityUtils;
-import com.joinbe.service.DivisionService;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.VehicleService;
 import com.joinbe.service.dto.DivisionDTO;
@@ -23,9 +24,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -56,20 +58,23 @@ public class BindingResource {
 
     private final VehicleService vehicleService;
 
-    private final DivisionService divisionService;
 
     private final EquipmentService equipmentService;
 
     private final MessageSource messageSource;
-    @Autowired
-    private RedissonEquipmentStore redissonEquipmentStore;
 
-    public BindingResource(VehicleService vehicleService, DivisionService divisionService,
-                           EquipmentService equipmentService, MessageSource messageSource) {
+    private final RedissonEquipmentStore redissonEquipmentStore;
+
+    private final StaffRepository staffRepository;
+
+    public BindingResource(VehicleService vehicleService,
+                           EquipmentService equipmentService, MessageSource messageSource, RedissonEquipmentStore redissonEquipmentStore,
+                           StaffRepository staffRepository) {
         this.vehicleService = vehicleService;
-        this.divisionService = divisionService;
         this.equipmentService = equipmentService;
         this.messageSource = messageSource;
+        this.redissonEquipmentStore = redissonEquipmentStore;
+        this.staffRepository = staffRepository;
     }
 
 
@@ -92,8 +97,7 @@ public class BindingResource {
     @ApiOperation("待绑定设备")
     public List<EquipmentDTO> getAllUnboundEquipments() {
         log.debug("REST request to get a page of Vehicles");
-        List<EquipmentDTO> list = equipmentService.findAllUnboundEquipments();
-        return list;
+        return equipmentService.findAllUnboundEquipments();
     }
 
     /**
@@ -147,17 +151,25 @@ public class BindingResource {
     @GetMapping("/binding/user/divisions")
     @ApiOperation("获取当前用户部门")
     public  List<DivisionDTO> getUserDivisions() {
-        List<DivisionDTO> divisionDTOS = divisionService.findUserDivision(SecurityUtils.getCurrentUserLogin().get());
+        Optional<Staff> staffOptional = staffRepository.findOneWithShopsAndCitiesByLogin(SecurityUtils.getCurrentUserLogin().get());
+        if (staffOptional.isPresent()) {
+            Staff staff = staffOptional.get();
+            List<DivisionDTO> divisionDTOS = staff.getShops().stream().map(shop -> new DivisionDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
 
-        Map<Long, List<DivisionDTO>> children = divisionDTOS.stream().filter(divisionDTO ->  divisionDTO.getParentId()!=null)
-            .collect(Collectors.groupingBy(DivisionDTO::getParentId));
-        for (DivisionDTO divisionDTO : divisionDTOS) {
-            if (children.get(divisionDTO.getId()) != null) {
-                divisionDTO.setChildren(children.get(divisionDTO.getId()));
+            List<DivisionDTO> divisionDTOInCities = staff.getCities().stream().map(shop -> new DivisionDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
+            divisionDTOS.addAll(divisionDTOInCities);
+
+            Map<String, List<DivisionDTO>> children = divisionDTOS.stream().filter(divisionDTO -> StringUtils.isNotEmpty(divisionDTO.getParentId()))
+                .collect(Collectors.groupingBy(DivisionDTO::getParentId));
+
+            for (DivisionDTO divisionDTO : divisionDTOS) {
+                if (children.get(divisionDTO.getId()) != null) {
+                    divisionDTO.setChildren(children.get(divisionDTO.getId()));
+                }
             }
+            return divisionDTOS.stream().filter(menu -> StringUtils.isEmpty(menu.getParentId())).collect(Collectors.toList());
         }
-        List<DivisionDTO> parents = divisionDTOS.stream().filter(menu -> menu.getParentId() == null).collect(Collectors.toList());
-        return parents;
+        return new ArrayList<>();
     }
 
 

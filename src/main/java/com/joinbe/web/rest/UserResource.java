@@ -1,16 +1,13 @@
 package com.joinbe.web.rest;
 
 import com.joinbe.config.Constants;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.security.RedissonTokenStore;
-import com.joinbe.service.DivisionService;
 import com.joinbe.service.MailService;
-import com.joinbe.service.UserService;
-import com.joinbe.service.dto.DivisionDTO;
-import com.joinbe.service.dto.RoleDTO;
-import com.joinbe.service.dto.UserDTO;
-import com.joinbe.service.dto.UserDetailsDTO;
+import com.joinbe.service.MerchantService;
+import com.joinbe.service.StaffService;
+import com.joinbe.service.dto.*;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.LoginAlreadyUsedException;
@@ -21,24 +18,27 @@ import com.joinbe.web.rest.vm.UserVM;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing users.
  * <p>
- * This class accesses the {@link User} entity, and needs to fetch its collection of authorities.
+ * This class accesses the {@link Staff} entity, and needs to fetch its collection of authorities.
  * <p>
  * For a normal use-case, it would be better to have an eager relationship between User and Authority,
  * and send everything to the client side: there would be no View Model and DTO, a lot less code, and an outer-join
@@ -67,19 +67,20 @@ public class UserResource {
     private final Logger log = LoggerFactory.getLogger(UserResource.class);
 
 
-    private final UserService userService;
+    private final StaffService staffService;
 
-    private final DivisionService divisionService;
 
     private final MailService mailService;
 
+    private final MerchantService merchantService;
+
     private final RedissonTokenStore redissonTokenStore;
 
-    public UserResource(@Qualifier("JpaUserService") UserService userService, MailService mailService,
-                        DivisionService divisionService, RedissonTokenStore redissonTokenStore) {
-        this.userService = userService;
+    public UserResource(@Qualifier("JpaUserService") StaffService staffService, MailService mailService,
+                        MerchantService merchantService, RedissonTokenStore redissonTokenStore) {
+        this.staffService = staffService;
         this.mailService = mailService;
-        this.divisionService = divisionService;
+        this.merchantService = merchantService;
         this.redissonTokenStore = redissonTokenStore;
     }
 
@@ -98,21 +99,21 @@ public class UserResource {
     @PostMapping("/users")
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     @ApiOperation(value = "创建新用户")
-    public ResponseEntity<User> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
+    public ResponseEntity<Staff> createUser(@Valid @RequestBody UserDTO userDTO) throws URISyntaxException {
         log.debug("REST request to save User : {}", userDTO);
 
         if (userDTO.getId() != null) {
             throw new BadRequestAlertException("A new user cannot already have an ID", "userManagement", "idexists");
             // Lowercase the user login before comparing with database
-        } else if (userService.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
+        } else if (staffService.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
             throw new LoginAlreadyUsedException();
-        } else if (userService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
+        } else if (staffService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
         } else {
-            User newUser = userService.createUser(userDTO);
+            Staff newStaff = staffService.createUser(userDTO);
             //mailService.sendCreationEmail(newUser);
-            return ResponseEntity.created(new URI("/api/users/" + newUser.getLogin()))
-                .body(newUser);
+            return ResponseEntity.created(new URI("/api/users/" + newStaff.getLogin()))
+                .body(newStaff);
         }
     }
 
@@ -129,15 +130,15 @@ public class UserResource {
     @ApiOperation(value = "更新新用户")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
-        Optional<User> existingUser = userService.findOneByEmailIgnoreCase(userDTO.getEmail());
+        Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new EmailAlreadyUsedException();
         }
-        existingUser = userService.findOneByLogin(userDTO.getLogin().toLowerCase());
+        existingUser = staffService.findOneByLogin(userDTO.getLogin().toLowerCase());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new LoginAlreadyUsedException();
         }
-        Optional<UserDTO> updatedUser = userService.updateUser(userDTO);
+        Optional<UserDTO> updatedUser = staffService.updateUser(userDTO);
 
         return ResponseUtil.wrapOrNotFound(updatedUser);
     }
@@ -155,7 +156,7 @@ public class UserResource {
                                                        @PathVariable @ApiParam(value ="操作类型", required = true ) UserOperation op) {
         log.debug("REST request to {} User : {} ", op, id);
         RecordStatus status = UserOperation.enable.equals(op) ? RecordStatus.ACTIVE : RecordStatus.INACTIVE;
-        Optional<UserDTO> updatedUser = userService.updateUserStatus(id, status);
+        Optional<UserDTO> updatedUser = staffService.updateUserStatus(id, status);
         return ResponseUtil.wrapOrNotFound(updatedUser);
     }
 
@@ -167,7 +168,7 @@ public class UserResource {
     @GetMapping(path = "/user/{id}/reset")
     @ApiOperation(value = "重置用户密码")
     public ResponseEntity<UserDTO> requestPasswordReset(@PathVariable  @ApiParam(value ="用户主键", required = true ) Long id) {
-        Optional<User> user = userService.requestPasswordReset(id);
+        Optional<Staff> user = staffService.requestPasswordReset(id);
         user.ifPresent(mailService::sendPasswordResetMail);
 
         return ResponseUtil.wrapOrNotFound(user.map(UserDTO::new));
@@ -182,7 +183,7 @@ public class UserResource {
     @GetMapping("/users")
     @ApiOperation("搜索用户")
     public ResponseEntity<PageData<UserDTO>> getAllUsers(Pageable pageable, UserVM userVM) {
-        final Page<UserDTO> page = userService.getAllManagedUsers(pageable, userVM);
+        final Page<UserDTO> page = staffService.getAllManagedUsers(pageable, userVM);
         return ResponseUtil.toPageData(page);
     }
 
@@ -192,27 +193,57 @@ public class UserResource {
      * @return all available roles.
      */
     @GetMapping("/users/roles")
-    @ApiOperation("获取所有角色")
+    @ApiOperation("获取所有平台角色")
     public List<RoleDTO> getRoles() {
-        return userService.getRoles();
+        return staffService.getRolesForMerchant();
+    }
+
+    /**
+     * Gets all available merchants.
+     *
+     * @return all available merchants.
+     */
+    @GetMapping("/users/merchants")
+    @ApiOperation("获取所有平台")
+    public List<MerchantDTO> getMerchants() {
+        return merchantService.getAll().stream().map(MerchantService::toDto).collect(Collectors.toList());
+    }
+
+    /**
+     * {@code Get  /users/{userId}/assign-merchant} : assign platform to user.
+     *
+     * @param userId     the id of the user to update.
+     * @param merchantId the id  of merchant to assign.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated userDto,
+     * or with status {@code 500 (Internal Server Error)} if the userDto couldn't be updated.
+     */
+    @GetMapping("/users/{userId}/assign-merchant/{merchantId}")
+    @ApiOperation("分配平台")
+    public ResponseEntity<UserDTO> assignMerchant(@PathVariable @ApiParam(value = "用户主键", required = true) Long userId,
+                                                  @PathVariable @ApiParam(value = "平台主键", required = true) Long merchantId) {
+        log.debug("REST request to assign merchant: {} to user : {}", merchantId, userId);
+        UserDTO result = staffService.assignMerchant(userId, merchantId);
+
+        return ResponseEntity.ok()
+            .body(result);
     }
 
 
     /**
-     * {@code PUT  /users/{userId}/assign} : assign division to role.
+     * {@code PUT  /users/{userId}/assign} : assign division to user.
      *
-     * @param userId     the id of the user to update.
+     * @param userId      the id of the user to update.
      * @param divisionIds the id  of division to assign.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated userDto,
      * or with status {@code 500 (Internal Server Error)} if the userDto couldn't be updated.
      */
     @PutMapping("/users/{userId}/assign")
     @ApiOperation("分配用户城市/部门")
-    public ResponseEntity<UserDTO> assignDivision(@PathVariable @ApiParam(value ="用户主键", required = true ) Long userId,
-                                                  @Valid @RequestBody @ApiParam(value ="城市/部门主键列表", required = true ) List<Long>  divisionIds) {
+    public ResponseEntity<UserDTO> assignDivision(@PathVariable @ApiParam(value = "用户主键", required = true) Long userId,
+                                                  @Valid @RequestBody @ApiParam(value = "城市/部门主键列表", required = true) List<String> divisionIds) {
         log.debug("REST request to assign division: {} to user : {}", divisionIds, userId);
-        UserDTO result = userService.assignDivision(userId, divisionIds);
-        redissonTokenStore.storeUserDivision(result.getLogin(), divisionIds);
+        UserDTO result = staffService.assignDivision(userId, divisionIds);
+        //redissonTokenStore.storeUserDivision(result.getLogin(), divisionIds);
         return ResponseEntity.ok()
             .body(result);
     }
@@ -226,7 +257,36 @@ public class UserResource {
     @ApiOperation(value = "获取当前用户拥有的所有部门")
     public List<DivisionDTO> getCurrentUserDivisions() {
         log.debug("REST request to get all divisions");
-        return divisionService.findCurrentUserDivisions();
+        Optional<Staff> staffOptional = staffService.getUserWithShopsAndCities();
+        if (staffOptional.isPresent()) {
+            Staff staff = staffOptional.get();
+            List<DivisionDTO> divisionDTOS = staff.getShops().stream().map(shop -> new DivisionDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
+
+            List<DivisionDTO> divisionDTOInCities = staff.getCities().stream().map(shop -> new DivisionDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
+            divisionDTOS.addAll(divisionDTOInCities);
+
+            List<DivisionDTO> children = divisionDTOS.stream()
+                // .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+                .filter(division -> StringUtils.isNotEmpty(division.getParentId()))
+                .sorted(Comparator.comparing(DivisionDTO::getName))
+                .collect(Collectors.toList());
+
+            Map<String, List<DivisionDTO>> childMenusMap = children.stream().collect(Collectors.groupingBy(DivisionDTO::getParentId));
+            //establish relationship for child menu
+            for (DivisionDTO divisionDTO : divisionDTOS) {
+                if (!CollectionUtils.isEmpty(childMenusMap.get(divisionDTO.getId()))) {
+                    divisionDTO.setChildren(childMenusMap.get(divisionDTO.getId()));
+//                permissionDTO.setExpand(true);
+                }
+            }
+
+            //get Root Menus
+
+            return divisionDTOS.stream()
+                .filter(menu -> StringUtils.isEmpty(menu.getParentId()))
+                .collect(Collectors.toList());
+        }
+        return new ArrayList<>();
     }
 
     /**
@@ -237,9 +297,9 @@ public class UserResource {
      */
     @GetMapping("/users/{userId}/divisions")
     @ApiOperation(value = "获取用户部门主键列表")
-    public List<Long> getAllUserDivisionIds(@PathVariable @ApiParam(value ="用户主键", required = true )  Long userId) {
+    public List<String> getAllUserDivisionIds(@PathVariable @ApiParam(value = "用户主键", required = true) Long userId) {
         log.debug("REST request to get a List of children divisions for parent:{}", userId);
-        return userService.findAllUserDivisionIds(userId);
+        return staffService.findAllUserDivisionIds(userId);
     }
 
 
@@ -255,7 +315,7 @@ public class UserResource {
     public ResponseEntity<UserDetailsDTO> getUser(@PathVariable @ApiParam(value ="用户登陆id", required = true ) String login) {
         log.debug("REST request to get User : {}", login);
         return ResponseUtil.wrapOrNotFound(
-            userService.getUserWithAuthoritiesByLogin(login));
+            staffService.getUserWithAuthoritiesByLogin(login));
     }
 
     /**
@@ -269,7 +329,7 @@ public class UserResource {
 //    @PreAuthorize("hasAuthority(\"" + AuthoritiesConstants.ADMIN + "\")")
     public ResponseEntity<Void> deleteUser(@PathVariable @ApiParam(value ="用户主键", required = true ) Long id) {
         log.debug("REST request to delete User: {}", id);
-        userService.deleteUser(id);
+        staffService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
 

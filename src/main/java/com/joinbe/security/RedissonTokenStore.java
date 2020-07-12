@@ -1,7 +1,6 @@
 package com.joinbe.security;
 
 import io.github.jhipster.config.JHipsterProperties;
-import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
@@ -9,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -41,36 +41,36 @@ public class RedissonTokenStore {
         tokenValidityInSeconds = jHipsterProperties.getSecurity().getAuthentication().getJwt().getTokenValidityInSeconds();
     }
 
-    public void putInRedis(String login, String token) {
-        RMapCache<String, String> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
-        tokenMap.put(TOKEN_KEY_PREFIX + login, token, tokenValidityInSeconds, TimeUnit.SECONDS);
+    public void saveLoginInfo(String login, UserLoginInfo loginInfo) {
+        RMapCache<String, UserLoginInfo> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
+        tokenMap.put(login, loginInfo, tokenValidityInSeconds, TimeUnit.SECONDS);
     }
 
-    public void removeFromRedis(String login) {
-        RMapCache<String, String> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
-        tokenMap.remove(TOKEN_KEY_PREFIX + login);
-    }
-
-    public void storeUserDivision(String login, List<Long> divisionIds) {
-        RMapCache<String, List<Long>> divisionMap = redissonClient.getMapCache(DIVISION_KEY);
-        divisionMap.put(login, divisionIds);
-    }
-
-    public List<Long> getUserDivisionIds(String login) {
-        RMapCache<String, List<Long>> divisionMap = redissonClient.getMapCache(DIVISION_KEY);
-        return divisionMap.get(login);
-    }
-
-    public void removeDivisionIdsFromRedis(String login) {
-        RMapCache<String, String> tokenMap = redissonClient.getMapCache(DIVISION_KEY);
+    public void removeLoginInfo(String login) {
+        RMapCache<String, UserLoginInfo> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
         tokenMap.remove(login);
     }
 
+    public UserLoginInfo getUserLoginInfo(String login) {
+        RMapCache<String, UserLoginInfo> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
+        return tokenMap.get(login);
+    }
+
+    public List<String> getUserDivisionIds(String login) {
+        RMapCache<String, UserLoginInfo> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
+        UserLoginInfo token = tokenMap.get(login);
+        if (token != null) {
+            return token.getDivisionIds();
+        }
+        return new ArrayList<>();
+    }
+
+
     public boolean isTokenExisted(String login) {
-        RMapCache<String, String> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
-        String token = tokenMap.get(TOKEN_KEY_PREFIX + login);
+        RMapCache<String, UserLoginInfo> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
+        UserLoginInfo token = tokenMap.get(login);
         log.debug("Token in redis for user {}:{}", login, token);
-        return StringUtils.isNotEmpty(token);
+        return token != null;
     }
 
 

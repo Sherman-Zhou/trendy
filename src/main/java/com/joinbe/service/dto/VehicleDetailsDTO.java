@@ -135,15 +135,19 @@ public class VehicleDetailsDTO implements Serializable {
     private Instant createdDate;
 
     @Size(max = 20)
-    @ApiModelProperty(value = "更新者",hidden = true )
+    @ApiModelProperty(value = "更新者", hidden = true)
     private String lastModifiedBy;
 
-    @ApiModelProperty(value = "更新时间",hidden = true )
+    @ApiModelProperty(value = "更新时间", hidden = true)
     private Instant lastModifiedDate;
 
-    @ApiModelProperty(value = "部门主键")
+    @ApiModelProperty(value = "城市主键")
     @NotNull
-    private Long divisionId;
+    private String cityId;
+
+    @ApiModelProperty(value = "门店主键")
+    @NotNull
+    private String shopId;
 
     @ApiModelProperty(value = "组织", hidden = true)
     private String orgName;

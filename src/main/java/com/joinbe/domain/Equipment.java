@@ -72,6 +72,9 @@ public class Equipment extends AbstractAuditingEntity {
     @JoinColumn(unique = true)
     private Vehicle vehicle;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Merchant merchant;
+
     @OneToMany(mappedBy = "equipment")
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<VehicleTrajectory> trajectories = new HashSet<>();
@@ -199,6 +202,14 @@ public class Equipment extends AbstractAuditingEntity {
         this.trajectories.remove(vehicleTrajectory);
         vehicleTrajectory.setEquipment(null);
         return this;
+    }
+
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
     }
 
     public Boolean getOnline() {

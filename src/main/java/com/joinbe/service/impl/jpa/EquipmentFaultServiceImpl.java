@@ -6,6 +6,7 @@ import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.EquipmentFault;
 import com.joinbe.repository.EquipmentFaultRepository;
 import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.EquipmentFaultService;
 import com.joinbe.service.dto.EquipmentFaultDTO;
 import com.joinbe.service.dto.EquipmentFaultHandleDTO;
@@ -61,6 +62,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
             .filter(Optional::isPresent)
             .map(Optional::get)
             .map(equipmentFault -> {
+                SecurityUtils.checkMerchantPermission(equipmentFault.getEquipment().getMerchant());
                 log.debug("isRead: {}", equipmentFault.getIsRead());
                 equipmentFault.setIsRead(true);
                 return equipmentFault;
@@ -73,6 +75,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
        List<EquipmentFault> faults = equipmentFaultRepository.findAllById(ids);
        faults.forEach(equipmentFault -> {
            log.debug("isRead:{} of {}", equipmentFault.getIsRead(), equipmentFault.getId());
+           SecurityUtils.checkMerchantPermission(equipmentFault.getEquipment().getMerchant());
            equipmentFault.setIsRead(true);
        });
     }
@@ -88,9 +91,10 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
     public Page<EquipmentFaultDTO> findAll(Pageable pageable, EquipmentFaultVM vm) {
         log.debug("Request to get all EquipmentFaults");
         QueryParams<EquipmentFault> queryParams = new QueryParams<>();
-        List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
+//
+        queryParams.and("vehicle.merchant.id", Filter.Operator.eq, loginInfo.getMerchantId());
 
-        queryParams.and("vehicle.division.id", Filter.Operator.in, userDivisionIds);
 
         if (vm.getIsRead() != null) {
             queryParams.and("isRead", Filter.Operator.eq, vm.getIsRead());
@@ -99,7 +103,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
 //            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentIdNum());
 //        }
 
-        if(vm.getVehicleId()!=null) {
+        if (vm.getVehicleId() != null) {
             queryParams.and("vehicle.id", Filter.Operator.eq, vm.getVehicleId());
         }
 

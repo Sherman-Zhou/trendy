@@ -13,5 +13,5 @@ public class SearchVehicleVM {
     private Boolean onlineOnly;
 
     @ApiModelProperty(value = "部门主键")
-    private Long divisionId;
+    private String divisionId;
 }

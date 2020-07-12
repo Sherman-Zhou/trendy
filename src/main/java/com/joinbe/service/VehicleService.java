@@ -2,8 +2,9 @@ package com.joinbe.service;
 
 import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.util.BeanConverter;
-import com.joinbe.domain.Division;
+import com.joinbe.domain.City;
 import com.joinbe.domain.Equipment;
+import com.joinbe.domain.Shop;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.UploadResponse;
@@ -11,10 +12,12 @@ import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.service.dto.VehicleSummaryDTO;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
 import com.joinbe.web.rest.vm.VehicleVM;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -23,20 +26,46 @@ import java.util.Optional;
 public interface VehicleService {
 
     static VehicleDetailsDTO toDto(Vehicle vehicle) {
+        Locale locale = LocaleContextHolder.getLocale();
+
         VehicleDetailsDTO dto = BeanConverter.toDto(vehicle, VehicleDetailsDTO.class);
         dto.setStatus(vehicle.getStatus() != null ? vehicle.getStatus().getCode() : null);
-        Division division = vehicle.getDivision();
-        SecurityUtils.checkDataPermission(division);
-        dto.setDivisionId(division.getId());
-        dto.setOrgName(division.getName());
+        Shop shop = vehicle.getShop();
+        City city = vehicle.getCity();
+        SecurityUtils.checkDataPermission(shop);
+
+        dto.setShopId(shop.getId());
+        if (Locale.CHINESE.equals(locale)) {
+            //city & shop
+            dto.setOrgName(shop.getTitleCn());
+            dto.setDivName(city.getNameCn());
+            //vehicle i18n
+            dto.setBrand(vehicle.getBrandCn());
+            dto.setContactName(vehicle.getContactNameCn());
+            dto.setName(vehicle.getNameCn());
+            dto.setStyle(vehicle.getStyleCn());
+            dto.setType(vehicle.getTypeCn());
+            dto.setLicensePlateNumber(vehicle.getLicensePlateNumberCn());
+
+        } else if (Locale.JAPANESE.equals(locale)) {
+            dto.setOrgName(shop.getTitleJp());
+            dto.setDivName(city.getNameJp());
+
+            //vehicle i18n
+            dto.setBrand(vehicle.getBrandJp());
+            dto.setContactName(vehicle.getContactNameJp());
+            dto.setName(vehicle.getNameJp());
+            dto.setStyle(vehicle.getStyleJp());
+            dto.setType(vehicle.getTypeJp());
+            dto.setLicensePlateNumber(vehicle.getLicensePlateNumberJp());
+        } else {
+            dto.setOrgName(shop.getTitle());
+            dto.setDivName(city.getName());
+        }
         Equipment equipment = vehicle.getEquipment();
         if (equipment != null) {
             dto.setIsOnline(vehicle.getEquipment().getOnline());
             dto.setIdentifyNumber(equipment.getIdentifyNumber());
-        }
-
-        if (division.getParent() != null) {
-            dto.setDivName(division.getParent().getName());
         }
         return dto;
     }
@@ -90,7 +119,7 @@ public interface VehicleService {
      */
     void delete(Long id);
 
-    List<VehicleSummaryDTO> findVehicleByDivisionId(Long divisionId);
+    List<VehicleSummaryDTO> findVehicleByDivisionId(String divisionId);
 
     void binding(UploadResponse response, List<BindingData> data);
 

@@ -3,15 +3,10 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
-import com.joinbe.domain.Equipment;
-import com.joinbe.domain.Vehicle;
-import com.joinbe.domain.VehicleTrajectory;
-import com.joinbe.domain.VehicleTrajectoryDetails;
+import com.joinbe.config.Constants;
+import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.RecordStatus;
-import com.joinbe.repository.DivisionRepository;
-import com.joinbe.repository.VehicleRepository;
-import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
-import com.joinbe.repository.VehicleTrajectoryRepository;
+import com.joinbe.repository.*;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.VehicleTrajectoryDetailsService;
@@ -22,6 +17,7 @@ import com.joinbe.web.rest.vm.TrajectoryVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,18 +44,23 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     private final VehicleTrajectoryRepository vehicleTrajectoryRepository;
 
-    private final DivisionRepository divisionRepository;
 
     private final VehicleRepository vehicleRepository;
 
     private final VehicleTrajectoryDetailsRepository trajectoryDetailsRepository;
 
-    public VehicleTrajectoryServiceImpl(VehicleTrajectoryRepository vehicleTrajectoryRepository, DivisionRepository divisionRepository,
-                                        VehicleRepository vehicleRepository, VehicleTrajectoryDetailsRepository trajectoryDetailsRepository) {
+    private final CityRepository cityRepository;
+
+    private final ShopRepository shopRepository;
+
+    public VehicleTrajectoryServiceImpl(VehicleTrajectoryRepository vehicleTrajectoryRepository,
+                                        VehicleRepository vehicleRepository, VehicleTrajectoryDetailsRepository trajectoryDetailsRepository,
+                                        CityRepository cityRepository, ShopRepository shopRepository) {
         this.vehicleTrajectoryRepository = vehicleTrajectoryRepository;
-        this.divisionRepository = divisionRepository;
         this.vehicleRepository = vehicleRepository;
         this.trajectoryDetailsRepository = trajectoryDetailsRepository;
+        this.cityRepository = cityRepository;
+        this.shopRepository = shopRepository;
     }
 
     /**
@@ -166,22 +167,33 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     @Override
     public List<DivisionWithVehicesleDTO> findCurrentUserDivisionsAndVehicles(SearchVehicleVM vm) {
-        List<Long> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+        List<String> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+
         List<DivisionWithVehicesleDTO> divisions = userDivisionIds.stream()
-            .map(divisionRepository::getOne)
-            .map(DivisionWithVehicesleDTO::new)
+            .map(id -> {
+                DivisionWithVehicesleDTO dto;
+                if (id.startsWith(Constants.CITY_ID_PREFIX)) {
+                    City city = cityRepository.getOne(id);
+                    dto = new DivisionWithVehicesleDTO(city, LocaleContextHolder.getLocale());
+                } else {
+                    Shop shop = shopRepository.getOne(id);
+                    dto = new DivisionWithVehicesleDTO(shop, LocaleContextHolder.getLocale());
+                }
+                return dto;
+            })
+
             .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
             .collect(Collectors.toList());
 
         QueryParams<Vehicle> queryParams = new QueryParams<>();
         queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
-        if (vm.getDivisionId() != null) {
-            SecurityUtils.checkDataPermission(vm.getDivisionId());
-            queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
-        } else {
-            // add user's division condition
-            queryParams.and("division.id", Filter.Operator.in, SecurityUtils.getCurrentUserDivisionIds());
-        }
+//        if (vm.getDivisionId() != null) {
+//            SecurityUtils.checkDataPermission(vm.getDivisionId());
+//            queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
+//        } else {
+//            // add user's division condition
+//            queryParams.and("division.id", Filter.Operator.in, SecurityUtils.getCurrentUserDivisionIds());
+//        } //FIXME: permission check
         if (vm.getOnlineOnly() != null) {
             queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
         }
@@ -196,13 +208,13 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             specification = specification.and(itemSpecification);
         }
 
-        Map<Long, List<VehicleSummaryDTO>> vehicleMap = vehicleRepository.findAll(specification).stream()
+        Map<String, List<VehicleSummaryDTO>> vehicleMap = vehicleRepository.findAll(specification).stream()
             .map(vehicle -> {
                 VehicleSummaryDTO dto = new VehicleSummaryDTO();
                 dto.setLicensePlateNumber(vehicle.getLicensePlateNumber());
                 dto.setIsMoving(vehicle.getIsMoving());
                 dto.setId(vehicle.getId());
-                dto.setDivisionId(vehicle.getDivision().getId());
+                dto.setDivisionId(vehicle.getShop().getId());
                 return dto;
             })
             .collect(Collectors.groupingBy(VehicleSummaryDTO::getDivisionId));
@@ -214,7 +226,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             .sorted(Comparator.comparing(DivisionDTO::getName))
             .collect(Collectors.toList());
 
-        Map<Long, List<DivisionDTO>> childMenusMap = children.stream().collect(Collectors.groupingBy(DivisionDTO::getParentId));
+        Map<String, List<DivisionDTO>> childMenusMap = children.stream().collect(Collectors.groupingBy(DivisionDTO::getParentId));
         //establish relationship for child menu
         for (DivisionDTO divisionDTO : divisions) {
             if (!CollectionUtils.isEmpty(childMenusMap.get(divisionDTO.getId()))) {
@@ -236,7 +248,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         Optional<Vehicle> vehicleOptional = vehicleRepository.findById(vehicleId);
         if (vehicleOptional.isPresent()) {
             Vehicle vehicle = vehicleOptional.get();
-            SecurityUtils.checkDataPermission(vehicle.getDivision());
+            SecurityUtils.checkDataPermission(vehicle.getShop());
             VehicleStateDTO vehicleStateDTO = new VehicleStateDTO();
             if (vehicle.getEquipment() != null) {
                 EquipmentDTO equipment = EquipmentService.toDto(vehicle.getEquipment());

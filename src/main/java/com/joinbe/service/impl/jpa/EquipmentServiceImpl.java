@@ -3,12 +3,13 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.excel.EquipmentData;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
-import com.joinbe.domain.Division;
 import com.joinbe.domain.Equipment;
+import com.joinbe.domain.Merchant;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.EquipmentStatus;
-import com.joinbe.repository.DivisionRepository;
 import com.joinbe.repository.EquipmentRepository;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
 import com.joinbe.service.dto.RowParseError;
@@ -40,13 +41,12 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
 
-    private final DivisionRepository divisionRepository;
 
     private final MessageSource messageSource;
 
-    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, DivisionRepository divisionRepository, MessageSource messageSource) {
+    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, MessageSource messageSource) {
         this.equipmentRepository = equipmentRepository;
-        this.divisionRepository = divisionRepository;
+
         this.messageSource = messageSource;
     }
 
@@ -59,7 +59,10 @@ public class EquipmentServiceImpl implements EquipmentService {
     @Override
     public EquipmentDTO save(EquipmentDTO equipmentDTO) {
         log.debug("Request to save Equipment : {}", equipmentDTO);
+        UserLoginInfo userLoginInfo = SecurityUtils.getCurrentUserLoginInfo();
+
         Equipment equipment = EquipmentService.toEntity(equipmentDTO);
+        equipment.setMerchant(new Merchant(userLoginInfo.getMerchantId()));
         equipment = equipmentRepository.save(equipment);
         return EquipmentService.toDto(equipment);
     }
@@ -74,7 +77,11 @@ public class EquipmentServiceImpl implements EquipmentService {
     @Transactional(readOnly = true)
     public Page<EquipmentDTO> findAll(Pageable pageable, EquipmentVM vm) {
         log.debug("Request to get all Equipment");
+        UserLoginInfo userLoginInfo = SecurityUtils.getCurrentUserLoginInfo();
         QueryParams<Equipment> queryParams = new QueryParams<>();
+
+        queryParams.and("merchant.id", Filter.Operator.eq, userLoginInfo.getMerchantId());
+
         queryParams.and("status", Filter.Operator.ne, EquipmentStatus.DELETED);
         if (StringUtils.isNotEmpty(vm.getIdentifyNumber())) {
             queryParams.and("identifyNumber", Filter.Operator.like, vm.getIdentifyNumber());
@@ -118,9 +125,11 @@ public class EquipmentServiceImpl implements EquipmentService {
     @Override
     public void delete(Long id) {
         log.debug("Request to delete Equipment : {}", id);
+
         Optional<Equipment> equipmentOptional = equipmentRepository.findById(id);
         if (equipmentOptional.isPresent()) {
             Equipment equipment = equipmentOptional.get();
+            SecurityUtils.checkMerchantPermission(equipment.getMerchant().getId());
             equipment.setStatus(EquipmentStatus.DELETED);
             equipment.setVehicle(null);
             Vehicle vehicle = equipment.getVehicle();
@@ -146,18 +155,19 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     @Override
     public List<EquipmentDTO> findAllUnboundEquipments() {
-        return equipmentRepository.findAllByStatus(EquipmentStatus.UNBOUND)
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
+        return equipmentRepository.findAllByStatusAndMerchantId(EquipmentStatus.UNBOUND, loginInfo.getMerchantId())
             .stream().map(EquipmentService::toDto).collect(Collectors.toList());
     }
 
     @Override
     public void upload(UploadResponse response, List<EquipmentData> equipmentDataList) {
-
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
         List<Equipment> equipments = new ArrayList<>();
 
         for (EquipmentData equipmentData : equipmentDataList) {
             boolean hasError = false;
-            Division org = null;
+
             if (equipmentRepository.findOneByImeiAndStatusNot(equipmentData.getImei(), EquipmentStatus.DELETED).isPresent()) {
                 createResult("equipment.upload.imei.exists", equipmentData.getRowIdx(), false, response.getErrors());
                 hasError = true;
@@ -190,9 +200,9 @@ public class EquipmentServiceImpl implements EquipmentService {
                 equipment.setSimCardNum(equipmentData.getSimCardNum());
                 equipment.setVersion(equipmentData.getVersion());
                 equipment.setRemark(equipmentData.getRemark());
+                equipment.setMerchant(new Merchant(loginInfo.getMerchantId()));
                 equipment.setOnline(false);
                 equipment.setStatus(EquipmentStatus.UNBOUND);
-
                 equipments.add(equipment);
             } else {
                 response.successToError();

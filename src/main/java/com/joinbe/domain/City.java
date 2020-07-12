@@ -1,8 +1,6 @@
 package com.joinbe.domain;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.RecordStatus;
 
@@ -22,9 +20,7 @@ public class City implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private String id;
 
     //    @NotNull
     @Size(max = 200)
@@ -50,27 +46,32 @@ public class City implements Serializable {
 
 
     @Column(name = "parent_id", updatable = false, insertable = false)
-    private Long parentId;
+    private String parentId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Merchant merchant;
+
     @ManyToOne
-    @JsonIgnoreProperties("divisions")
+    @JsonIgnoreProperties("children")
     @TableField(exist = false)
     private City parent;
-    @OneToMany(mappedBy = "parent")
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     @TableField(exist = false)
     private List<City> children = new ArrayList<>();
 
     public City() {
     }
 
-    public City(Long id) {
+    public City(String id) {
         this.id = id;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -122,11 +123,11 @@ public class City implements Serializable {
         this.status = status;
     }
 
-    public Long getParentId() {
+    public String getParentId() {
         return parentId;
     }
 
-    public void setParentId(Long parentId) {
+    public void setParentId(String parentId) {
         this.parentId = parentId;
     }
 
@@ -146,4 +147,11 @@ public class City implements Serializable {
         this.children = children;
     }
 
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
+    }
 }

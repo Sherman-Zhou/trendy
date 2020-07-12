@@ -2,7 +2,7 @@ package com.joinbe.service.dto;
 
 import com.joinbe.config.Constants;
 import com.joinbe.domain.Role;
-import com.joinbe.domain.User;
+import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.Sex;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -80,25 +80,28 @@ public class UserDTO implements Serializable {
     private List<Long> roleIds;
 
     @ApiModelProperty("部门id列表")
-    private List<Long> divisionIds;
+    private List<String> divisionIds;
+
+    @ApiModelProperty("平台主键")
+    private Long merchantId;
 
     public UserDTO() {
     }
 
-    public UserDTO(User user) {
-        this.setId(user.getId());
-        this.setLogin(user.getLogin());
-        this.setName(user.getName());
-        this.setEmail(user.getEmail());
-        this.setMobileNo(user.getMobileNo());
-        this.setStatus(user.getStatus() != null ? user.getStatus().getCode() : null);
-        this.setAvatar(user.getAvatar());
-        this.setSex(Sex.getCode(user.getSex()));
-        this.setLangKey(user.getLangKey());
-        this.setAddress(user.getAddress());
-        this.setRemark(user.getRemark());
-        if (!CollectionUtils.isEmpty(user.getRoles())) {
-            Set<String> roleNames = user.getRoles().stream()
+    public UserDTO(Staff staff) {
+        this.setId(staff.getId());
+        this.setLogin(staff.getLogin());
+        this.setName(staff.getName());
+        this.setEmail(staff.getEmail());
+        this.setMobileNo(staff.getMobileNo());
+        this.setStatus(staff.getStatus() != null ? staff.getStatus().getCode() : null);
+        this.setAvatar(staff.getAvatar());
+        this.setSex(Sex.getCode(staff.getSex()));
+        this.setLangKey(staff.getLangKey());
+        this.setAddress(staff.getAddress());
+        this.setRemark(staff.getRemark());
+        if (!CollectionUtils.isEmpty(staff.getRoles())) {
+            Set<String> roleNames = staff.getRoles().stream()
                 .map(Role::getName)
                 .collect(Collectors.toSet());
             this.setRoleName(String.join(", ", roleNames));
