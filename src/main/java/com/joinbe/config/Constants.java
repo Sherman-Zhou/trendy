@@ -19,6 +19,9 @@ public final class Constants {
     public static final String ROLE_TYPE_MERCHANT = "M";
 
     public static final String CITY_ID_PREFIX = "C";
+    public static final String SHOP_ID_PREFIX = "S";
+
+    public static final String CITY_ROOT_ID = "C0";
 
     private Constants() {
     }

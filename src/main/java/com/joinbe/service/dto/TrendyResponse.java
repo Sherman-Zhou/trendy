@@ -16,8 +16,16 @@ public class TrendyResponse implements Serializable {
 
     @Data
     public static class DataList implements Serializable {
-        private long total;
-        private List<Car> list;
+        //private long total;
+        private Row row;
+        // private List<Car> list;
+    }
+
+    @Data
+    public static class Row implements Serializable {
+        private List<Car> jp;
+        private List<Car> en;
+        private List<Car> cn;
     }
 
     @Data
@@ -62,6 +70,9 @@ public class TrendyResponse implements Serializable {
     public static class City implements Serializable {
         private String id;
         private String name;
+        private String lng;
+        private String lat;
+        private String parentId;
         private List<City> son;
     }
 }

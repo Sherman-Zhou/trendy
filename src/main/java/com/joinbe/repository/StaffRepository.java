@@ -30,8 +30,10 @@ public interface StaffRepository extends JpaRepository<Staff, Long>, JpaSpecific
 
     Optional<Staff> findOneByResetKey(String resetKey);
 
+    @EntityGraph(attributePaths = {"cities", "shops"})
     Optional<Staff> findOneByEmailIgnoreCaseAndStatusNot(String email, RecordStatus status);
 
+    @EntityGraph(attributePaths = {"cities", "shops"})
     Optional<Staff> findOneByLoginAndStatusNot(String login, RecordStatus status);
 
 
@@ -54,7 +56,7 @@ public interface StaffRepository extends JpaRepository<Staff, Long>, JpaSpecific
     @EntityGraph(attributePaths = {"roles"})
     Optional<Staff> findOneWithRolesByLoginAndStatus(String login, RecordStatus recordStatus);
 
-    @EntityGraph(attributePaths = {"divisions"})
+    @EntityGraph(attributePaths = {"shops", "cities"})
     Optional<Staff> findOneWithDivisionsById(Long id);
 
 

@@ -104,7 +104,6 @@ public class Staff extends AbstractAuditingEntity implements Serializable {
     @JsonIgnoreProperties("staffs")
     private Merchant merchant;
 
-
     @JsonIgnore
     @ManyToMany
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -120,7 +119,7 @@ public class Staff extends AbstractAuditingEntity implements Serializable {
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JoinTable(name = "staff_city",
         joinColumns = @JoinColumn(name = "staff_id", referencedColumnName = "id"),
-        inverseJoinColumns = @JoinColumn(name = "city", referencedColumnName = "id"))
+        inverseJoinColumns = @JoinColumn(name = "city_id", referencedColumnName = "id"))
     @BatchSize(size = 20)
     @TableField(exist = false)
     private Set<City> cities = new HashSet<>();

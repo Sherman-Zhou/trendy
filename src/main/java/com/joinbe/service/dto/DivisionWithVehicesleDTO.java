@@ -28,7 +28,7 @@ public class DivisionWithVehicesleDTO extends DivisionDTO {
             this.setDescription(shop.getTitle());
         }
 
-        this.setParentId(null);
+        this.setParentId(shop.getCityId());
         this.setStatus(shop.getStatus());
     }
 

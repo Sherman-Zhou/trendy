@@ -6,6 +6,8 @@ import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.VehicleMaintenance;
 import com.joinbe.repository.VehicleMaintenanceRepository;
 import com.joinbe.repository.VehicleRepository;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.VehicleMaintenanceService;
 import com.joinbe.service.dto.VehicleMaintenanceDTO;
 import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
@@ -95,8 +97,10 @@ public class VehicleMaintenanceServiceImpl implements VehicleMaintenanceService 
 
     @Override
     public List<VehicleMaintenanceDTO> findAll(VehicleMaintenanceVM vm) {
+        UserLoginInfo userLoginInfo = SecurityUtils.getCurrentUserLoginInfo();
         QueryParams<VehicleMaintenance> queryParams = new QueryParams<>();
         queryParams.and("vehicle.id", Filter.Operator.eq, vm.getVehicleId());
+        queryParams.and("vehicle.merchant.id", Filter.Operator.eq, userLoginInfo.getMerchantId());
         return vehicleMaintenanceRepository.findAll(queryParams)
             .stream().map(VehicleMaintenanceService::toDto).collect(Collectors.toList());
     }

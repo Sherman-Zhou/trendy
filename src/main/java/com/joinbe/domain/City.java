@@ -48,12 +48,15 @@ public class City implements Serializable {
     @Column(name = "parent_id", updatable = false, insertable = false)
     private String parentId;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Merchant merchant;
+
     @ManyToOne
-    @JsonIgnoreProperties("divisions")
+    @JsonIgnoreProperties("children")
     @TableField(exist = false)
     private City parent;
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
     @TableField(exist = false)
     private List<City> children = new ArrayList<>();
 
@@ -144,4 +147,11 @@ public class City implements Serializable {
         this.children = children;
     }
 
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
+    }
 }

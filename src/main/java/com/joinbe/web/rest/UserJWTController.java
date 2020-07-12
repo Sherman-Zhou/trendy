@@ -1,12 +1,14 @@
 package com.joinbe.web.rest;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.joinbe.domain.Staff;
+import com.joinbe.config.Constants;
 import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.security.jwt.JWTFilter;
 import com.joinbe.security.jwt.TokenProvider;
 import com.joinbe.service.StaffService;
+import com.joinbe.service.dto.UserDetailsDTO;
 import com.joinbe.web.rest.vm.LoginVM;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModelProperty;
@@ -24,7 +26,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 
@@ -44,6 +45,7 @@ public class UserJWTController {
     private final RedissonTokenStore redissonTokenStore;
     private final StaffService staffService;
 
+
     public UserJWTController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder,
                              RedissonTokenStore redissonTokenStore,
                              @Qualifier("JpaUserService") StaffService staffService) {
@@ -57,10 +59,19 @@ public class UserJWTController {
     @PostMapping("/authenticate")
     @ApiOperation("用户登陆")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
-        Optional<Staff> userOptional;
-        if (new EmailValidator().isValid(loginVM.getUsername(), null)) {
-            userOptional = staffService.findOneByEmailIgnoreCase(loginVM.getUsername());
+        Optional<UserDetailsDTO> userOptional;
+
+        boolean isAdmin = Constants.ADMIN_ACCOUNT.equalsIgnoreCase(loginVM.getUsername());
+        String lowercaseLogin = loginVM.getUsername().toLowerCase(Locale.ENGLISH);
+        if (!isAdmin) {
+            if (new EmailValidator().isValid(loginVM.getUsername(), null)) {
+                userOptional = staffService.findOneByEmailIgnoreCase(loginVM.getUsername());
+            } else {
+
+                userOptional = staffService.findOneByLogin(lowercaseLogin);
+            }
             if (userOptional.isPresent()) {
+                //need register email before login
                 if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
                     JWTToken token = new JWTToken();
                     token.setNeedRegister(true);
@@ -68,29 +79,19 @@ public class UserJWTController {
                 }
             }
         } else {
-            String lowercaseLogin = loginVM.getUsername().toLowerCase(Locale.ENGLISH);
-            userOptional = staffService.findOneByLogin(lowercaseLogin);
-            if (userOptional.isPresent()) {
-                if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
-                    JWTToken token = new JWTToken();
-                    token.setNeedRegister(true);
-                    return new ResponseEntity<>(token, HttpStatus.OK);
-                }
-            }
+            userOptional = staffService.getSystemUserWithAuthorities(lowercaseLogin);
         }
-
         UsernamePasswordAuthenticationToken authenticationToken =
             new UsernamePasswordAuthenticationToken(loginVM.getUsername(), loginVM.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         boolean rememberMe = (loginVM.isRememberMe() == null) ? false : loginVM.isRememberMe();
         String jwt = tokenProvider.createToken(authentication, rememberMe);
-
-        String login = userOptional.get().getLogin();
-        redissonTokenStore.putInRedis(login, jwt);
-
-        List<String> userDivisionIds = staffService.findAllUserDivisionIds(login);
-        redissonTokenStore.storeUserDivision(login, userDivisionIds);
+        if (userOptional.isPresent()) {
+            UserDetailsDTO userDetailsDTO = userOptional.get();
+            UserLoginInfo loginInfo = new UserLoginInfo(userDetailsDTO.getLogin(), userDetailsDTO.getMerchantId(), userDetailsDTO.getDivisionIds());
+            redissonTokenStore.saveLoginInfo(userDetailsDTO.getLogin(), loginInfo);
+        }
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add(JWTFilter.AUTHORIZATION_HEADER, "Bearer " + jwt);
         return new ResponseEntity<>(new JWTToken(jwt), httpHeaders, HttpStatus.OK);
@@ -99,8 +100,7 @@ public class UserJWTController {
     @GetMapping("/logout")
     @ApiOperation("用户登出")
     public ResponseEntity<Void> logout() {
-        redissonTokenStore.removeFromRedis(SecurityUtils.getCurrentUserLogin().orElse(""));
-        redissonTokenStore.removeDivisionIdsFromRedis(SecurityUtils.getCurrentUserLogin().orElse(""));
+        SecurityUtils.getCurrentUserLogin().ifPresent(redissonTokenStore::removeLoginInfo);
         return ResponseEntity.noContent().build();
     }
 

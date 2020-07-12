@@ -18,6 +18,7 @@ import com.joinbe.web.rest.vm.UserVM;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,14 +26,13 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -130,7 +130,7 @@ public class UserResource {
     @ApiOperation(value = "更新新用户")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
-        Optional<Staff> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
+        Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new EmailAlreadyUsedException();
         }
@@ -264,7 +264,27 @@ public class UserResource {
 
             List<DivisionDTO> divisionDTOInCities = staff.getCities().stream().map(shop -> new DivisionDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
             divisionDTOS.addAll(divisionDTOInCities);
-            return divisionDTOS;
+
+            List<DivisionDTO> children = divisionDTOS.stream()
+                // .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+                .filter(division -> StringUtils.isNotEmpty(division.getParentId()))
+                .sorted(Comparator.comparing(DivisionDTO::getName))
+                .collect(Collectors.toList());
+
+            Map<String, List<DivisionDTO>> childMenusMap = children.stream().collect(Collectors.groupingBy(DivisionDTO::getParentId));
+            //establish relationship for child menu
+            for (DivisionDTO divisionDTO : divisionDTOS) {
+                if (!CollectionUtils.isEmpty(childMenusMap.get(divisionDTO.getId()))) {
+                    divisionDTO.setChildren(childMenusMap.get(divisionDTO.getId()));
+//                permissionDTO.setExpand(true);
+                }
+            }
+
+            //get Root Menus
+
+            return divisionDTOS.stream()
+                .filter(menu -> StringUtils.isEmpty(menu.getParentId()))
+                .collect(Collectors.toList());
         }
         return new ArrayList<>();
     }

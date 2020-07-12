@@ -210,6 +210,8 @@ public class Vehicle extends AbstractAuditingEntity {
     @OneToOne(mappedBy = "vehicle", fetch = FetchType.LAZY)
     private Equipment equipment;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Merchant merchant;
 
     @OneToMany(mappedBy = "vehicle")
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -571,6 +573,14 @@ public class Vehicle extends AbstractAuditingEntity {
 
     public void setEquipment(Equipment equipment) {
         this.equipment = equipment;
+    }
+
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
     }
 
     @Override

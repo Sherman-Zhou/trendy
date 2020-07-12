@@ -22,6 +22,13 @@ public class Merchant extends AbstractAuditingEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public Merchant() {
+    }
+
+    public Merchant(Long id) {
+        this.id = id;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @TableId(value = "id", type = IdType.AUTO)
@@ -81,4 +88,6 @@ public class Merchant extends AbstractAuditingEntity implements Serializable {
     public void setStaffs(List<Staff> staffs) {
         this.staffs = staffs;
     }
+
+
 }

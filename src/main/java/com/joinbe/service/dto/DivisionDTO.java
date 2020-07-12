@@ -62,26 +62,24 @@ public class DivisionDTO implements Serializable {
             this.setDescription(shop.getTitle());
         }
 
-        this.setParentId(null);
+        this.setParentId(shop.getCityId());
         this.setStatus(shop.getStatus());
     }
 
-    public DivisionDTO(City shop, Locale locale) {
-        this.setId(shop.getId());
+    public DivisionDTO(City city, Locale locale) {
+        this.setId(city.getId());
         if (Locale.CHINESE.equals(locale)) {
-
-            this.setName(shop.getNameCn());
-            this.setDescription(shop.getNameCn());
+            this.setName(city.getNameCn());
+            this.setDescription(city.getNameCn());
         } else if (Locale.JAPANESE.equals(locale)) {
-            this.setName(shop.getNameJp());
-            this.setDescription(shop.getNameJp());
+            this.setName(city.getNameJp());
+            this.setDescription(city.getNameJp());
         } else {
-            this.setName(shop.getName());
-            this.setDescription(shop.getName());
+            this.setName(city.getName());
+            this.setDescription(city.getName());
         }
-
-        this.setParentId(shop.getParentId());
-        this.setStatus(shop.getStatus());
+        this.setParentId(city.getParentId());
+        this.setStatus(city.getStatus());
     }
 
 

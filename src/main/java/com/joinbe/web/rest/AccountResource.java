@@ -138,11 +138,11 @@ public class AccountResource {
     @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新用户姓名， 用户邮件， 用户语言，手机号码和 地址")
     public void saveAccount(@Valid @RequestBody UserAccountDTO userDTO) {
         String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
-        Optional<Staff> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
+        Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
         if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
             throw new EmailAlreadyUsedException();
         }
-        Optional<Staff> user = staffService.findOneByLogin(userLogin);
+        Optional<UserDetailsDTO> user = staffService.findOneByLogin(userLogin);
         if (!user.isPresent()) {
             throw new AccountResourceException("User could not be found");
         }

@@ -2,10 +2,7 @@ package com.joinbe.domain;
 
 import com.joinbe.domain.enumeration.RecordStatus;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.Size;
 import java.io.Serializable;
 
@@ -56,7 +53,22 @@ public class Shop implements Serializable {
     @Column(name = "status")
     private RecordStatus status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Merchant merchant;
 
+//    @ManyToOne
+//    @JoinColumn(name= "area_id")
+//    private City area;
+
+    @ManyToOne
+    @JoinColumn(name = "city_id")
+    private City city;
+
+    @Column(name = "city_id", updatable = false, insertable = false)
+    private String cityId;
+
+//    @Column(name = "area_id", updatable = false, insertable = false)
+//    private String areaId;
 
     public Shop() {
     }
@@ -73,6 +85,13 @@ public class Shop implements Serializable {
         this.id = id;
     }
 
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
+    }
 
     public String getTitle() {
         return title;
@@ -147,5 +166,35 @@ public class Shop implements Serializable {
         this.status = status;
     }
 
+    public String getCityId() {
+        return cityId;
+    }
 
+    public void setCityId(String cityId) {
+        this.cityId = cityId;
+    }
+
+//    public String getAreaId() {
+//        return areaId;
+//    }
+//
+//    public void setAreaId(String areaId) {
+//        this.areaId = areaId;
+//    }
+//
+//    public City getArea() {
+//        return area;
+//    }
+//
+//    public void setArea(City area) {
+//        this.area = area;
+//    }
+
+    public City getCity() {
+        return city;
+    }
+
+    public void setCity(City city) {
+        this.city = city;
+    }
 }

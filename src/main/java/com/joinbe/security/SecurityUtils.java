@@ -1,8 +1,11 @@
 package com.joinbe.security;
 
 
+import com.joinbe.domain.Merchant;
 import com.joinbe.domain.Shop;
 import com.joinbe.service.util.SpringContextUtils;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
@@ -52,7 +55,16 @@ public final class SecurityUtils {
         }
         RedissonTokenStore redissonTokenStore = SpringContextUtils.getBean(RedissonTokenStore.class);
         return redissonTokenStore.getUserDivisionIds(currentUserLogin.get());
+    }
 
+    public static UserLoginInfo getCurrentUserLoginInfo() {
+        Optional<String> login = getCurrentUserLogin();
+        RedissonTokenStore redissonTokenStore = SpringContextUtils.getBean(RedissonTokenStore.class);
+        if (login.isPresent()) {
+            return redissonTokenStore.getUserLoginInfo(login.get());
+        } else {
+            throw new CredentialsExpiredException("User Login info is expired");
+        }
     }
 
     /**
@@ -76,6 +88,33 @@ public final class SecurityUtils {
 //        if(!getCurrentUserDivisionIds().contains(divisionId)) {
 //            throw new AccessDeniedException("No Permission to view this record");
 //        }
+    }
+
+    public static void checkMerchantPermission(Merchant merchant) {
+        UserLoginInfo loginInfo = getCurrentUserLoginInfo();
+        if (loginInfo.isSystemAdmin()) {
+            return;
+        }
+        if (merchant == null || !merchant.getId().equals(loginInfo.getMerchantId())) {
+            throw new AccessDeniedException("No Permission");
+        }
+    }
+
+    public static void checkMerchantPermission(Long merchantId) {
+        UserLoginInfo loginInfo = getCurrentUserLoginInfo();
+        if (loginInfo.isSystemAdmin()) {
+            return;
+        }
+        if (merchantId.equals(loginInfo.getMerchantId())) {
+            throw new AccessDeniedException("No Permission");
+        }
+    }
+
+
+    public static void checkMerchantPermission(UserLoginInfo loginInfo, Merchant merchant) {
+        if (merchant == null || !merchant.getId().equals(loginInfo.getMerchantId())) {
+            throw new AccessDeniedException("No Permission");
+        }
     }
 
 

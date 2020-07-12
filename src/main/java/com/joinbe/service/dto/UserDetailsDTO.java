@@ -1,8 +1,6 @@
 package com.joinbe.service.dto;
 
-import com.joinbe.domain.Role;
-import com.joinbe.domain.Staff;
-import com.joinbe.domain.SystemUser;
+import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.service.RoleService;
 import io.swagger.annotations.ApiModelProperty;
@@ -52,6 +50,13 @@ public class UserDetailsDTO extends UserDTO {
     @ApiModelProperty(value = "用户权限")
     private List<PermissionDTO> permissions;
 
+    @ApiModelProperty(value = "平台主键")
+    private Long merchantId;
+
+    @ApiModelProperty(value = "激活key", hidden = true)
+    private String ActivationKey;
+
+
     public UserDetailsDTO() {
         // Empty constructor needed for Jackson.
     }
@@ -64,6 +69,8 @@ public class UserDetailsDTO extends UserDTO {
         this.setStatus(staff.getStatus() != null ? staff.getStatus().getCode() : null);
         this.setAvatar(staff.getAvatar());
         this.setLangKey(staff.getLangKey());
+        this.setMerchantId(staff.getMerchant().getId());
+        this.setActivationKey(staff.getActivationKey());
         this.version = staff.getVersion();
         this.roles = staff.getRoles().stream()
             .map(RoleService::toDto)
@@ -71,6 +78,10 @@ public class UserDetailsDTO extends UserDTO {
         this.authorities = staff.getRoles().stream()
             .map(Role::getName)
             .collect(Collectors.toSet());
+        List<String> userCityIds = staff.getCities().stream().map(City::getId).collect(Collectors.toList());
+        List<String> userShopIds = staff.getShops().stream().map(Shop::getId).collect(Collectors.toList());
+        userCityIds.addAll(userShopIds);
+        this.setDivisionIds(userCityIds);
 //        this.divisions = staff.getDivisions().stream()
 //            .map(DivisionService::toDto)
 //            .collect(Collectors.toSet());

@@ -24,6 +24,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -96,8 +97,7 @@ public class BindingResource {
     @ApiOperation("待绑定设备")
     public List<EquipmentDTO> getAllUnboundEquipments() {
         log.debug("REST request to get a page of Vehicles");
-        List<EquipmentDTO> list = equipmentService.findAllUnboundEquipments();
-        return list;
+        return equipmentService.findAllUnboundEquipments();
     }
 
     /**
@@ -151,7 +151,7 @@ public class BindingResource {
     @GetMapping("/binding/user/divisions")
     @ApiOperation("获取当前用户部门")
     public  List<DivisionDTO> getUserDivisions() {
-        Optional<Staff> staffOptional = staffRepository.findOneWithRolesByLogin(SecurityUtils.getCurrentUserLogin().get());
+        Optional<Staff> staffOptional = staffRepository.findOneWithShopsAndCitiesByLogin(SecurityUtils.getCurrentUserLogin().get());
         if (staffOptional.isPresent()) {
             Staff staff = staffOptional.get();
             List<DivisionDTO> divisionDTOS = staff.getShops().stream().map(shop -> new DivisionDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
@@ -159,15 +159,15 @@ public class BindingResource {
             List<DivisionDTO> divisionDTOInCities = staff.getCities().stream().map(shop -> new DivisionDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
             divisionDTOS.addAll(divisionDTOInCities);
 
-            Map<String, List<DivisionDTO>> children = divisionDTOS.stream().filter(divisionDTO -> divisionDTO.getParentId() != null)
+            Map<String, List<DivisionDTO>> children = divisionDTOS.stream().filter(divisionDTO -> StringUtils.isNotEmpty(divisionDTO.getParentId()))
                 .collect(Collectors.groupingBy(DivisionDTO::getParentId));
+
             for (DivisionDTO divisionDTO : divisionDTOS) {
                 if (children.get(divisionDTO.getId()) != null) {
                     divisionDTO.setChildren(children.get(divisionDTO.getId()));
                 }
             }
-            List<DivisionDTO> parents = divisionDTOS.stream().filter(menu -> menu.getParentId() == null).collect(Collectors.toList());
-            return parents;
+            return divisionDTOS.stream().filter(menu -> StringUtils.isEmpty(menu.getParentId())).collect(Collectors.toList());
         }
         return new ArrayList<>();
     }

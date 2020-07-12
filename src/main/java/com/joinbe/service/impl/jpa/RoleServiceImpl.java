@@ -2,6 +2,7 @@ package com.joinbe.service.impl.jpa;
 
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
+import com.joinbe.config.Constants;
 import com.joinbe.domain.Permission;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.Staff;
@@ -62,7 +63,7 @@ public class RoleServiceImpl implements RoleService {
         }else {
               role = RoleService.toEntity(roleDTO);
         }
-
+        role.setRoleType(Constants.ROLE_TYPE_MERCHANT);
         role = roleRepository.save(role);
         return RoleService.toDto(role);
     }

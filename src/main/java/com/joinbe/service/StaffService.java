@@ -52,13 +52,13 @@ public interface StaffService {
 
     Optional<Staff> getUserWithShopsAndCities();
 
-    Optional<UserDetailsDTO> getSystemUserWithAuthorities();
+    Optional<UserDetailsDTO> getSystemUserWithAuthorities(String login);
 
     List<RoleDTO> getRolesForMerchant();
 
-    Optional<Staff> findOneByEmailIgnoreCase(String email);
+    Optional<UserDetailsDTO> findOneByEmailIgnoreCase(String email);
 
-    Optional<Staff> findOneByLogin(String login);
+    Optional<UserDetailsDTO> findOneByLogin(String login);
 
     List<Permission> findAllUserPermissionsByLogin(String login);
 

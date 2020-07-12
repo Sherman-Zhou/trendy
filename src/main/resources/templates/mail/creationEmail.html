@@ -6,7 +6,7 @@
         <link rel="shortcut icon" th:href="@{|${baseUrl}/favicon.ico|}" />
     </head>
     <body>
-        <p th:text="#{email.activation.greeting(${staff.login})}">
+        <p th:text="#{email.activation.greeting(${user.login})}">
             Dear
         </p>
         <p th:text="#{email.creation.text1}">
@@ -14,7 +14,7 @@
         </p>
         <p>
             <a th:href="${url}" th:text="${url}"
-               th:with="url=(@{|${baseUrl}/#/login?key=${staff.resetKey}|})">Login link</a>
+               th:with="url=(@{|${baseUrl}/#/login?key=${user.resetKey}|})">Login link</a>
         </p>
         <p>
             <span th:text="#{email.activation.text2}">Regards, </span>

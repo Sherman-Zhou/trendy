@@ -82,6 +82,9 @@ public class UserDTO implements Serializable {
     @ApiModelProperty("部门id列表")
     private List<String> divisionIds;
 
+    @ApiModelProperty("平台主键")
+    private Long merchantId;
+
     public UserDTO() {
     }
 
