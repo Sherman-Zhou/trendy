@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -104,4 +105,19 @@ public class MerchantResource {
         merchantService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * {@code GET  /merchants/:id} : get the "id" role.
+     *
+     * @param id the id of the merchantDTO to retrieve.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the roleDTO, or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/merchants/{id}")
+    @ApiOperation("获取平台详情")
+    public ResponseEntity<MerchantDTO> getRole(@PathVariable @ApiParam(value = "平台主键", required = true) Long id) {
+        log.debug("REST request to get Role : {}", id);
+        Optional<MerchantDTO> roleDTO = merchantService.findOne(id);
+        return ResponseUtil.wrapOrNotFound(roleDTO);
+    }
 }
+
