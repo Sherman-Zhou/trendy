@@ -294,4 +294,28 @@ public class DataCollectService {
         ept.getVehicle().setIsMoving(isMoving);
         equipmentRepository.save(ept);
     }
+
+    /**
+     *
+     * @param deviceNo
+     * @param bleName
+     */
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+    public void updateBleName(String deviceNo, String bleName) {
+        if(StringUtils.isBlank(deviceNo) || StringUtils.isBlank(bleName)){
+            return;
+        }
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(deviceNo);
+        if (!equipment.isPresent()) {
+            log.warn("Refused to update blueName, equipment not maintained yet, imei: {}", deviceNo);
+            return;
+        } else if (equipment.get().getVehicle() == null) {
+            log.warn("Refused to update blueName, vehicle not bound yet, imei: {}", deviceNo);
+            return;
+        }
+        log.debug("In updateBleName, request for update bluetooth name , deviceNo: {},  bleName: {},  isMoving: {}", deviceNo,bleName);
+        Equipment ept = equipment.get();
+        ept.setBluetoothName(bleName);
+        equipmentRepository.save(ept);
+    }
 }

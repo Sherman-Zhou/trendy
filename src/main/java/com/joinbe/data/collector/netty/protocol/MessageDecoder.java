@@ -60,6 +60,10 @@ public class MessageDecoder extends ByteToMessageDecoder {
                     message = new SetKeyProtocol(data);
                     message.initData(SetKeyProtocol.class);
                     break;
+                case "BLENAME":
+                    message = new BleNameProtocol(data);
+                    message.initData(BleNameProtocol.class);
+                    break;
                 default:
                     message = new CommonProtocol(data);
                     message.initData(CommonProtocol.class);

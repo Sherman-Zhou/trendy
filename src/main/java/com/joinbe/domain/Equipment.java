@@ -53,6 +53,13 @@ public class Equipment extends AbstractAuditingEntity {
     private String simCardNum;
 
     /**
+     * 蓝牙名称
+     */
+    @Size(max = 200)
+    @Column(name = "bluetooth_name", length = 200)
+    private String bluetoothName;
+
+    /**
      * 备注
      */
     @Size(max = 200)
@@ -220,6 +227,14 @@ public class Equipment extends AbstractAuditingEntity {
         isOnline = online;
     }
 
+    public String getBluetoothName() {
+        return bluetoothName;
+    }
+
+    public void setBluetoothName(String bluetoothName) {
+        this.bluetoothName = bluetoothName;
+    }
+
     @Override
     public String toString() {
         return "Equipment{" +
@@ -228,6 +243,7 @@ public class Equipment extends AbstractAuditingEntity {
             ", imei='" + getImei() + "'" +
             ", version='" + getVersion() + "'" +
             ", simCardNum='" + getSimCardNum() + "'" +
+            ", bluetoothName='" + getBluetoothName() + "'" +
             ", remark='" + getRemark() + "'" +
             ", status='" + getStatus() + "'" +
             ", createdBy='" + getCreatedBy() + "'" +

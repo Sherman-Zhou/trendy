@@ -165,6 +165,21 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         }else if (deferredResult != null && "$ERR".equals(lockUnlockProtocol.getOk())){
                             deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, "Get ERR response from device, device: " + deviceNo, lockUnlockProtocol), HttpStatus.OK));
                         }
+                    }else if(msg instanceof BleNameProtocol){
+                        BleNameProtocol bleNameProtocol = (BleNameProtocol)msg;
+                        BleResponseItemDTO bleResponseItemDTO = new BleResponseItemDTO();
+                        bleResponseItemDTO.setData(bleNameProtocol.getData());
+                        bleResponseItemDTO.setOk(bleNameProtocol.getOk());
+                        bleResponseItemDTO.setType(bleNameProtocol.getType());
+                        bleResponseItemDTO.setBleName(bleNameProtocol.getBleName());
+                        bleResponseItemDTO.setImei(deviceNo);
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.BLENAME);
+                        if(deferredResult != null && "$OK".equals(bleNameProtocol.getOk())){
+                            dataCollectService.updateBleName(deviceNo, bleNameProtocol.getBleName());
+                            deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(0, "success", bleResponseItemDTO), HttpStatus.OK));
+                        }else if (deferredResult != null && "$ERR".equals(bleNameProtocol.getOk())){
+                            deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, "Get ERR response from device, device: " + deviceNo, bleResponseItemDTO), HttpStatus.OK));
+                        }
                     }else if(msg instanceof DoorProtocol){
                         DoorProtocol doorProtocol = (DoorProtocol)msg;
                         DoorResponseItemDTO doorResponseItemDTO = new DoorResponseItemDTO();
@@ -370,6 +385,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 return new LocationResponseDTO(code, message);
             case "SETKEY":
                 return new TokenResponseDTO(code,message);
+            case "BLENAME":
+                return new BleResponseDTO(code, message);
             default:
                 return new CommonResponseDTO(code, message);
         }

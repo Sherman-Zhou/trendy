@@ -24,6 +24,12 @@ public class DeviceResponseItem implements Serializable {
     @ApiModelProperty(value = "固件版本")
     private String version;
 
+    /**
+     * 蓝牙名称
+     */
+    @ApiModelProperty(value = "蓝牙名称")
+    private String bleName;
+
     public String getIdentifyNumber() {
         return identifyNumber;
     }
@@ -46,5 +52,13 @@ public class DeviceResponseItem implements Serializable {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getBleName() {
+        return bleName;
+    }
+
+    public void setBleName(String bleName) {
+        this.bleName = bleName;
     }
 }

@@ -138,8 +138,17 @@ public enum EventEnum {
      * 开锁查询
      */
     DOOR_QRY("DOOR_QRY"),
-    ;
 
+    /**
+     * 蓝牙名称设置
+     */
+    BLENAME("BLENAME"),
+
+    /**
+     * 蓝牙名称查询
+     */
+    BLENAME_QRY("BLENAME_QRY"),
+    ;
 
     EventEnum(String event) {
         this.event = event;

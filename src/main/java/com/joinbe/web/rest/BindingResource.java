@@ -144,6 +144,8 @@ public class BindingResource {
             if(!VehicleStatusEnum.UNKNOWN.equals(currentDeviceStatus)){
                 return ResponseEntity.ok().body("Successful");
             }
+        }else{
+            return ResponseEntity.ok().body("No Found the equipment by equipmentId: " + equipmentId);
         }
         return ResponseEntity.ok().body("Device is offline");
     }

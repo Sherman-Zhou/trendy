@@ -56,6 +56,12 @@ public class EquipmentDTO implements Serializable {
     private String remark;
 
     /**
+     * 蓝牙名称
+     */
+    @ApiModelProperty(value = "蓝牙名称")
+    private String bluetoothName;
+
+    /**
      * 设备状态 - 枚举类型\n绑定\n未绑定\"
      */
     @Size(max = 1)

@@ -4,6 +4,7 @@ import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.cmd.register.Cmd;
+import com.joinbe.data.collector.cmd.register.impl.BleNameCmd;
 import com.joinbe.data.collector.cmd.register.impl.DoorCmd;
 import com.joinbe.data.collector.cmd.register.impl.SetTokenCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
@@ -176,6 +177,7 @@ public class EquipmentExtController {
             deviceResponseItem.setIdentifyNumber(equipment.get().getIdentifyNumber());
             deviceResponseItem.setImei(equipment.get().getImei());
             deviceResponseItem.setVersion(equipment.get().getVersion());
+            deviceResponseItem.setBleName(equipment.get().getBluetoothName());
             deviceResponseDTO.setData(deviceResponseItem);
         }else{
             deviceResponseDTO.setMessage("No binding device found for the plate number: " + deviceInfo.getPlateNumber() );
@@ -577,5 +579,52 @@ public class EquipmentExtController {
             return new ResponseEntity<>(new TrajectoryInfoResponseDTO(1, e.getMessage()), HttpStatus.OK);
         }
         return new ResponseEntity<>(trajectoryInfoResponseDTO, HttpStatus.OK);
+    }
+
+
+    /**
+     *
+     * @param bleVehicleReq
+     * @param bindingResult
+     * @return
+     */
+    @ApiOperation("根据车牌号设置蓝牙名称")
+    @PostMapping("/setBluetooth")
+    public DeferredResult<ResponseEntity<ResponseDTO>> setBluetooth(@RequestBody @Valid BleVehicleReq bleVehicleReq, BindingResult bindingResult) {
+        ResponseEntity<BleResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new BleResponseDTO(1, "set bluetooth name time out, maybe device is disconnecting, please try later, vehicle: " + bleVehicleReq.getPlateNumber()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/equipment/setBluetooth validate error: {}", message);
+            deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(bleVehicleReq.getPlateNumber());
+        String deviceId;
+        if(equipment.isPresent()){
+            deviceId = equipment.get().getImei();
+        }else{
+            String message = "No binding device found for the plate number : " + bleVehicleReq.getPlateNumber();
+            logger.debug(message);
+            deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+
+        HashMap<String, String> params = new HashMap<>(8);
+        params.put(BleNameCmd.bleName, bleVehicleReq.getBleName());
+        Cmd cmd = factory.createInstance(EventEnum.BLENAME.getEvent());
+        if (cmd == null) {
+            deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
+            return deferredResult;
+        }
+        String bleNameStr = cmd.initCmd(params);
+        logger.debug("REST request for set bluetooth name, command: {}", bleNameStr);
+        serverHandler.sendCommonQueryMessage(deviceId, bleNameStr, EventEnum.BLENAME, deferredResult);
+        deferredResult.onTimeout(() -> {
+            //remove from local store if timeout
+            logger.warn("Set bluetooth name time out, maybe device is disconnecting, device: {}", deviceId);
+            LocalEquipmentStroe.get(deviceId, EventEnum.BLENAME);
+        });
+        return deferredResult;
     }
 }
