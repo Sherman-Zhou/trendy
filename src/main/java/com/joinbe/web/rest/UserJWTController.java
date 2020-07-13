@@ -89,7 +89,7 @@ public class UserJWTController {
         String jwt = tokenProvider.createToken(authentication, rememberMe);
         if (userOptional.isPresent()) {
             UserDetailsDTO userDetailsDTO = userOptional.get();
-            UserLoginInfo loginInfo = new UserLoginInfo(userDetailsDTO.getLogin(), userDetailsDTO.getMerchantId(), userDetailsDTO.getDivisionIds());
+            UserLoginInfo loginInfo = new UserLoginInfo(userDetailsDTO.getId(), userDetailsDTO.getLogin(), userDetailsDTO.getMerchantId(), userDetailsDTO.getDivisionIds());
             redissonTokenStore.saveLoginInfo(userDetailsDTO.getLogin(), loginInfo);
         }
         HttpHeaders httpHeaders = new HttpHeaders();

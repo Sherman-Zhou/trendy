@@ -222,6 +222,8 @@ public class StaffServiceImpl implements StaffService {
         }
 
         if (loginInfo.isSystemAdmin()) {
+            Merchant merchant = new Merchant(userDTO.getMerchantId());
+            staff.setMerchant(merchant);
             log.debug("system admin update user");
         } else {
             Merchant merchant = new Merchant();
@@ -312,6 +314,8 @@ public class StaffServiceImpl implements StaffService {
                 this.clearUserCaches(user);
                 if (loginInfo.isSystemAdmin()) {
                     log.debug("system admin update user");
+                    Merchant merchant = new Merchant(userDTO.getMerchantId());
+                    user.setMerchant(merchant);
                 } else {
                     SecurityUtils.checkMerchantPermission(loginInfo, user.getMerchant());
 

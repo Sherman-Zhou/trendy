@@ -189,7 +189,7 @@ public class VehicleServiceImpl implements VehicleService {
         log.debug("Request to binding equipment and vehicle: {}", vm);
         Optional<Vehicle> vehicleOptional = vehicleRepository.findById(vm.getVehicleId()).filter(vehicle -> RecordStatus.ACTIVE.equals(vehicle.getStatus()));
 
-        Optional<Equipment> equipmentOptional = equipmentRepository.findById(vm.getEquipmentId()).filter(equipment -> EquipmentStatus.DELETED.equals(equipment.getStatus()));
+        Optional<Equipment> equipmentOptional = equipmentRepository.findById(vm.getEquipmentId()).filter(equipment -> !EquipmentStatus.DELETED.equals(equipment.getStatus()));
 
 
         if (!vehicleOptional.isPresent()) {
