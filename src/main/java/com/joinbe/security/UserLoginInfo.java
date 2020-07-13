@@ -9,13 +9,16 @@ public class UserLoginInfo implements Serializable {
 
     private String login;
 
+    private final Long id;
+
     private Long merchantId;
 
     private RoleDTO roleDTO;
 
     private List<String> divisionIds;
 
-    public UserLoginInfo(String login, Long merchantId, List<String> divisionIds) {
+    public UserLoginInfo(Long id, String login, Long merchantId, List<String> divisionIds) {
+        this.id = id;
         this.login = login;
         this.merchantId = merchantId;
         this.divisionIds = divisionIds;
@@ -56,5 +59,15 @@ public class UserLoginInfo implements Serializable {
 
     public void setDivisionIds(List<String> divisionIds) {
         this.divisionIds = divisionIds;
+    }
+
+    @Override
+    public String toString() {
+        return "UserLoginInfo{" +
+            "login='" + login + '\'' +
+            ",id=" + id +
+            ", merchantId=" + merchantId +
+            ", divisionIds=" + divisionIds +
+            '}';
     }
 }

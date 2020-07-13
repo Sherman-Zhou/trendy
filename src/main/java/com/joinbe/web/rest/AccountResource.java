@@ -176,7 +176,7 @@ public class AccountResource {
     public ResponseEntity<UserDetailsDTO> forgotPassword(@PathVariable @ApiParam(value = "用户登陆id", required = true) String login) {
         log.debug("REST request to get User {} email", login);
 
-        Optional<UserDetailsDTO> userDetailsDTO = staffService.getUserWithAuthoritiesByLogin(login);
+        Optional<UserDetailsDTO> userDetailsDTO = staffService.getUserEmail(login);
 
         if (userDetailsDTO.isPresent()) {
             Optional<Staff> user = staffService.requestPasswordReset(userDetailsDTO.get().getEmail());

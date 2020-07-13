@@ -111,6 +111,8 @@ public class RoleServiceImpl implements RoleService {
         log.debug("Request to get all Roles");
         QueryParams<Role> queryParams = new QueryParams<>();
 
+        queryParams.and("roleType", Filter.Operator.eq, Constants.ROLE_TYPE_MERCHANT);
+
         if (StringUtils.isNotEmpty(vm.getCode())) {
             queryParams.and("code", Filter.Operator.eq, vm.getCode());
         }

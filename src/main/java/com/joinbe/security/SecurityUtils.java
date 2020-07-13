@@ -105,7 +105,7 @@ public final class SecurityUtils {
         if (loginInfo.isSystemAdmin()) {
             return;
         }
-        if (merchantId.equals(loginInfo.getMerchantId())) {
+        if (!merchantId.equals(loginInfo.getMerchantId())) {
             throw new AccessDeniedException("No Permission");
         }
     }

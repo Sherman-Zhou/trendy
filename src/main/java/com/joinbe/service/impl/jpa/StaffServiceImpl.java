@@ -222,6 +222,8 @@ public class StaffServiceImpl implements StaffService {
         }
 
         if (loginInfo.isSystemAdmin()) {
+            Merchant merchant = new Merchant(userDTO.getMerchantId());
+            staff.setMerchant(merchant);
             log.debug("system admin update user");
         } else {
             Merchant merchant = new Merchant();
@@ -312,6 +314,8 @@ public class StaffServiceImpl implements StaffService {
                 this.clearUserCaches(user);
                 if (loginInfo.isSystemAdmin()) {
                     log.debug("system admin update user");
+                    Merchant merchant = new Merchant(userDTO.getMerchantId());
+                    user.setMerchant(merchant);
                 } else {
                     SecurityUtils.checkMerchantPermission(loginInfo, user.getMerchant());
 
@@ -459,6 +463,21 @@ public class StaffServiceImpl implements StaffService {
         userOptional.ifPresent(userDetailsDTO -> SecurityUtils.checkMerchantPermission(userDetailsDTO.getMerchantId()));
         return userOptional;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UserDetailsDTO> getUserEmail(String login) {
+
+        return staffRepository.findOneWithRolesByLogin(login)
+            .map(staff -> {
+                UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
+                userDetailsDTO.setId(staff.getId());
+                userDetailsDTO.setLogin(staff.getLogin());
+                userDetailsDTO.setEmail(staff.getEmail());
+                return userDetailsDTO;
+            });
+    }
+
 
     @Override
     @Transactional(readOnly = true)
