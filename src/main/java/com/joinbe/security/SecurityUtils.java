@@ -70,24 +70,49 @@ public final class SecurityUtils {
     /**
      * to check if the user has the permission of Division
      *
-     * @param division
+     * @param shop
      */
-    public static void checkDataPermission(Shop division) {
-//        if(division == null) {
-//            throw new AccessDeniedException("No Permission to view this record");
-//        }
-//        checkDataPermission(division.getId());
+    public static void checkDataPermission(Shop shop) {
+        if (shop == null) {
+            throw new AccessDeniedException("No Permission to view this record");
+        }
+        checkDataPermission(getCurrentUserLoginInfo(), shop.getId());
     }
 
     /**
      * to check if the user has the permission of Division
      *
-     * @param divisionId
+     * @param shop
      */
-    public static void checkDataPermission(String divisionId) {
-//        if(!getCurrentUserDivisionIds().contains(divisionId)) {
-//            throw new AccessDeniedException("No Permission to view this record");
-//        }
+    public static void checkDataPermission(UserLoginInfo loginInfo, Shop shop) {
+        if (shop == null) {
+            throw new AccessDeniedException("No Permission to view this record");
+        }
+        checkDataPermission(loginInfo, shop.getId());
+    }
+
+    /**
+     * to check if the user has the permission of Division
+     *
+     * @param shopId
+     */
+    public static void checkDataPermission(UserLoginInfo loginInfo, String shopId) {
+
+        if (!loginInfo.getDivisionIds().contains(shopId)) {
+            throw new AccessDeniedException("No Permission to view this record");
+        }
+    }
+
+    /**
+     * to check if the user has the permission of Division
+     *
+     * @param shopId
+     */
+    public static void checkDataPermission(String shopId) {
+
+        if (!getCurrentUserLoginInfo().getDivisionIds().contains(shopId)) {
+            throw new AccessDeniedException("No Permission to view this record");
+        }
     }
 
     public static void checkMerchantPermission(Merchant merchant) {

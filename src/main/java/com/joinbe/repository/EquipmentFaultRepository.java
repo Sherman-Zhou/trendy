@@ -1,5 +1,6 @@
 package com.joinbe.repository;
 
+import com.joinbe.domain.Equipment;
 import com.joinbe.domain.EquipmentFault;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -12,5 +13,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EquipmentFaultRepository extends JpaRepository<EquipmentFault, Long>,
     JpaSpecificationExecutor<EquipmentFault> {
+
+    void deleteByEquipment(Equipment equipment);
 
 }

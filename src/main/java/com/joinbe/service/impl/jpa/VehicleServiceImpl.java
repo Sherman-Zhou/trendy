@@ -8,12 +8,8 @@ import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.ApplicationProperties;
 import com.joinbe.config.Constants;
 import com.joinbe.domain.*;
-import com.joinbe.domain.enumeration.EquipmentStatus;
-import com.joinbe.domain.enumeration.RecordStatus;
-import com.joinbe.repository.CityRepository;
-import com.joinbe.repository.EquipmentRepository;
-import com.joinbe.repository.ShopRepository;
-import com.joinbe.repository.VehicleRepository;
+import com.joinbe.domain.enumeration.*;
+import com.joinbe.repository.*;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.VehicleService;
@@ -32,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.JoinType;
@@ -60,19 +57,22 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final RestfulClient restfulClient;
 
+    private final EquipmentOperationRecordRepository operationRecordRepository;
+
     private final ApplicationProperties applicationProperties;
 
     private final ObjectMapper mapper;
 
     public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
                               ShopRepository shopRepository, CityRepository cityRepository, MessageSource messageSource,
-                              RestfulClient restfulClient, ApplicationProperties applicationProperties) {
+                              RestfulClient restfulClient, EquipmentOperationRecordRepository operationRecordRepository, ApplicationProperties applicationProperties) {
         this.vehicleRepository = vehicleRepository;
         this.equipmentRepository = equipmentRepository;
         this.shopRepository = shopRepository;
         this.cityRepository = cityRepository;
         this.messageSource = messageSource;
         this.restfulClient = restfulClient;
+        this.operationRecordRepository = operationRecordRepository;
         this.applicationProperties = applicationProperties;
         mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -87,24 +87,17 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     public VehicleDetailsDTO save(VehicleDetailsDTO vehicleDetailsDTO) {
         log.debug("Request to save Vehicle : {}", vehicleDetailsDTO);
-        Vehicle vehicle = VehicleService.toEntity(vehicleDetailsDTO);
-        String shopId = vehicleDetailsDTO.getShopId();
-        String cityId = vehicleDetailsDTO.getCityId();
+        Vehicle vehicle = null;
+
         if (vehicleDetailsDTO.getId() != null) {
-            Vehicle vehicleInDb = vehicleRepository.getOne(vehicleDetailsDTO.getId());
-            shopId = vehicleInDb.getShop().getId();
-            cityId = vehicleInDb.getCity().getId();
-        } else {
-//            Optional<Division> division = divisionRepository.findById(divisionId);
-//            if (division.isPresent()) {
-//                SecurityUtils.checkDataPermission(division.get());
-//                vehicle.setShop(division.get());
-//            } else {
-//                throw new BadRequestAlertException("Division does not exist", "Vehicle", "divnotexists");
-//            }
+            vehicle = vehicleRepository.getOne(vehicleDetailsDTO.getId());
+            vehicle.setFuelConsumption(vehicleDetailsDTO.getFuelConsumption());
+            vehicle.setTankVolume(vehicleDetailsDTO.getTankVolume());
+            SecurityUtils.checkDataPermission(vehicle.getShop());
+            vehicle = vehicleRepository.save(vehicle);
         }
 
-        vehicle = vehicleRepository.save(vehicle);
+
         return VehicleService.toDto(vehicle);
     }
 
@@ -192,28 +185,49 @@ public class VehicleServiceImpl implements VehicleService {
         Optional<Equipment> equipmentOptional = equipmentRepository.findById(vm.getEquipmentId()).filter(equipment -> !EquipmentStatus.DELETED.equals(equipment.getStatus()));
 
 
+
         if (!vehicleOptional.isPresent()) {
+            createOpRecord(null, equipmentOptional.isPresent() ? equipmentOptional.get() : null, OperationResult.FAILURE, EventType.BINDING);
             throw new BadRequestAlertException("Invalid vehicle id", "Vehicle", "vehicle.notexist");
         }
         if (!equipmentOptional.isPresent()) {
+            createOpRecord(vehicleOptional.get(), null, OperationResult.FAILURE, EventType.BINDING);
             throw new BadRequestAlertException("Invalid equipment id", "Equipment", "equipment.notexist");
         }
         Vehicle vehicle = vehicleOptional.get();
 
         Equipment equipment = equipmentOptional.get();
 
-        SecurityUtils.checkMerchantPermission(vehicle.getMerchant());
-        SecurityUtils.checkMerchantPermission(equipment.getMerchant());
+        SecurityUtils.checkMerchantPermission(loginInfo, vehicle.getMerchant());
+        SecurityUtils.checkMerchantPermission(loginInfo, equipment.getMerchant());
+        SecurityUtils.checkDataPermission(vehicle.getShop());
 
         if (!EquipmentStatus.UNBOUND.equals(equipment.getStatus())) {
+            createOpRecord(vehicle, equipment, OperationResult.FAILURE, EventType.BINDING);
             throw new BadRequestAlertException("Equipment is bound already", "Binding", "equipment.binding.boundalready");
         }
         if (vehicle.getBounded()) {
+            createOpRecord(vehicle, equipment, OperationResult.FAILURE, EventType.BINDING);
             throw new BadRequestAlertException("Vehicle is bound already", "Binding", "vehicle.binding.boundalready");
         }
         equipment.setVehicle(vehicle);
         equipment.setStatus(EquipmentStatus.BOUND);
         vehicle.setBounded(true);
+        createOpRecord(vehicle, equipment, OperationResult.SUCCESS, EventType.BINDING);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void createOpRecord(Vehicle vehicle, Equipment equipment, OperationResult result, EventType eventType) {
+        EquipmentOperationRecord equipmentOperationRecord = new EquipmentOperationRecord();
+        equipmentOperationRecord.setOperationSourceType(OperationSourceType.PLATFORM);
+        equipmentOperationRecord.setEventType(EventCategory.BINDING);
+        equipmentOperationRecord.setEventDesc(eventType);
+        equipmentOperationRecord.setEquipment(equipment);
+
+        equipmentOperationRecord.setVehicle(vehicle);
+        equipmentOperationRecord.setResult(result);
+        operationRecordRepository.save(equipmentOperationRecord);
+
     }
 
     @Override
@@ -226,12 +240,13 @@ public class VehicleServiceImpl implements VehicleService {
 
                 Equipment equipment = vehicle.getEquipment();
                 if (equipment != null) {
-                    SecurityUtils.checkMerchantPermission(equipment.getMerchant());
+                    //SecurityUtils.checkMerchantPermission(equipment.getMerchant());
                     equipment.setVehicle(null);
                     equipment.setStatus(EquipmentStatus.UNBOUND);
                 } else {
                     log.warn("no equipment is found for vehiche: {}", vehicleId);
                 }
+                createOpRecord(vehicle, equipment, OperationResult.SUCCESS, EventType.UNBINDING);
                 return VehicleService.toDto(vehicle);
             });
     }

@@ -1,19 +1,24 @@
 package com.joinbe.service.impl.jpa;
 
 import com.joinbe.common.excel.EquipmentData;
+import com.joinbe.common.util.BeanConverter;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Merchant;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.EquipmentStatus;
+import com.joinbe.repository.EquipmentFaultRepository;
+import com.joinbe.repository.EquipmentOperationRecordRepository;
 import com.joinbe.repository.EquipmentRepository;
+import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.dto.EquipmentDTO;
 import com.joinbe.service.dto.RowParseError;
 import com.joinbe.service.dto.UploadResponse;
+import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.EquipmentVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -41,11 +46,22 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
 
+    private final VehicleRepository vehicleRepository;
+
+    private final EquipmentFaultRepository equipmentFaultRepository;
+
+    private final EquipmentOperationRecordRepository operationRecordRepository;
+
 
     private final MessageSource messageSource;
 
-    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, MessageSource messageSource) {
+    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, VehicleRepository vehicleRepository,
+                                EquipmentFaultRepository equipmentFaultRepository,
+                                EquipmentOperationRecordRepository operationRecordRepository, MessageSource messageSource) {
         this.equipmentRepository = equipmentRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.equipmentFaultRepository = equipmentFaultRepository;
+        this.operationRecordRepository = operationRecordRepository;
 
         this.messageSource = messageSource;
     }
@@ -59,10 +75,48 @@ public class EquipmentServiceImpl implements EquipmentService {
     @Override
     public EquipmentDTO save(EquipmentDTO equipmentDTO) {
         log.debug("Request to save Equipment : {}", equipmentDTO);
+        Equipment equipment;
         UserLoginInfo userLoginInfo = SecurityUtils.getCurrentUserLoginInfo();
 
-        Equipment equipment = EquipmentService.toEntity(equipmentDTO);
-        equipment.setMerchant(new Merchant(userLoginInfo.getMerchantId()));
+        Optional<Equipment> equipmentByIdNum = equipmentRepository.findOneByIdentifyNumberAndStatusNot(equipmentDTO.getIdentifyNumber(), EquipmentStatus.DELETED);
+
+        Optional<Equipment> equipmentByImei = equipmentRepository.findOneByImeiAndStatusNot(equipmentDTO.getImei(), EquipmentStatus.DELETED);
+
+
+        if (equipmentDTO.getId() != null) {
+            log.debug("updating Equipment");
+            equipment = equipmentRepository.getOne(equipmentDTO.getId());
+            if (equipmentByIdNum.isPresent() && !equipmentByIdNum.get().getId().equals(equipment.getId())) {
+                throw new BadRequestAlertException("the IdentifyNumber is existed ", "Equipment", "equipment.upload.equipmentId.exists");
+            }
+            if (equipmentByImei.isPresent() && !equipmentByImei.get().getId().equals(equipment.getId())) {
+                throw new BadRequestAlertException("the IMEI is existed ", "Equipment", "equipment.upload.imei.exists");
+            }
+            if (StringUtils.isNotEmpty(equipmentDTO.getBluetoothName())) {
+                Optional<Equipment> equipmentByBluetoothName = equipmentRepository.findOneByBluetoothName(equipmentDTO.getBluetoothName());
+                if (equipmentByBluetoothName.isPresent() && !equipmentByBluetoothName.get().getId().equals(equipment.getId())) {
+                    throw new BadRequestAlertException("the Bluetooth Name is existed ", "Equipment", "equipment.bluetooth.name.exists");
+                }
+            }
+
+            BeanConverter.copyProperties(equipmentDTO, equipment, true);
+            SecurityUtils.checkMerchantPermission(userLoginInfo, equipment.getMerchant());
+        } else {
+            if (equipmentByIdNum.isPresent()) {
+                throw new BadRequestAlertException("the IdentifyNumber is existed ", "Equipment", "equipment.upload.equipmentId.exists");
+            }
+            if (equipmentByImei.isPresent()) {
+                throw new BadRequestAlertException("the IMEI is existed ", "Equipment", "equipment.upload.imei.exists");
+            }
+            if (StringUtils.isNotEmpty(equipmentDTO.getBluetoothName())) {
+                Optional<Equipment> equipmentByBluetoothName = equipmentRepository.findOneByBluetoothName(equipmentDTO.getBluetoothName());
+                if (equipmentByBluetoothName.isPresent()) {
+                    throw new BadRequestAlertException("the Bluetooth Name is existed ", "Equipment", "equipment.bluetooth.name.exists");
+                }
+            }
+            equipment = EquipmentService.toEntity(equipmentDTO);
+            equipment.setMerchant(new Merchant(userLoginInfo.getMerchantId()));
+        }
         equipment = equipmentRepository.save(equipment);
         return EquipmentService.toDto(equipment);
     }
@@ -83,6 +137,7 @@ public class EquipmentServiceImpl implements EquipmentService {
         queryParams.and("merchant.id", Filter.Operator.eq, userLoginInfo.getMerchantId());
 
         queryParams.and("status", Filter.Operator.ne, EquipmentStatus.DELETED);
+
         if (StringUtils.isNotEmpty(vm.getIdentifyNumber())) {
             queryParams.and("identifyNumber", Filter.Operator.like, vm.getIdentifyNumber());
         }
@@ -130,14 +185,23 @@ public class EquipmentServiceImpl implements EquipmentService {
         if (equipmentOptional.isPresent()) {
             Equipment equipment = equipmentOptional.get();
             SecurityUtils.checkMerchantPermission(equipment.getMerchant().getId());
-            equipment.setStatus(EquipmentStatus.DELETED);
-            equipment.setVehicle(null);
+
+            if (EquipmentStatus.BOUND.equals(equipment.getStatus())) {
+                throw new BadRequestAlertException("the Equipment is bound to Vehicle already, please unbound before deletion", "Equipment", "equipment.delete.bound.already");
+            }
             Vehicle vehicle = equipment.getVehicle();
             if (vehicle != null) {
                 vehicle.setBounded(false);
+                vehicleRepository.save(vehicle);
             }
+//            equipment.setStatus(EquipmentStatus.DELETED);
+//            equipment.setVehicle(null);
+            equipmentFaultRepository.deleteByEquipment(equipment);
+            operationRecordRepository.deleteByEquipment(equipment);
+            equipmentRepository.deleteById(id);
+
         }
-//        equipmentRepository.deleteById(id);
+
     }
 
 

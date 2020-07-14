@@ -4,6 +4,7 @@ import com.joinbe.common.excel.EquipmentData;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Equipment;
 import com.joinbe.domain.enumeration.EquipmentStatus;
+import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.EquipmentDTO;
 import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.web.rest.vm.EquipmentVM;
@@ -20,6 +21,7 @@ public interface EquipmentService {
 
     static EquipmentDTO toDto(Equipment equipment) {
         EquipmentDTO dto = BeanConverter.toDto(equipment, EquipmentDTO.class);
+        SecurityUtils.checkMerchantPermission(equipment.getMerchant());
         dto.setStatus(EquipmentStatus.getCode(equipment.getStatus()));
         return dto;
     }
