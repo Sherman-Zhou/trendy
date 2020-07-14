@@ -66,6 +66,7 @@ public interface VehicleService {
         if (equipment != null) {
             dto.setIsOnline(vehicle.getEquipment().getOnline());
             dto.setIdentifyNumber(equipment.getIdentifyNumber());
+            dto.setBluetoothName(equipment.getBluetoothName());
         }
         return dto;
     }
