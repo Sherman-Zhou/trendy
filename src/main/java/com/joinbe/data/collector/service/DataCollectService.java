@@ -258,11 +258,12 @@ public class DataCollectService {
      *
      * @param equipmentOperationRecord
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void insertEventLog(EquipmentOperationRecord equipmentOperationRecord){
         if(equipmentOperationRecord == null){
             return;
         }
+        log.debug("InsertEventLog, equipmentOperationRecord :{}", equipmentOperationRecord);
         equipmentOperationRecordRepository.save(equipmentOperationRecord);
     }
 
