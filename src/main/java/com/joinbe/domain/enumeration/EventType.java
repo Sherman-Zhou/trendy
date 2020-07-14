@@ -11,7 +11,8 @@ public enum EventType {
     LOCK("lock"),//:开锁,
     UNLOCK("unlock"),//:关锁,
     BINDING("binding"),//: 绑定设备,
-    UNBINDING("unbinding");//:解绑设备
+    UNBINDING("unbinding"),//:解绑设备
+    SETBLENAME("SETBLENAME");//:修改蓝牙名称
 
     private static final Map<String, EventType> mapping = new HashMap<>(6);
 

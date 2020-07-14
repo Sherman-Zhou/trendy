@@ -8,9 +8,7 @@ import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
-import com.joinbe.domain.enumeration.IbuttonStatusEnum;
-import com.joinbe.domain.enumeration.VehicleDoorStatusEnum;
-import com.joinbe.domain.enumeration.VehicleStatusEnum;
+import com.joinbe.domain.enumeration.*;
 import com.joinbe.data.collector.service.dto.DoorResponseItemDTO;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -175,9 +173,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         bleResponseItemDTO.setImei(deviceNo);
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.BLENAME);
                         if(deferredResult != null && "$OK".equals(bleNameProtocol.getOk())){
+                            dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH_NAME, EventType.SETBLENAME,OperationResult.SUCCESS);
                             dataCollectService.updateBleName(deviceNo, bleNameProtocol.getBleName());
                             deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(0, "success", bleResponseItemDTO), HttpStatus.OK));
                         }else if (deferredResult != null && "$ERR".equals(bleNameProtocol.getOk())){
+                            dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH_NAME, EventType.SETBLENAME,OperationResult.FAILURE);
                             deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, "Get ERR response from device, device: " + deviceNo, bleResponseItemDTO), HttpStatus.OK));
                         }
                     }else if(msg instanceof DoorProtocol){
@@ -189,10 +189,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         doorResponseItemDTO.setMode(doorProtocol.getMode());
                         doorResponseItemDTO.setModeStatus(doorProtocol.getMode() == 1 ? "OPEN" : "CLOSE");
                         doorResponseItemDTO.setImei(deviceNo);
+                        EventType eventType = doorProtocol.getMode() == 1 ? EventType.UNLOCK : EventType.LOCK;
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.DOOR);
                         if(deferredResult != null && "$OK".equals(doorProtocol.getOk())){
+                            dataCollectService.insertEventLog(deviceNo, EventCategory.LOCK, eventType,OperationResult.SUCCESS);
                             deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(0, "success", doorResponseItemDTO), HttpStatus.OK));
                         }else if (deferredResult != null && "$ERR".equals(doorProtocol.getOk())){
+                            dataCollectService.insertEventLog(deviceNo, EventCategory.LOCK, eventType,OperationResult.FAILURE);
                             deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Get ERR response from device, device: " + deviceNo, doorResponseItemDTO), HttpStatus.OK));
                         }
                     }else if(msg instanceof SetKeyProtocol){
@@ -204,8 +207,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         tokenResponseItem.setExpireDate(expireDateTime);
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SETKEY);
                         if(deferredResult != null && "$OK".equals(setKeyProtocol.getOk())){
+                            dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.SUCCESS);
                             deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(0, "success", tokenResponseItem), HttpStatus.OK));
                         }else if(deferredResult != null && "$ERR".equals(setKeyProtocol.getOk())){
+                            dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.FAILURE);
                             deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(1, "Get ERR response from device, device: " + deviceNo, tokenResponseItem), HttpStatus.OK));
                         }
                     }else if(msg instanceof CommonProtocol){
