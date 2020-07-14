@@ -162,11 +162,17 @@ public class EquipmentController {
             dataCollectService.insertEventLog(equipmentOperationRecord);
         });
         deferredResult.setResultHandler((result) ->{
+            logger.debug("In lock/unlock, result: {}", result);
+            logger.debug("In lock/unlock, result instanceof ResponseEntity: {}", result instanceof ResponseEntity);
             if(result != null && result instanceof ResponseEntity){
                 ResponseEntity responseEntity = (ResponseEntity) result;
+                logger.debug("In lock/unlock, responseEntity: {}", responseEntity);
+                logger.debug("In lock/unlock, responseEntity.getBody(): {}", responseEntity.getBody());
+                logger.debug("In lock/unlock, responseEntity.getBody() instanceof ResponseDTO: {}", responseEntity.getBody() instanceof ResponseDTO);
                 if(responseEntity !=null && responseEntity.getBody() !=null && responseEntity.getBody() instanceof ResponseDTO){
                     int code = ((ResponseDTO)responseEntity.getBody()).getCode();
                     String message = ((ResponseDTO)responseEntity.getBody()).getMessage();
+                    logger.debug("In lock/unlock, code: {}", code);
                     if(code == 0){
                         equipmentOperationRecord.setResult(OperationResult.SUCCESS);
                     }else{
