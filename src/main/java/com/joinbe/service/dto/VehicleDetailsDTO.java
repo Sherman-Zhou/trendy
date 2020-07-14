@@ -33,7 +33,7 @@ public class VehicleDetailsDTO implements Serializable {
      */
     @Size(max = 50)
     @ApiModelProperty(value = "车架号")
-    @NotBlank
+    //@NotBlank
     private String vehicleIdNum;
 
     /**
@@ -148,7 +148,7 @@ public class VehicleDetailsDTO implements Serializable {
     private Instant lastModifiedDate;
 
     @ApiModelProperty(value = "城市主键")
-    @NotNull
+    //@NotNull
     private String cityId;
 
     @ApiModelProperty(value = "门店主键")

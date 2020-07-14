@@ -14,6 +14,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,9 +59,9 @@ public class VehicleMonitoringResource {
      */
     @GetMapping("/monitor/trajectories")
     @ApiOperation(value = "获取车辆轨迹")
-    public ResponseEntity<List<VehicleTrajectoryDTO>> getAllVehicleTrajectories(TrajectoryVM vm) {
+    public ResponseEntity<List<VehicleTrajectoryDTO>> getAllVehicleTrajectories(Pageable pageable, TrajectoryVM vm) {
         log.debug("REST request to get a page of VehicleTrajectories");
-        List<VehicleTrajectoryDTO> dtos = vehicleTrajectoryService.findAll(vm);
+        List<VehicleTrajectoryDTO> dtos = vehicleTrajectoryService.findAll(pageable, vm);
         return ResponseEntity.ok().body(dtos);
     }
 

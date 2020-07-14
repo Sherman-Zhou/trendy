@@ -23,6 +23,7 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long>,
 
     Optional<Equipment> findOneByImeiAndStatusNot(String imei, EquipmentStatus status);
 
+
     Optional<Equipment> findOneByIdentifyNumberAndStatusNot(String identifyNumber, EquipmentStatus status);
 
     List<Equipment> findAllByStatusAndMerchantId(EquipmentStatus status, Long merchantId);

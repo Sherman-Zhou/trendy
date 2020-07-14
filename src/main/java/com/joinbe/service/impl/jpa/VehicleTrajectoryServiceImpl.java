@@ -80,12 +80,13 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
     /**
      * Get all the vehicleTrajectories.
      *
-     * @param vm the search conditions.
+     * @param vm       the search conditions.
+     * @param pageable
      * @return the list of entities.
      */
     @Override
     @Transactional(readOnly = true)
-    public List<VehicleTrajectoryDTO> findAll(TrajectoryVM vm) {
+    public List<VehicleTrajectoryDTO> findAll(Pageable pageable, TrajectoryVM vm) {
         log.debug("Request to get all VehicleTrajectories");
         QueryParams<VehicleTrajectory> queryParams = new QueryParams<>();
         if (vm.getVehicleId() != null) {
@@ -95,14 +96,17 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             queryParams.and("trajectoryId", Filter.Operator.like, vm.getTrajectoryId());
         }
         if (StringUtils.isNotEmpty(vm.getStartDate())) {
-            Date startDate = DateUtils.parseDate(vm.getStartDate(), DateUtils.PATTERN_DATE);
+            Date startDate = DateUtils.parseDate(vm.getStartDate(), DateUtils.PATTERN_DATEALLTIME);
             queryParams.and("startTime", Filter.Operator.greaterThanOrEqualTo, startDate);
         }
         if (StringUtils.isNotEmpty(vm.getEndDate())) {
-            Date endDate = DateUtils.parseDate(vm.getEndDate() + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME);
+            Date endDate = DateUtils.parseDate(vm.getEndDate(), DateUtils.PATTERN_DATEALLTIME);
             queryParams.and("endTime", Filter.Operator.lessThanOrEqualTo, endDate);
         }
-        return vehicleTrajectoryRepository.findAll(queryParams)
+
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+            pageable.getSort().and(Sort.by(Sort.Direction.DESC, "startTime")));
+        return vehicleTrajectoryRepository.findAll(queryParams, pageable)
             .stream().map(VehicleTrajectoryService::toDto).collect(Collectors.toList());
     }
 

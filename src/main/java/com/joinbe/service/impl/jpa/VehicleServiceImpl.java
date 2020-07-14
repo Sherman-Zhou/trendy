@@ -87,24 +87,17 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     public VehicleDetailsDTO save(VehicleDetailsDTO vehicleDetailsDTO) {
         log.debug("Request to save Vehicle : {}", vehicleDetailsDTO);
-        Vehicle vehicle = VehicleService.toEntity(vehicleDetailsDTO);
-        String shopId = vehicleDetailsDTO.getShopId();
-        String cityId = vehicleDetailsDTO.getCityId();
+        Vehicle vehicle = null;
+
         if (vehicleDetailsDTO.getId() != null) {
-            Vehicle vehicleInDb = vehicleRepository.getOne(vehicleDetailsDTO.getId());
-            shopId = vehicleInDb.getShop().getId();
-            cityId = vehicleInDb.getCity().getId();
-        } else {
-//            Optional<Division> division = divisionRepository.findById(divisionId);
-//            if (division.isPresent()) {
-//                SecurityUtils.checkDataPermission(division.get());
-//                vehicle.setShop(division.get());
-//            } else {
-//                throw new BadRequestAlertException("Division does not exist", "Vehicle", "divnotexists");
-//            }
+            vehicle = vehicleRepository.getOne(vehicleDetailsDTO.getId());
+            vehicle.setFuelConsumption(vehicleDetailsDTO.getFuelConsumption());
+            vehicle.setTankVolume(vehicleDetailsDTO.getTankVolume());
+            SecurityUtils.checkDataPermission(vehicle.getShop());
+            vehicle = vehicleRepository.save(vehicle);
         }
 
-        vehicle = vehicleRepository.save(vehicle);
+
         return VehicleService.toDto(vehicle);
     }
 
