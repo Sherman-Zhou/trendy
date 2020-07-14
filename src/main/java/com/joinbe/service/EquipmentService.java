@@ -69,6 +69,8 @@ public interface EquipmentService {
      */
     Optional<Equipment> findByLicensePlateNumber(String plateNumber);
 
+    Optional<Equipment> findByBluetoothName(String bluetoothName);
+
     List<EquipmentDTO> findAllUnboundEquipments();
 
     void upload(UploadResponse response, List<EquipmentData> equipmentDataList);

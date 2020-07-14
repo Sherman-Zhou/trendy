@@ -154,6 +154,16 @@ public class EquipmentServiceImpl implements EquipmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Equipment> findByBluetoothName(String bluetoothName) {
+        log.debug("Request to get Equipment by bluetoothName: {}", bluetoothName);
+        if(StringUtils.isBlank(bluetoothName)){
+            return Optional.empty();
+        }
+        return equipmentRepository.findOneByBluetoothName(bluetoothName);
+    }
+
+    @Override
     public List<EquipmentDTO> findAllUnboundEquipments() {
         UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
         return equipmentRepository.findAllByStatusAndMerchantId(EquipmentStatus.UNBOUND, loginInfo.getMerchantId())

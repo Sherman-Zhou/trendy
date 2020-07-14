@@ -188,6 +188,7 @@ public class EquipmentController {
     @ApiOperation("根据车牌号设置蓝牙名称")
     @PostMapping("/setBluetooth")
     public DeferredResult<ResponseEntity<ResponseDTO>> setBluetooth(@RequestBody @Valid BleVehicleReq bleVehicleReq, BindingResult bindingResult) {
+        logger.debug("REST request for set bluetooth name: {}", bleVehicleReq);
         ResponseEntity<BleResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new BleResponseDTO(1, "set bluetooth name time out, maybe device is disconnecting, please try later, vehicle: " + bleVehicleReq.getPlateNumber()), HttpStatus.OK);
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
@@ -205,6 +206,23 @@ public class EquipmentController {
             logger.debug(message);
             deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
+        }
+
+        //Do validation
+        String bleName = equipment.get().getBluetoothName();
+        if(bleVehicleReq.getBleName().equals(bleName)){
+            String message = "No changes for current bluetooth name: " + bleVehicleReq.getBleName();
+            logger.debug(message);
+            deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }else{
+            Optional<Equipment> equipmentByBluetoothName = equipmentService.findByBluetoothName(bleVehicleReq.getBleName());
+            if(equipmentByBluetoothName.isPresent()){
+                String message = "Bluetooth name already used by other equipment, imei is:" + equipmentByBluetoothName.get().getImei();
+                logger.debug(message);
+                deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, message), HttpStatus.OK));
+                return deferredResult;
+            }
         }
 
         HashMap<String, String> params = new HashMap<>(8);
