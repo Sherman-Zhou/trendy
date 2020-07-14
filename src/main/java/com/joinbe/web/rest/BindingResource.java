@@ -3,11 +3,13 @@ package com.joinbe.web.rest;
 import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.excel.BindingDataListener;
 import com.joinbe.common.util.ExcelUtil;
+import com.joinbe.data.collector.service.dto.DoorResponseDTO;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.Staff;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import com.joinbe.repository.StaffRepository;
+import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.service.VehicleService;
@@ -27,6 +29,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
@@ -66,6 +69,9 @@ public class BindingResource {
     private final RedissonEquipmentStore redissonEquipmentStore;
 
     private final StaffRepository staffRepository;
+
+    @Autowired
+    private VehicleRepository vehicleRepository;
 
     public BindingResource(VehicleService vehicleService,
                            EquipmentService equipmentService, MessageSource messageSource, RedissonEquipmentStore redissonEquipmentStore,
@@ -131,21 +137,23 @@ public class BindingResource {
     /**
      * {@code GET  /binding/:equipmentId/conn-testing} : sync vehicle from App backend.
      *
-     * @param equipmentId the id of the Equipment to test.
+     * @param vehicleId the id of the vehicle to test.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the message}.
      */
-    @GetMapping("/binding/{equipmentId}/conn-testing")
+    @GetMapping("/binding/{vehicleId}/conn-testing")
     @ApiOperation("连通测试")
-    public ResponseEntity<String> connTesting(@PathVariable @ApiParam(value = "设备主键", required = true)  Long equipmentId) {
-        log.debug("Connection testing with equipment: {}", equipmentId); //TODO: to implement...
-        Optional<EquipmentDTO> equipmentDto = equipmentService.findOne(equipmentId);
-        if(equipmentDto.isPresent()){
-            VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(equipmentDto.get().getImei());
-            if(!VehicleStatusEnum.UNKNOWN.equals(currentDeviceStatus)){
-                return ResponseEntity.ok().body("Successful");
-            }
-        }else{
-            return ResponseEntity.ok().body("No Found the equipment by equipmentId: " + equipmentId);
+    public ResponseEntity<String> connTesting(@PathVariable @ApiParam(value = "车辆主键", required = true)  Long vehicleId) {
+        log.debug("Connection testing with vehicle: {}", vehicleId);
+        Optional<Vehicle> vehicle = vehicleRepository.findById(vehicleId);
+        String deviceId;
+        if (vehicle.isPresent() && vehicle.get().getEquipment() != null) {
+            deviceId = vehicle.get().getEquipment().getImei();
+        } else {
+            return ResponseEntity.ok().body("No binding device found for the vehicle ID:" + vehicleId);
+        }
+        VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(deviceId);
+        if(!VehicleStatusEnum.UNKNOWN.equals(currentDeviceStatus)){
+            return ResponseEntity.ok().body("Successful");
         }
         return ResponseEntity.ok().body("Device is offline");
     }
