@@ -73,9 +73,10 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
     @Override
     public void batchRead(List<Long> ids) {
        List<EquipmentFault> faults = equipmentFaultRepository.findAllById(ids);
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
        faults.forEach(equipmentFault -> {
            log.debug("isRead:{} of {}", equipmentFault.getIsRead(), equipmentFault.getId());
-           SecurityUtils.checkMerchantPermission(equipmentFault.getEquipment().getMerchant());
+           SecurityUtils.checkMerchantPermission(loginInfo, equipmentFault.getEquipment().getMerchant());
            equipmentFault.setIsRead(true);
        });
     }
@@ -169,6 +170,7 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
        Optional<EquipmentFault> equipmentFaultOptional =  equipmentFaultRepository.findById(equipmentFaultHandleDTO.getId());
        if(equipmentFaultOptional.isPresent()){
            EquipmentFault equipmentFault = equipmentFaultOptional.get();
+           SecurityUtils.checkMerchantPermission(equipmentFault.getEquipment().getMerchant());
            equipmentFault.setRemark(equipmentFaultHandleDTO.getRemark());
            equipmentFault.setHandledOn(Instant.now());
            return Optional.of(EquipmentFaultService.toDto(equipmentFault));

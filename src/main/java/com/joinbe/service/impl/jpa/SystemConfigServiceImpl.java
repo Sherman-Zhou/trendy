@@ -1,7 +1,11 @@
 package com.joinbe.service.impl.jpa;
 
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.SystemConfig;
 import com.joinbe.repository.SystemConfigRepository;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.SystemConfigService;
 import com.joinbe.service.dto.SystemConfigDTO;
 import org.apache.commons.lang3.StringUtils;
@@ -40,10 +44,12 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     @Override
     public SystemConfigDTO save(SystemConfigDTO systemConfigDTO) {
         log.debug("Request to save SystemConfig : {}", systemConfigDTO);
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
         SystemConfig config = systemConfigRepository.findByKey(SystemConfig.TRAJECTORY_RESERVE_DAYS);
-
+        SecurityUtils.checkMerchantPermission(loginInfo, config.getMerchant());
         config.setValue(String.valueOf(systemConfigDTO.getTrajectoryReserveDays()));
         SystemConfig lastBackupTime = systemConfigRepository.findByKey(SystemConfig.LAST_BACKUP_TIME);
+        SecurityUtils.checkMerchantPermission(loginInfo, lastBackupTime.getMerchant());
         if (StringUtils.isNotEmpty(systemConfigDTO.getLastBackupTime())) {
             lastBackupTime.setValue(systemConfigDTO.getLastBackupTime());
         }
@@ -61,7 +67,10 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     @Transactional(readOnly = true)
     public Page<SystemConfigDTO> findAll(Pageable pageable) {
         log.debug("Request to get all SystemConfigs");
-        return systemConfigRepository.findAll(pageable)
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
+        QueryParams<SystemConfig> queryParams = new QueryParams<>();
+        queryParams.and("merchant.id", Filter.Operator.eq, loginInfo.getMerchantId());
+        return systemConfigRepository.findAll(queryParams, pageable)
             .map(SystemConfigService::toDto);
     }
 

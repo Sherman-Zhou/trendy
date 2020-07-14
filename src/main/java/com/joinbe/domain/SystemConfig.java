@@ -40,6 +40,9 @@ public class SystemConfig extends AbstractAuditingEntity {
     @Column(name = "status", length = 1)
     private String status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Merchant merchant;
+
 
     public Long getId() {
         return id;
@@ -86,6 +89,14 @@ public class SystemConfig extends AbstractAuditingEntity {
     public SystemConfig status(String status) {
         this.status = status;
         return this;
+    }
+
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
     }
 
     @Override

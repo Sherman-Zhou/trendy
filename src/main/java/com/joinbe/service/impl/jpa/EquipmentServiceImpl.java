@@ -8,6 +8,8 @@ import com.joinbe.domain.Equipment;
 import com.joinbe.domain.Merchant;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.EquipmentStatus;
+import com.joinbe.repository.EquipmentFaultRepository;
+import com.joinbe.repository.EquipmentOperationRecordRepository;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
@@ -46,12 +48,20 @@ public class EquipmentServiceImpl implements EquipmentService {
 
     private final VehicleRepository vehicleRepository;
 
+    private final EquipmentFaultRepository equipmentFaultRepository;
+
+    private final EquipmentOperationRecordRepository operationRecordRepository;
+
 
     private final MessageSource messageSource;
 
-    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, VehicleRepository vehicleRepository, MessageSource messageSource) {
+    public EquipmentServiceImpl(EquipmentRepository equipmentRepository, VehicleRepository vehicleRepository,
+                                EquipmentFaultRepository equipmentFaultRepository,
+                                EquipmentOperationRecordRepository operationRecordRepository, MessageSource messageSource) {
         this.equipmentRepository = equipmentRepository;
         this.vehicleRepository = vehicleRepository;
+        this.equipmentFaultRepository = equipmentFaultRepository;
+        this.operationRecordRepository = operationRecordRepository;
 
         this.messageSource = messageSource;
     }
@@ -186,7 +196,10 @@ public class EquipmentServiceImpl implements EquipmentService {
             }
 //            equipment.setStatus(EquipmentStatus.DELETED);
 //            equipment.setVehicle(null);
+            equipmentFaultRepository.deleteByEquipment(equipment);
+            operationRecordRepository.deleteByEquipment(equipment);
             equipmentRepository.deleteById(id);
+
         }
 
     }

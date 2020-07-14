@@ -76,7 +76,31 @@ public final class SecurityUtils {
         if (shop == null) {
             throw new AccessDeniedException("No Permission to view this record");
         }
-        checkDataPermission(shop.getId());
+        checkDataPermission(getCurrentUserLoginInfo(), shop.getId());
+    }
+
+    /**
+     * to check if the user has the permission of Division
+     *
+     * @param shop
+     */
+    public static void checkDataPermission(UserLoginInfo loginInfo, Shop shop) {
+        if (shop == null) {
+            throw new AccessDeniedException("No Permission to view this record");
+        }
+        checkDataPermission(loginInfo, shop.getId());
+    }
+
+    /**
+     * to check if the user has the permission of Division
+     *
+     * @param shopId
+     */
+    public static void checkDataPermission(UserLoginInfo loginInfo, String shopId) {
+
+        if (!loginInfo.getDivisionIds().contains(shopId)) {
+            throw new AccessDeniedException("No Permission to view this record");
+        }
     }
 
     /**
