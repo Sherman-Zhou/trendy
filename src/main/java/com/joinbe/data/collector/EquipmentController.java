@@ -151,9 +151,6 @@ public class EquipmentController {
             deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
             return deferredResult;
         }
-        String doorStr = cmd.initCmd(params);
-        logger.debug("REST request for lock/unlock, command: {}", doorStr);
-        serverHandler.sendCommonQueryMessage(deviceId, doorStr, EventEnum.DOOR, deferredResult);
         deferredResult.onTimeout(() -> {
             //remove from local store if timeout
             logger.warn("Lock/Unlock time out, maybe device is disconnecting, device: {}", deviceId);
@@ -182,6 +179,9 @@ public class EquipmentController {
                 }
             }
         });
+        String doorStr = cmd.initCmd(params);
+        logger.debug("REST request for lock/unlock, command: {}", doorStr);
+        serverHandler.sendCommonQueryMessage(deviceId, doorStr, EventEnum.DOOR, deferredResult);
         return deferredResult;
     }
 
