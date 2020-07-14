@@ -221,7 +221,9 @@ public class VehicleServiceImpl implements VehicleService {
         EquipmentOperationRecord equipmentOperationRecord = new EquipmentOperationRecord();
         equipmentOperationRecord.setOperationSourceType(OperationSourceType.PLATFORM);
         equipmentOperationRecord.setEventType(EventCategory.BINDING);
+        equipmentOperationRecord.setEventDesc(eventType);
         equipmentOperationRecord.setEquipment(equipment);
+
         equipmentOperationRecord.setVehicle(vehicle);
         equipmentOperationRecord.setResult(result);
         operationRecordRepository.save(equipmentOperationRecord);
