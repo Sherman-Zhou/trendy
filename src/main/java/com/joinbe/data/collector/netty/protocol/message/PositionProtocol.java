@@ -11,119 +11,125 @@ import java.util.List;
 
 public class PositionProtocol extends ProtocolMessage{
 
-    private static final Integer DEFAULT_DATA_LENGTH = 22;
+    private static final Integer DEFAULT_DATA_LENGTH = 23;
 
     public PositionProtocol(String data) {
         super(data);
     }
 
     /**
-     * 设备id
+     * 消息头：AT35
      */
     @DataOrder(order = 0)
+    private String head;
+
+    /**
+     * 设备id
+     */
+    @DataOrder(order = 1)
     private String unitId;
 
     /**
      * 时间
      */
-    @DataOrder(order = 1)
+    @DataOrder(order = 2)
     private String dateTime;
 
 
     /**
      * 经度
      */
-    @DataOrder(order = 2)
+    @DataOrder(order = 3)
     private Double longitude;
 
     /**
      * 纬度
      */
-    @DataOrder(order = 3)
+    @DataOrder(order = 4)
     private Double latitude;
 
     /**
      * 速度
      */
-    @DataOrder(order = 4)
+    @DataOrder(order = 5)
     private Integer speed;
 
     /**
      * 方向
      */
-    @DataOrder(order = 5)
+    @DataOrder(order = 6)
     private Integer heading;
     /**
      * 海拔
      */
-    @DataOrder(order = 6)
+    @DataOrder(order = 7)
     private Integer altitude;
 
     /**
      * 卫星数量
      */
-    @DataOrder(order = 7)
+    @DataOrder(order = 8)
     private Integer satellites;
 
     /**
      * event id
      */
-    @DataOrder(order = 8)
+    @DataOrder(order = 9)
     private Integer eventId;
 
     /**
      * 里程
      */
-    @DataOrder(order = 9)
+    @DataOrder(order = 10)
     private Float mileage;
 
     /**
      * 输入状态
      */
-    @DataOrder(order = 10)
+    @DataOrder(order = 11)
     private Integer inputStatus;
 
     /**
      * 模拟输入1电压电平
      */
-    @DataOrder(order = 11)
+    @DataOrder(order = 12)
     private Float analogInput1;
 
     /**
      * 模拟输入2电压电平
      */
-    @DataOrder(order = 12)
+    @DataOrder(order = 13)
     private Float analogInput2;
 
     /**
      * 输出状态
      */
-    @DataOrder(order = 13)
+    @DataOrder(order = 14)
     private Integer outputStatus;
 
     /**
      * 漫游状态
      */
-    @DataOrder(order = 14)
+    @DataOrder(order = 15)
     private Integer roamingStatus;
 
     /**
      * GSM网络信号强度，CSQ数据
      */
-    @DataOrder(order = 15)
+    @DataOrder(order = 16)
     private Integer csq;
 
 
     /**
      * Communication system, 2=2G 3=3G 4=4G
      */
-    @DataOrder(order = 16)
+    @DataOrder(order = 17)
     private Integer commSys;
 
     /**
      * 跨国公司（移动国家代码）-跨国公司（移动网络代码）
      */
-    @DataOrder(order = 17)
+    @DataOrder(order = 18)
     private String mccMnc;
 
 
@@ -131,27 +137,27 @@ public class PositionProtocol extends ProtocolMessage{
      * Location area code
      * 位置区号
      */
-    @DataOrder(order = 18)
+    @DataOrder(order = 19)
     private String lac;
 
     /**
      * cell id
      */
-    @DataOrder(order = 19)
+    @DataOrder(order = 20)
     private String cid;
 
     /**
      * Voltage level of backup battery
      * 备用电池电压等级
      */
-    @DataOrder(order = 20)
+    @DataOrder(order = 21)
     private Float voltageBB;
 
     /**
      * 当IBUTTON吸附时，AT35会发送事件ID=100至SERVER并将IBUTTON ID附加于信息最后
      * 当IBUTTON移除后，AT35会发送事件件ID=101至SERVER
      */
-    @DataOrder(order = 21)
+    @DataOrder(order = 22)
     private String ibuttonId;
 
     /**
@@ -373,5 +379,13 @@ public class PositionProtocol extends ProtocolMessage{
 
     public void setIbuttonId(String ibuttonId) {
         this.ibuttonId = ibuttonId;
+    }
+
+    public String getHead() {
+        return head;
+    }
+
+    public void setHead(String head) {
+        this.head = head;
     }
 }
