@@ -6,6 +6,7 @@ import com.joinbe.domain.enumeration.PaymentStatus;
 import com.joinbe.service.dto.*;
 import com.joinbe.web.rest.vm.SearchVehicleVM;
 import com.joinbe.web.rest.vm.TrajectoryVM;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
@@ -42,7 +43,7 @@ public interface VehicleTrajectoryService {
      *
      * @return the list of entities.
      */
-    List<VehicleTrajectoryDTO> findAll(Pageable pageable, TrajectoryVM vm);
+    Page<VehicleTrajectoryDTO> findAll(Pageable pageable, TrajectoryVM vm);
 
 
     /**
