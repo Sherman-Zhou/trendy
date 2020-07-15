@@ -86,7 +86,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<VehicleTrajectoryDTO> findAll(Pageable pageable, TrajectoryVM vm) {
+    public Page<VehicleTrajectoryDTO> findAll(Pageable pageable, TrajectoryVM vm) {
         log.debug("Request to get all VehicleTrajectories");
         QueryParams<VehicleTrajectory> queryParams = new QueryParams<>();
         if (vm.getVehicleId() != null) {
@@ -107,7 +107,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
             pageable.getSort().and(Sort.by(Sort.Direction.DESC, "startTime")));
         return vehicleTrajectoryRepository.findAll(queryParams, pageable)
-            .stream().map(VehicleTrajectoryService::toDto).collect(Collectors.toList());
+            .map(VehicleTrajectoryService::toDto);
     }
 
 

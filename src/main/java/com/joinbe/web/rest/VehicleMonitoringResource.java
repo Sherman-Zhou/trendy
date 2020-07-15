@@ -6,6 +6,7 @@ import com.joinbe.service.dto.DivisionWithVehicesleDTO;
 import com.joinbe.service.dto.VehicleStateDTO;
 import com.joinbe.service.dto.VehicleTrajectoryDTO;
 import com.joinbe.service.dto.VehicleTrajectoryDetailsDTO;
+import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.SearchVehicleVM;
 import com.joinbe.web.rest.vm.TrajectoryVM;
@@ -14,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,10 +61,10 @@ public class VehicleMonitoringResource {
      */
     @GetMapping("/monitor/trajectories")
     @ApiOperation(value = "获取车辆轨迹")
-    public ResponseEntity<List<VehicleTrajectoryDTO>> getAllVehicleTrajectories(Pageable pageable, TrajectoryVM vm) {
+    public ResponseEntity<PageData<VehicleTrajectoryDTO>> getAllVehicleTrajectories(Pageable pageable, TrajectoryVM vm) {
         log.debug("REST request to get a page of VehicleTrajectories");
-        List<VehicleTrajectoryDTO> dtos = vehicleTrajectoryService.findAll(pageable, vm);
-        return ResponseEntity.ok().body(dtos);
+        Page<VehicleTrajectoryDTO> dtos = vehicleTrajectoryService.findAll(pageable, vm);
+        return ResponseUtil.toPageData(dtos);
     }
 
 
