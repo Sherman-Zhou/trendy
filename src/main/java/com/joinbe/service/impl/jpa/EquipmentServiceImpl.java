@@ -282,6 +282,7 @@ public class EquipmentServiceImpl implements EquipmentService {
                 equipment.setRemark(equipmentData.getRemark());
                 equipment.setMerchant(new Merchant(loginInfo.getMerchantId()));
                 equipment.setOnline(false);
+                equipment.setBluetoothName(equipmentData.getBluetoothName());
                 equipment.setStatus(EquipmentStatus.UNBOUND);
                 equipments.add(equipment);
             } else {
