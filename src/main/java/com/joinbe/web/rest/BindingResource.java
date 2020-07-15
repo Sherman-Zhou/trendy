@@ -152,7 +152,7 @@ public class BindingResource {
             return ResponseEntity.ok().body("No binding device found for the vehicle ID:" + vehicleId);
         }
         VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(deviceId);
-        if(!VehicleStatusEnum.UNKNOWN.equals(currentDeviceStatus)){
+        if(currentDeviceStatus != null && !VehicleStatusEnum.UNKNOWN.equals(currentDeviceStatus)){
             return ResponseEntity.ok().body("Successful");
         }
         return ResponseEntity.ok().body("Device is offline");
