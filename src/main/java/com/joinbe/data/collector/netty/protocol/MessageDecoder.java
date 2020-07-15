@@ -68,10 +68,13 @@ public class MessageDecoder extends ByteToMessageDecoder {
                     message = new CommonProtocol(data);
                     message.initData(CommonProtocol.class);
             }
-        }else{
+        }else if(data.startsWith("AT35")){
             //Position data
             message = new PositionProtocol(data);
             message.initData(PositionProtocol.class);
+        }else{
+            log.debug("Incorrect data format, discard the message.");
+            return;
         }
         out.add(message);
         buffer.skipBytes(buffer.readableBytes());
@@ -92,6 +95,10 @@ public class MessageDecoder extends ByteToMessageDecoder {
             byte[] bytes = new byte[buf.readableBytes()];
             buf.getBytes(buf.readerIndex(), bytes);
             str = new String(bytes, 0, buf.readableBytes());
+        }
+        if(!str.endsWith("\r\n")){
+            log.debug("Incorrect data format, not end with rn, discard the message.");
+            return null;
         }
         /**
          * remove \r\n

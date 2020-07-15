@@ -26,6 +26,16 @@ public class Tests {
         Long daysAgo = new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24).getTime();
         System.out.println(now);
         System.out.println(daysAgo);
+
+        String aaa = "aaaa\r\n";
+        String bbb = "bbbb\r\n";
+        System.out.println(aaa);
+        System.out.println(bbb);
+        if(aaa.endsWith("\r\n")){
+            System.out.println(aaa.substring(0, aaa.length()-2));
+            System.out.println(bbb.substring(0, bbb.length()-2));
+        }
+
     }
 
     @Test
