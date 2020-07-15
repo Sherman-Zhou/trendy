@@ -250,6 +250,12 @@ public class EquipmentServiceImpl implements EquipmentService {
                 createResult("equipment.upload.equipmentId.exists", equipmentData.getRowIdx(), false, response.getErrors());
                 hasError = true;
             }
+            if (StringUtils.isNotEmpty(equipmentData.getBluetoothName())) {
+                if (equipmentRepository.findOneByBluetoothName(equipmentData.getBluetoothName()).isPresent()) {
+                    createResult("equipment.upload.bluetooth.name.exists", equipmentData.getRowIdx(), false, response.getErrors());
+                    hasError = true;
+                }
+            }
 //            Optional<Division> divisionOptional = divisionRepository.findByNameAndStatus(equipmentData.getDivName(), RecordStatus.ACTIVE);
 //            if (divisionOptional.isPresent()) {
 //                List<Division> orgs = divisionOptional.get().getChildren().stream()

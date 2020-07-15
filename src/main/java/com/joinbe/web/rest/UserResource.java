@@ -66,9 +66,7 @@ public class UserResource {
 
     private final Logger log = LoggerFactory.getLogger(UserResource.class);
 
-
     private final StaffService staffService;
-
 
     private final MailService mailService;
 
@@ -105,7 +103,8 @@ public class UserResource {
         if (userDTO.getId() != null) {
             throw new BadRequestAlertException("A new user cannot already have an ID", "userManagement", "idexists");
             // Lowercase the user login before comparing with database
-        } else if (staffService.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
+        } else if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(userDTO.getLogin())
+            || staffService.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
             throw new LoginAlreadyUsedException();
         } else if (staffService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
@@ -135,6 +134,9 @@ public class UserResource {
             throw new EmailAlreadyUsedException();
         }
         existingUser = staffService.findOneByLogin(userDTO.getLogin().toLowerCase());
+        if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(userDTO.getLogin())) {
+            throw new LoginAlreadyUsedException();
+        }
         if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
             throw new LoginAlreadyUsedException();
         }

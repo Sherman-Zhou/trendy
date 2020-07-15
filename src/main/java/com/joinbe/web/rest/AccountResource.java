@@ -4,7 +4,6 @@ import com.joinbe.config.Constants;
 import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.security.SecurityUtils;
-import com.joinbe.service.MailService;
 import com.joinbe.service.PermissionService;
 import com.joinbe.service.StaffService;
 import com.joinbe.service.dto.PasswordChangeDTO;
@@ -55,14 +54,14 @@ public class AccountResource {
 
     private final StaffService staffService;
 
-    private final MailService mailService;
+    //private final MailService mailService;
 
     private final PermissionService permissionService;
 
-    public AccountResource(@Qualifier("JpaUserService") StaffService staffService, MailService mailService, PermissionService permissionService) {
+    public AccountResource(@Qualifier("JpaUserService") StaffService staffService, PermissionService permissionService) {
 
         this.staffService = staffService;
-        this.mailService = mailService;
+        // this.mailService = mailService;
         this.permissionService = permissionService;
     }
 
@@ -180,7 +179,7 @@ public class AccountResource {
 
         if (userDetailsDTO.isPresent()) {
             Optional<Staff> user = staffService.requestPasswordReset(userDetailsDTO.get().getEmail());
-            mailService.sendPasswordResetMail(user.get());
+
         } else {
             // Pretend the request has been successful to prevent checking which emails really exist
             // but log that an invalid attempt has been made
@@ -240,13 +239,7 @@ public class AccountResource {
     public void registerEmail(@Valid @RequestBody UserRegisterVM managedUserVM) {
 
         Optional<Staff> userOptional = staffService.registerUserEmail(managedUserVM);
-        if (userOptional.isPresent()) {
-            Staff staff = userOptional.get();
-            log.debug("user is registered with email: {}", staff.getEmail());
-            //mailService.sendActivationEmail(user);
-        } else {
-            log.warn("the user {} does not exist, just ignored", managedUserVM.getLogin());
-        }
+
     }
 
 //    /**
@@ -276,7 +269,7 @@ public class AccountResource {
         Optional<Staff> userOptional = staffService.changeUserEmail(registerVM);
         userOptional.ifPresent(user -> {
             log.debug("user is changed email: {}", user.getEmail());
-            mailService.sendEmailChangeEmail(user);
+
         });
     }
 

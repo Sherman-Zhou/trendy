@@ -111,9 +111,9 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
         log.debug("Parsed header:");
         headMap.entrySet().forEach((entry -> log.info("{}:{}", entry.getKey(), entry.getValue())));
         //do header validation
-        if (headMap.size() != 7) {
+        if (headMap.size() != 6) {
             String message = messageSource.getMessage("excel.upload.wrong.template", null, LocaleContextHolder.getLocale());
-            throw new RuntimeException(message);
+            throw new BadRequestAlertException(message, "equipment.upload", message);
         }
     }
 

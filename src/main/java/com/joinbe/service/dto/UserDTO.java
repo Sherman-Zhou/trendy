@@ -85,6 +85,9 @@ public class UserDTO implements Serializable {
     @ApiModelProperty("平台主键")
     private Long merchantId;
 
+    @ApiModelProperty("平台名")
+    private String merchantName;
+
     public UserDTO() {
     }
 
@@ -100,6 +103,9 @@ public class UserDTO implements Serializable {
         this.setLangKey(staff.getLangKey());
         this.setAddress(staff.getAddress());
         this.setRemark(staff.getRemark());
+        if (staff.getMerchant() != null) {
+            this.setMerchantName(staff.getMerchant().getName());
+        }
         if (!CollectionUtils.isEmpty(staff.getRoles())) {
             Set<String> roleNames = staff.getRoles().stream()
                 .map(Role::getName)
