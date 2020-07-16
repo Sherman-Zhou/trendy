@@ -40,6 +40,8 @@ public class EquipmentData {
 //     */
 //    private String divName;
 
+    private String bluetoothName;
+
     private Integer rowIdx;
 
 }

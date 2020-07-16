@@ -3,11 +3,12 @@ package com.joinbe.web.rest;
 import com.joinbe.common.excel.BindingData;
 import com.joinbe.common.excel.BindingDataListener;
 import com.joinbe.common.util.ExcelUtil;
-import com.joinbe.data.collector.service.dto.DoorResponseDTO;
+import com.joinbe.config.Constants;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.Staff;
 import com.joinbe.domain.Vehicle;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
+import com.joinbe.repository.CityRepository;
 import com.joinbe.repository.StaffRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.security.SecurityUtils;
@@ -70,17 +71,20 @@ public class BindingResource {
 
     private final StaffRepository staffRepository;
 
+    private final CityRepository cityRepository;
+
     @Autowired
     private VehicleRepository vehicleRepository;
 
     public BindingResource(VehicleService vehicleService,
                            EquipmentService equipmentService, MessageSource messageSource, RedissonEquipmentStore redissonEquipmentStore,
-                           StaffRepository staffRepository) {
+                           StaffRepository staffRepository, CityRepository cityRepository) {
         this.vehicleService = vehicleService;
         this.equipmentService = equipmentService;
         this.messageSource = messageSource;
         this.redissonEquipmentStore = redissonEquipmentStore;
         this.staffRepository = staffRepository;
+        this.cityRepository = cityRepository;
     }
 
 
@@ -171,6 +175,12 @@ public class BindingResource {
 
             Map<String, List<DivisionDTO>> children = divisionDTOS.stream().filter(divisionDTO -> StringUtils.isNotEmpty(divisionDTO.getParentId()))
                 .collect(Collectors.groupingBy(DivisionDTO::getParentId));
+
+            boolean hasNotRootCity = divisionDTOS.stream().noneMatch(divisionDTO -> Constants.CITY_ROOT_ID.equals(divisionDTO.getId()));
+
+            if (hasNotRootCity && children.get(Constants.CITY_ROOT_ID) != null) {
+                divisionDTOS.add(new DivisionDTO(cityRepository.findById(Constants.CITY_ROOT_ID).get(), LocaleContextHolder.getLocale()));
+            }
 
             for (DivisionDTO divisionDTO : divisionDTOS) {
                 if (children.get(divisionDTO.getId()) != null) {

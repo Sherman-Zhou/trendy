@@ -52,7 +52,7 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    @Async
+   // @Async
     public void sendEmail(String to, String subject, String content, boolean isMultipart, boolean isHtml) {
         log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
             isMultipart, isHtml, to, subject, content);
@@ -76,7 +76,7 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    @Async
+    //@Async
     public void sendEmailFromTemplate(Staff staff, String templateName, String titleKey) {
         if (staff.getEmail() == null) {
             log.debug("Email doesn't exist for user '{}'", staff.getLogin());
@@ -92,14 +92,14 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    @Async
+    // @Async
     public void sendActivationEmail(Staff staff) {
         log.debug("Sending activation email to '{}'", staff.getEmail());
         sendEmailFromTemplate(staff, "mail/activationEmail", "email.activation.title");
     }
 
     @Override
-    @Async
+    // @Async
     public void sendEmailChangeEmail(Staff staff) {
         log.debug("Sending change email notification to '{}'", staff.getEmail());
 
@@ -113,14 +113,14 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    @Async
+    // @Async
     public void sendCreationEmail(Staff staff) {
         log.debug("Sending creation email to '{}'", staff.getEmail());
         sendEmailFromTemplate(staff, "mail/creationEmail", "email.activation.title");
     }
 
     @Override
-    @Async
+    //  @Async
     public void sendPasswordResetMail(Staff staff) {
         log.debug("Sending password reset email to '{}'", staff.getEmail());
         sendEmailFromTemplate(staff, "mail/passwordResetEmail", "email.reset.title");

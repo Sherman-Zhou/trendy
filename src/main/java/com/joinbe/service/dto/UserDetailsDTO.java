@@ -54,7 +54,7 @@ public class UserDetailsDTO extends UserDTO {
     private Long merchantId;
 
     @ApiModelProperty(value = "激活key", hidden = true)
-    private String ActivationKey;
+    private String activationKey;
 
 
     public UserDetailsDTO() {

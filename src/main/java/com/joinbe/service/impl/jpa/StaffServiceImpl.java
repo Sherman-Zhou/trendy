@@ -13,6 +13,7 @@ import com.joinbe.security.AuthoritiesConstants;
 import com.joinbe.security.RedissonTokenStore;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.UserLoginInfo;
+import com.joinbe.service.MailService;
 import com.joinbe.service.RoleService;
 import com.joinbe.service.StaffService;
 import com.joinbe.service.dto.RoleDTO;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 import java.time.Instant;
 import java.util.*;
@@ -70,10 +72,12 @@ public class StaffServiceImpl implements StaffService {
 
     private final RedissonTokenStore redissonTokenStore;
 
+    private final MailService mailService;
+
     public StaffServiceImpl(StaffRepository staffRepository, SystemUserRepository systemUserRepository, PasswordEncoder passwordEncoder,
                             RoleRepository roleRepository, CacheManager cacheManager, RoleService roleService, ShopRepository shopRepository,
                             CityRepository cityRepository, PermissionRepository permissionRepository,
-                            RedissonTokenStore redissonTokenStore) {
+                            RedissonTokenStore redissonTokenStore, MailService mailService) {
         this.staffRepository = staffRepository;
         this.systemUserRepository = systemUserRepository;
         this.passwordEncoder = passwordEncoder;
@@ -84,6 +88,7 @@ public class StaffServiceImpl implements StaffService {
         this.cityRepository = cityRepository;
         this.permissionRepository = permissionRepository;
         this.redissonTokenStore = redissonTokenStore;
+        this.mailService = mailService;
     }
 
     @Override
@@ -121,6 +126,7 @@ public class StaffServiceImpl implements StaffService {
             .map(user -> {
                 user.setResetKey(RandomUtil.generateResetKey());
                 user.setResetDate(Instant.now());
+                mailService.sendPasswordResetMail(user);
                 this.clearUserCaches(user);
                 return user;
             });
@@ -158,6 +164,8 @@ public class StaffServiceImpl implements StaffService {
                 user.setStatus(RecordStatus.ACTIVE);
                 user.setActivationKey(null);
                 staffRepository.save(user);
+                log.debug("user is registered with email: {}", user.getEmail());
+                mailService.sendActivationEmail(user);
                 this.clearUserCaches(user);
                 log.debug("Created Information for User: {}", user);
                 return user;
@@ -190,6 +198,7 @@ public class StaffServiceImpl implements StaffService {
                 }
                 user.setOldEmail(user.getEmail());
                 user.setEmail(userDTO.getEmail().toLowerCase());
+                mailService.sendEmailChangeEmail(user);
                 // user.setStatus(RecordStatus.ACTIVE);
                 // user.setActivationKey(null);
                 staffRepository.save(user);
@@ -222,13 +231,30 @@ public class StaffServiceImpl implements StaffService {
         }
 
         if (loginInfo.isSystemAdmin()) {
+            log.debug("system admin update user");
             Merchant merchant = new Merchant(userDTO.getMerchantId());
             staff.setMerchant(merchant);
-            log.debug("system admin update user");
+            Set<Role> roles = new HashSet<>();
+            roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.ROLE_MERCHANT_ADMIN, RecordStatus.ACTIVE).ifPresent(roles::add);
+            staff.setRoles(roles);
+            staff.setShops(shopRepository.findByMerchant(merchant));
+            staff.setCities(cityRepository.findByMerchant(merchant));
+
         } else {
-            Merchant merchant = new Merchant();
-            merchant.setId(loginInfo.getMerchantId());
-            staff.setMerchant(merchant);
+            staff.setMerchant(new Merchant(loginInfo.getMerchantId()));
+            if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
+                Set<Role> roles = userDTO.getRoleIds().stream()
+                    .map(roleRepository::findById)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .collect(Collectors.toSet());
+                staff.setRoles(roles);
+            } else {
+                //if not selected any roles, set to user by default.
+                Set<Role> roles = new HashSet<>();
+                roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.USER, RecordStatus.ACTIVE).ifPresent(roles::add);
+                staff.setRoles(roles);
+            }
         }
 
         staff.setAvatar(userDTO.getAvatar());
@@ -251,19 +277,6 @@ public class StaffServiceImpl implements StaffService {
         staff.setStatus(RecordStatus.INACTIVE);
         staff.setActivationKey(RandomUtil.generateActivationKey());
 
-        if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
-            Set<Role> roles = userDTO.getRoleIds().stream()
-                .map(roleRepository::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toSet());
-            staff.setRoles(roles);
-        } else {
-            //if not selected any roles, set to user by default.
-            Set<Role> roles = new HashSet<>();
-            roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.USER, RecordStatus.ACTIVE).ifPresent(roles::add);
-            staff.setRoles(roles);
-        }
         staffRepository.save(staff);
         this.clearUserCaches(staff);
         log.debug("Created Information for User: {}", staff);
@@ -316,9 +329,21 @@ public class StaffServiceImpl implements StaffService {
                     log.debug("system admin update user");
                     Merchant merchant = new Merchant(userDTO.getMerchantId());
                     user.setMerchant(merchant);
+                    Set<Role> roles = new HashSet<>();
+                    roleRepository.findByCodeAndStatusIs(AuthoritiesConstants.ROLE_MERCHANT_ADMIN, RecordStatus.ACTIVE).ifPresent(roles::add);
+                    user.setRoles(roles);
+                    user.setShops(shopRepository.findByMerchant(merchant));
+                    user.setCities(cityRepository.findByMerchant(merchant));
                 } else {
                     SecurityUtils.checkMerchantPermission(loginInfo, user.getMerchant());
+                    Set<Role> managedAuthorities = user.getRoles();
+                    managedAuthorities.clear();
 
+                    userDTO.getRoleIds().stream()
+                        .map(roleRepository::findById)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .forEach(managedAuthorities::add);
                 }
 
                 user.setLogin(userDTO.getLogin().toLowerCase());
@@ -339,14 +364,6 @@ public class StaffServiceImpl implements StaffService {
                 user.setSex(Sex.resolve(userDTO.getSex()));
                 user.setMobileNo(userDTO.getMobileNo());
                 // user.setVersion(userDTO.getVersion());
-                Set<Role> managedAuthorities = user.getRoles();
-                managedAuthorities.clear();
-
-                userDTO.getRoleIds().stream()
-                    .map(roleRepository::findById)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .forEach(managedAuthorities::add);
 
                 staffRepository.save(user);
                 this.clearUserCaches(user);
@@ -414,11 +431,7 @@ public class StaffServiceImpl implements StaffService {
 //            .stream().map(id -> new Division(id)).collect(Collectors.toSet());
         //queryParams.and("divisions", Filter.Operator.in, userDivisions);
         UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
-        if (loginInfo.isSystemAdmin()) {
-            log.debug("system user...");
-        } else {
-            queryParams.and("merchant.id", Filter.Operator.eq, loginInfo.getMerchantId());
-        }
+
         queryParams.and("status", Filter.Operator.ne, RecordStatus.DELETED);
 
         if (StringUtils.isNotEmpty(vm.getEmail())) {
@@ -447,11 +460,18 @@ public class StaffServiceImpl implements StaffService {
             specification = specification.and(itemSpecification);
         }
 
-        //Divisions Id
-//        Specification<User> divisionSpecification = (Specification<User>) (root, criteriaQuery, criteriaBuilder) -> {
-//             return root.join("divisions").in(userDivisions);
-//        };
-//        specification = specification.and(divisionSpecification);
+        if (loginInfo.isSystemAdmin()) {
+            log.debug("system user...");
+            Specification<Staff> roleSpecification = (Specification<Staff>) (root, criteriaQuery, criteriaBuilder) -> {
+                Join<Staff, Role> join = root.join("roles");
+
+                return criteriaBuilder.equal(join.get("code"), AuthoritiesConstants.ROLE_MERCHANT_ADMIN);
+            };
+            specification = specification.and(roleSpecification);
+        } else {
+            queryParams.and("merchant.id", Filter.Operator.eq, loginInfo.getMerchantId());
+        }
+
         return staffRepository.findAll(specification, pageable).map(UserDTO::new);
     }
 
@@ -574,7 +594,9 @@ public class StaffServiceImpl implements StaffService {
         if (userOptional.isPresent()) {
             Staff staff = userOptional.get();
             SecurityUtils.checkMerchantPermission(staff.getMerchant());
-
+//            if(!CollectionUtils.isEmpty(divisionIds) && !divisionIds.contains(Constants.CITY_ROOT_ID)){
+//                divisionIds.add(Constants.CITY_ROOT_ID);
+//            }
             staff.getShops().clear();
             staff.getCities().clear();
             divisionIds.forEach(id -> {

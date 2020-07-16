@@ -53,14 +53,17 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     private final ShopRepository shopRepository;
 
+    private final StaffRepository staffRepository;
+
     public VehicleTrajectoryServiceImpl(VehicleTrajectoryRepository vehicleTrajectoryRepository,
                                         VehicleRepository vehicleRepository, VehicleTrajectoryDetailsRepository trajectoryDetailsRepository,
-                                        CityRepository cityRepository, ShopRepository shopRepository) {
+                                        CityRepository cityRepository, ShopRepository shopRepository, StaffRepository staffRepository) {
         this.vehicleTrajectoryRepository = vehicleTrajectoryRepository;
         this.vehicleRepository = vehicleRepository;
         this.trajectoryDetailsRepository = trajectoryDetailsRepository;
         this.cityRepository = cityRepository;
         this.shopRepository = shopRepository;
+        this.staffRepository = staffRepository;
     }
 
     /**
@@ -171,23 +174,30 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     @Override
     public List<DivisionWithVehicesleDTO> findCurrentUserDivisionsAndVehicles(SearchVehicleVM vm) {
-        List<String> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+        //List<String> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
+        Staff staff = staffRepository.findOneWithShopsAndCitiesByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
+        List<DivisionWithVehicesleDTO> divisions = staff.getShops().stream().map(shop ->
+            new DivisionWithVehicesleDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
 
-        List<DivisionWithVehicesleDTO> divisions = userDivisionIds.stream()
-            .map(id -> {
-                DivisionWithVehicesleDTO dto;
-                if (id.startsWith(Constants.CITY_ID_PREFIX)) {
-                    City city = cityRepository.getOne(id);
-                    dto = new DivisionWithVehicesleDTO(city, LocaleContextHolder.getLocale());
-                } else {
-                    Shop shop = shopRepository.getOne(id);
-                    dto = new DivisionWithVehicesleDTO(shop, LocaleContextHolder.getLocale());
-                }
-                return dto;
-            })
+        List<DivisionWithVehicesleDTO> divisionDTOInCities = staff.getCities().stream()
+            .map(shop -> new DivisionWithVehicesleDTO(shop, LocaleContextHolder.getLocale())).collect(Collectors.toList());
+        divisions.addAll(divisionDTOInCities);
 
-            .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
-            .collect(Collectors.toList());
+//        List<DivisionWithVehicesleDTO> divisions = userDivisionIds.stream()
+//            .map(id -> {
+//                DivisionWithVehicesleDTO dto;
+//                if (id.startsWith(Constants.CITY_ID_PREFIX)) {
+//                    City city = cityRepository.getOne(id);
+//                    dto = new DivisionWithVehicesleDTO(city, LocaleContextHolder.getLocale());
+//                } else {
+//                    Shop shop = shopRepository.getOne(id);
+//                    dto = new DivisionWithVehicesleDTO(shop, LocaleContextHolder.getLocale());
+//                }
+//                return dto;
+//            })
+//
+//            .filter(division -> RecordStatus.ACTIVE.equals(division.getStatus()))
+//            .collect(Collectors.toList());
 
         QueryParams<Vehicle> queryParams = new QueryParams<>();
         queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
@@ -199,7 +209,9 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 //            queryParams.and("division.id", Filter.Operator.in, SecurityUtils.getCurrentUserDivisionIds());
 //        } //FIXME: permission check
         if (vm.getOnlineOnly() != null) {
-            queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
+            if (vm.getOnlineOnly()) {
+                queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
+            }
         }
         Specification<Vehicle> specification = Specification.where(queryParams);
         if (StringUtils.isNotEmpty(vm.getLicensePlateNumberOrDeviceId())) {
@@ -230,7 +242,14 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             .sorted(Comparator.comparing(DivisionDTO::getName))
             .collect(Collectors.toList());
 
+
         Map<String, List<DivisionDTO>> childMenusMap = children.stream().collect(Collectors.groupingBy(DivisionDTO::getParentId));
+        boolean hasNotRootCity = divisions.stream().noneMatch(divisionDTO -> Constants.CITY_ROOT_ID.equals(divisionDTO.getId()));
+
+        if (hasNotRootCity && childMenusMap.get(Constants.CITY_ROOT_ID) != null) {
+            divisions.add(new DivisionWithVehicesleDTO(cityRepository.findById(Constants.CITY_ROOT_ID).get(), LocaleContextHolder.getLocale()));
+        }
+
         //establish relationship for child menu
         for (DivisionDTO divisionDTO : divisions) {
             if (!CollectionUtils.isEmpty(childMenusMap.get(divisionDTO.getId()))) {
