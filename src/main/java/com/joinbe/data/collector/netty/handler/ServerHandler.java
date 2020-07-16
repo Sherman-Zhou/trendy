@@ -99,7 +99,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 log.debug("ChannelUnregistered, Device is offline, set status to offline, deviceNo: {}", deviceNo);
                 dataCollectService.updateStatus(deviceNo, false, false);
             }
-        });
+        }).start();
 
         super.channelUnregistered(ctx);
     }
