@@ -170,10 +170,7 @@ public class UserResource {
     @GetMapping(path = "/user/{id}/reset")
     @ApiOperation(value = "重置用户密码")
     public ResponseEntity<UserDTO> requestPasswordReset(@PathVariable  @ApiParam(value ="用户主键", required = true ) Long id) {
-        Optional<Staff> user = staffService.requestPasswordReset(id);
-        user.ifPresent(mailService::sendPasswordResetMail);
-
-        return ResponseUtil.wrapOrNotFound(user.map(UserDTO::new));
+         return ResponseUtil.wrapOrNotFound(staffService.requestPasswordReset(id));
     }
 
     /**
@@ -211,24 +208,24 @@ public class UserResource {
         return merchantService.getAll().stream().map(MerchantService::toDto).collect(Collectors.toList());
     }
 
-    /**
-     * {@code Get  /users/{userId}/assign-merchant} : assign platform to user.
-     *
-     * @param userId     the id of the user to update.
-     * @param merchantId the id  of merchant to assign.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated userDto,
-     * or with status {@code 500 (Internal Server Error)} if the userDto couldn't be updated.
-     */
-    @GetMapping("/users/{userId}/assign-merchant/{merchantId}")
-    @ApiOperation("分配平台")
-    public ResponseEntity<UserDTO> assignMerchant(@PathVariable @ApiParam(value = "用户主键", required = true) Long userId,
-                                                  @PathVariable @ApiParam(value = "平台主键", required = true) Long merchantId) {
-        log.debug("REST request to assign merchant: {} to user : {}", merchantId, userId);
-        UserDTO result = staffService.assignMerchant(userId, merchantId);
-
-        return ResponseEntity.ok()
-            .body(result);
-    }
+//    /**
+//     * {@code Get  /users/{userId}/assign-merchant} : assign platform to user.
+//     *
+//     * @param userId     the id of the user to update.
+//     * @param merchantId the id  of merchant to assign.
+//     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated userDto,
+//     * or with status {@code 500 (Internal Server Error)} if the userDto couldn't be updated.
+//     */
+//    @GetMapping("/users/{userId}/assign-merchant/{merchantId}")
+//    @ApiOperation("分配平台")
+//    public ResponseEntity<UserDTO> assignMerchant(@PathVariable @ApiParam(value = "用户主键", required = true) Long userId,
+//                                                  @PathVariable @ApiParam(value = "平台主键", required = true) Long merchantId) {
+//        log.debug("REST request to assign merchant: {} to user : {}", merchantId, userId);
+//        UserDTO result = staffService.assignMerchant(userId, merchantId);
+//
+//        return ResponseEntity.ok()
+//            .body(result);
+//    }
 
 
     /**

@@ -67,7 +67,7 @@ public class EquipmentOperationRecordServiceImpl implements EquipmentOperationRe
         QueryParams<EquipmentOperationRecord> queryParams = new QueryParams<>();
 
         queryParams.and("vehicle.merchant.id", Filter.Operator.eq, loginInfo.getMerchantId());
-        //FIXME: permission
+
 
 //        if (StringUtils.isNotEmpty(vm.getEquipmentId())) {
 //            queryParams.and("equipment.identifyNumber", Filter.Operator.like, vm.getEquipmentId());

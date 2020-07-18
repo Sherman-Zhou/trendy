@@ -5,7 +5,6 @@ import com.joinbe.domain.City;
 import com.joinbe.domain.EquipmentOperationRecord;
 import com.joinbe.domain.Shop;
 import com.joinbe.domain.Vehicle;
-import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.EquipmentOperationRecordDTO;
 import com.joinbe.web.rest.vm.EquipmentOpRecordVM;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -31,7 +30,7 @@ public interface EquipmentOperationRecordService {
             dto.setLicensePlateNumber(vehicle.getLicensePlateNumber());
             Shop shop = vehicle.getShop();
             City city = vehicle.getCity();
-            SecurityUtils.checkDataPermission(shop);
+//            SecurityUtils.checkDataPermission(shop);
             Locale locale = LocaleContextHolder.getLocale();
             if (Locale.CHINESE.equals(locale)) {
                 //city & shop

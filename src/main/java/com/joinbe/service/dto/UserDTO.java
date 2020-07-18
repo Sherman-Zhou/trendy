@@ -36,7 +36,7 @@ public class UserDTO implements Serializable {
     private String name;
 
     @Email
-    @Size(min = 5, max = 254)
+    @Size(max = 200)
     @ApiModelProperty(value = "用户邮件（必须唯一）")
     private String email;
 
@@ -105,6 +105,7 @@ public class UserDTO implements Serializable {
         this.setRemark(staff.getRemark());
         if (staff.getMerchant() != null) {
             this.setMerchantName(staff.getMerchant().getName());
+            this.setMerchantId(staff.getMerchant().getId());
         }
         if (!CollectionUtils.isEmpty(staff.getRoles())) {
             Set<String> roleNames = staff.getRoles().stream()

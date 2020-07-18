@@ -22,7 +22,7 @@ public interface StaffService {
 
     Optional<Staff> requestPasswordReset(String mail);
 
-    Optional<Staff> requestPasswordReset(Long userId);
+    Optional<UserDTO> requestPasswordReset(Long userId);
 
     Optional<Staff> registerUserEmail(UserRegisterVM userDTO);
 

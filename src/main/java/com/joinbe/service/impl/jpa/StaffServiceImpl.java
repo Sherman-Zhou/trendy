@@ -133,16 +133,19 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public Optional<Staff> requestPasswordReset(Long userId) {
+    public Optional<UserDTO> requestPasswordReset(Long userId) {
         return staffRepository.findOneWithRolesById(userId)
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 SecurityUtils.checkMerchantPermission(user.getMerchant());
                 user.setResetKey(RandomUtil.generateResetKey());
                 user.setResetDate(Instant.now());
+                mailService.sendPasswordResetMail(user);
                 this.clearUserCaches(user);
                 return user;
-            });
+            }).map(
+                UserDTO::new
+            );
     }
 
     @Override

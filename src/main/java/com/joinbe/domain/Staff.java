@@ -51,7 +51,7 @@ public class Staff extends AbstractAuditingEntity implements Serializable {
     private String name;
 
     @Email
-    @Size(min = 5, max = 200)
+    @Size(max = 200)
     @Column(length = 200)
     private String email;
 
