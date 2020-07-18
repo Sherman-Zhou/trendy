@@ -176,7 +176,25 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public Optional<Staff> changeUserEmail(ChangeEmailVM userDTO) {
+    public void changeUserEmail(ChangeEmailVM userDTO) {
+
+        String login = SecurityUtils.getCurrentUserLogin().get();
+
+        if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(login)) {
+            Optional<SystemUser> systemUser = systemUserRepository.findOneWithRoleByLogin(login);
+            if (systemUser.isPresent()) {
+                SystemUser user = systemUser.get();
+                String currentEncryptedPassword = user.getPassword();
+                if (!passwordEncoder.matches(userDTO.getPassword(), currentEncryptedPassword)) {
+                    throw new InvalidPasswordException();
+                }
+                user.setOldEmail(user.getEmail());
+                user.setEmail(userDTO.getEmail().toLowerCase());
+                systemUserRepository.save(user);
+                mailService.sendEmailChangeEmail(user);
+            }
+            return;
+        }
 
         staffRepository.findOneByEmailIgnoreCaseAndStatusNot(userDTO.getEmail(), RecordStatus.DELETED).ifPresent(existingUser -> {
             if (!existingUser.getLogin().equals(userDTO.getLogin()) && existingUser.getActivated()) {
@@ -190,7 +208,7 @@ public class StaffServiceImpl implements StaffService {
             throw new InvalidPasswordException();
         }
 
-        return Optional.of(userInDb)
+        Optional.of(userInDb)
             //.filter(Optional::isPresent)
             .map(Optional::get)
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
@@ -410,19 +428,33 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     public void changePassword(String currentClearTextPassword, String newPassword) {
-        SecurityUtils.getCurrentUserLogin()
-            .flatMap(login -> staffRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED))
-            .ifPresent(user -> {
-                SecurityUtils.checkMerchantPermission(user.getMerchant());
-                String currentEncryptedPassword = user.getPassword();
-                if (!passwordEncoder.matches(currentClearTextPassword, currentEncryptedPassword)) {
-                    throw new InvalidPasswordException();
-                }
-                String encryptedPassword = passwordEncoder.encode(newPassword);
-                user.setPassword(encryptedPassword);
-                this.clearUserCaches(user);
-                log.debug("Changed password for User: {}", user);
-            });
+        String login = SecurityUtils.getCurrentUserLogin().get();
+        if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(login)) {
+            systemUserRepository.findOneWithRoleByLogin(login)
+                .ifPresent(user -> {
+                    String currentEncryptedPassword = user.getPassword();
+                    if (!passwordEncoder.matches(currentClearTextPassword, currentEncryptedPassword)) {
+                        throw new InvalidPasswordException();
+                    }
+                    String encryptedPassword = passwordEncoder.encode(newPassword);
+                    user.setPassword(encryptedPassword);
+                    log.debug("Changed password for System Admin: {}", user);
+                });
+
+        } else {
+            staffRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED)
+                .ifPresent(user -> {
+
+                    String currentEncryptedPassword = user.getPassword();
+                    if (!passwordEncoder.matches(currentClearTextPassword, currentEncryptedPassword)) {
+                        throw new InvalidPasswordException();
+                    }
+                    String encryptedPassword = passwordEncoder.encode(newPassword);
+                    user.setPassword(encryptedPassword);
+                    this.clearUserCaches(user);
+                    log.debug("Changed password for User: {}", user);
+                });
+        }
     }
 
     @Override
@@ -490,6 +522,17 @@ public class StaffServiceImpl implements StaffService {
     @Override
     @Transactional(readOnly = true)
     public Optional<UserDetailsDTO> getUserEmail(String login) {
+
+        if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(login)) {
+            return systemUserRepository.findOneWithRoleByLogin(login)
+                .map(staff -> {
+                    UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
+                    userDetailsDTO.setId(staff.getId());
+                    userDetailsDTO.setLogin(staff.getLogin());
+                    userDetailsDTO.setEmail(staff.getEmail());
+                    return userDetailsDTO;
+                });
+        }
 
         return staffRepository.findOneWithRolesByLogin(login)
             .map(staff -> {
@@ -579,6 +622,23 @@ public class StaffServiceImpl implements StaffService {
     @Override
     public Optional<UserDetailsDTO> findOneByLogin(String login) {
         return staffRepository.findOneByLoginAndStatusNot(login, RecordStatus.DELETED).map(UserDetailsDTO::new);
+    }
+
+    @Override
+    public void updateSystemUser(String name, String email, String langKey, String address, String mobileNo) {
+        SecurityUtils.getCurrentUserLogin()
+            .flatMap(login -> systemUserRepository.findOneWithRoleByLogin(login))
+            .ifPresent(user -> {
+                user.setName(name);
+                if (email != null) {
+                    user.setEmail(email.toLowerCase());
+                }
+                user.setLangKey(langKey);
+                user.setAddress(address);
+                user.setMobileNo(mobileNo);
+
+                log.debug("Changed Information for User: {}", user);
+            });
     }
 
     @Override

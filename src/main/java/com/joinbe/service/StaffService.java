@@ -26,7 +26,7 @@ public interface StaffService {
 
     Optional<Staff> registerUserEmail(UserRegisterVM userDTO);
 
-    Optional<Staff> changeUserEmail(ChangeEmailVM userDTO);
+    void changeUserEmail(ChangeEmailVM userDTO);
 
     Staff createUser(UserDTO userDTO);
 
@@ -61,6 +61,8 @@ public interface StaffService {
     Optional<UserDetailsDTO> findOneByEmailIgnoreCase(String email);
 
     Optional<UserDetailsDTO> findOneByLogin(String login);
+
+    void updateSystemUser(String name, String email, String langKey, String address, String mobileNo);
 
     List<Permission> findAllUserPermissionsByLogin(String login);
 

@@ -10,6 +10,7 @@ import com.joinbe.service.dto.PasswordChangeDTO;
 import com.joinbe.service.dto.PermissionDTO;
 import com.joinbe.service.dto.UserAccountDTO;
 import com.joinbe.service.dto.UserDetailsDTO;
+import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
 import com.joinbe.web.rest.vm.ChangeEmailVM;
@@ -40,12 +41,34 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api")
-@Api(value ="当前登陆用户操作相关接口", tags={"当前登陆用户操作相关接口"}, produces = "application/json" )
+@Api(value = "当前登陆用户操作相关接口", tags = {"当前登陆用户操作相关接口"}, produces = "application/json")
 public class AccountResource {
 
-    private static class AccountResourceException extends RuntimeException {
-        private AccountResourceException(String message) {
-            super(message);
+    /**
+     * {@code POST  /account} : update the current user information.
+     *
+     * @param userDTO the current user information.
+     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
+     * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
+     */
+    @PostMapping("/account")
+    @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新用户姓名， 用户邮件， 用户语言，手机号码和 地址")
+    public void saveAccount(@Valid @RequestBody UserAccountDTO userDTO) {
+        String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
+        if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(userLogin)) {
+            staffService.updateSystemUser(userDTO.getName(), userDTO.getEmail(),
+                userDTO.getLangKey(), userDTO.getAddress(), userDTO.getMobileNo());
+        } else {
+            Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
+            if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
+                throw new EmailAlreadyUsedException();
+            }
+            Optional<UserDetailsDTO> user = staffService.findOneByLogin(userLogin);
+            if (!user.isPresent()) {
+                throw new AccountResourceException("User could not be found");
+            }
+            staffService.updateUser(userDTO.getName(), userDTO.getEmail(),
+                userDTO.getLangKey(), userDTO.getAddress(), userDTO.getMobileNo());
         }
     }
 
@@ -127,26 +150,15 @@ public class AccountResource {
     }
 
     /**
-     * {@code POST  /account} : update the current user information.
+     * {@code POST  /account/change-email} : changes the current user's email.
      *
-     * @param userDTO the current user information.
-     * @throws EmailAlreadyUsedException {@code 400 (Bad Request)} if the email is already used.
-     * @throws RuntimeException          {@code 500 (Internal Server Error)} if the user login wasn't found.
+     * @param registerVM current userId, password and new Email.
+     * @throws InvalidPasswordException {@code 400 (Bad Request)} if the new password is incorrect.
      */
-    @PostMapping("/account")
-    @ApiOperation(value = "更新当前用户部分信息", notes = "仅允许并且只更新用户姓名， 用户邮件， 用户语言，手机号码和 地址")
-    public void saveAccount(@Valid @RequestBody UserAccountDTO userDTO) {
-        String userLogin = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new AccountResourceException("Current user login not found"));
-        Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
-        if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
-            throw new EmailAlreadyUsedException();
-        }
-        Optional<UserDetailsDTO> user = staffService.findOneByLogin(userLogin);
-        if (!user.isPresent()) {
-            throw new AccountResourceException("User could not be found");
-        }
-        staffService.updateUser(userDTO.getName(), userDTO.getEmail(),
-            userDTO.getLangKey(), userDTO.getAddress(), userDTO.getMobileNo());
+    @PostMapping(path = "/account/change-email")
+    @ApiOperation("修改绑定邮箱")
+    public void changeEmail(@RequestBody ChangeEmailVM registerVM) {
+        staffService.changeUserEmail(registerVM);
     }
 
     /**
@@ -257,20 +269,10 @@ public class AccountResource {
 //        }
 //    }
 
-    /**
-     * {@code POST  /account/change-email} : changes the current user's email.
-     *
-     * @param registerVM current userId, password and new Email.
-     * @throws InvalidPasswordException {@code 400 (Bad Request)} if the new password is incorrect.
-     */
-    @PostMapping(path = "/account/change-email")
-    @ApiOperation("修改绑定邮箱")
-    public void changeEmail(@RequestBody ChangeEmailVM registerVM) {
-        Optional<Staff> userOptional = staffService.changeUserEmail(registerVM);
-        userOptional.ifPresent(user -> {
-            log.debug("user is changed email: {}", user.getEmail());
-
-        });
+    private static class AccountResourceException extends BadRequestAlertException {
+        private AccountResourceException(String message) {
+            super("", "Account", message);
+        }
     }
 
     private static boolean checkPasswordLength(String password) {

@@ -1,6 +1,7 @@
 package com.joinbe.service.impl;
 
 import com.joinbe.domain.Staff;
+import com.joinbe.domain.SystemUser;
 import com.joinbe.service.MailService;
 import io.github.jhipster.config.JHipsterProperties;
 import org.apache.commons.lang3.StringUtils;
@@ -101,6 +102,20 @@ public class MailServiceImpl implements MailService {
     @Override
     // @Async
     public void sendEmailChangeEmail(Staff staff) {
+        log.debug("Sending change email notification to '{}'", staff.getEmail());
+
+        Locale locale = Locale.forLanguageTag(staff.getLangKey());
+        Context context = new Context(locale);
+        context.setVariable(USER, staff);
+        context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
+        String content = templateEngine.process("mail/changeEmail", context);
+        String subject = messageSource.getMessage("email.change.title", null, locale);
+        sendEmail(staff.getOldEmail(), subject, content, false, true);
+    }
+
+    @Override
+    // @Async
+    public void sendEmailChangeEmail(SystemUser staff) {
         log.debug("Sending change email notification to '{}'", staff.getEmail());
 
         Locale locale = Locale.forLanguageTag(staff.getLangKey());

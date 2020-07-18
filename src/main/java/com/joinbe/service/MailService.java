@@ -1,6 +1,7 @@
 package com.joinbe.service;
 
 import com.joinbe.domain.Staff;
+import com.joinbe.domain.SystemUser;
 
 public interface MailService {
 
@@ -11,6 +12,8 @@ public interface MailService {
     void sendActivationEmail(Staff staff);
 
     void sendEmailChangeEmail(Staff staff);
+
+    void sendEmailChangeEmail(SystemUser staff);
 
     void sendCreationEmail(Staff staff);
 
