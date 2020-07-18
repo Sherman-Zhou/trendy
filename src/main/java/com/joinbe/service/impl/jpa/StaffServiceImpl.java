@@ -106,30 +106,52 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public Optional<Staff> completePasswordReset(String newPassword, String key) {
+    public Optional<UserDTO> completePasswordReset(String newPassword, String key) {
         log.debug("Reset user password for reset key {}", key);
-        return staffRepository.findOneByResetKey(key)
-            .filter(user -> user.getResetDate().isAfter(Instant.now().minusSeconds(86400)))
-            .map(user -> {
-                user.setPassword(passwordEncoder.encode(newPassword));
-                user.setResetKey(null);
-                user.setResetDate(null);
-                this.clearUserCaches(user);
-                return user;
-            });
+        Optional<Staff> staffOptional = staffRepository.findOneByResetKey(key);
+        if (staffOptional.isPresent()) {
+            return staffOptional.filter(user -> user.getResetDate().isAfter(Instant.now().minusSeconds(86400)))
+                .map(user -> {
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    user.setResetKey(null);
+                    user.setResetDate(null);
+                    this.clearUserCaches(user);
+                    return user;
+                }).map(UserDTO::new);
+        } else {
+            return systemUserRepository.findOneByResetKey(key)
+                .map(user -> {
+                    user.setPassword(passwordEncoder.encode(newPassword));
+                    user.setResetKey(null);
+                    user.setResetDate(null);
+
+                    return user;
+                }).map(UserDetailsDTO::new);
+        }
     }
 
     @Override
-    public Optional<Staff> requestPasswordReset(String mail) {
-        return staffRepository.findOneByEmailIgnoreCaseAndStatusNot(mail, RecordStatus.DELETED)
-            .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
-            .map(user -> {
-                user.setResetKey(RandomUtil.generateResetKey());
-                user.setResetDate(Instant.now());
-                mailService.sendPasswordResetMail(user);
-                this.clearUserCaches(user);
-                return user;
-            });
+    public void requestPasswordReset(String mail, Boolean isAdmin) {
+        if (isAdmin) {
+            systemUserRepository.findOneByEmailIgnoreCase(mail)
+                .map(user -> {
+                    user.setResetKey(RandomUtil.generateResetKey());
+                    user.setResetDate(Instant.now());
+                    mailService.sendPasswordResetMail(user);
+
+                    return user;
+                });
+        } else {
+            staffRepository.findOneByEmailIgnoreCaseAndStatusNot(mail, RecordStatus.DELETED)
+                .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
+                .map(user -> {
+                    user.setResetKey(RandomUtil.generateResetKey());
+                    user.setResetDate(Instant.now());
+                    mailService.sendPasswordResetMail(user);
+                    this.clearUserCaches(user);
+                    return user;
+                });
+        }
     }
 
     @Override

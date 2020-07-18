@@ -68,6 +68,8 @@ public class UserDetailsDTO extends UserDTO {
         this.setEmail(staff.getEmail());
         this.setStatus(staff.getStatus() != null ? staff.getStatus().getCode() : null);
         this.setAvatar(staff.getAvatar());
+        this.setMobileNo(staff.getMobileNo());
+        this.setAddress(staff.getAddress());
         this.setLangKey(staff.getLangKey());
         this.setMerchantId(staff.getMerchant().getId());
         this.setActivationKey(staff.getActivationKey());
@@ -91,6 +93,9 @@ public class UserDetailsDTO extends UserDTO {
         this.setId(staff.getId());
         this.setLogin(staff.getLogin());
         this.setName(staff.getName());
+        this.setLangKey(staff.getLangKey());
+        this.setMobileNo(staff.getMobileNo());
+        this.setAddress(staff.getAddress());
         this.setEmail(staff.getEmail());
         this.setStatus(staff.getStatus() != null ? staff.getStatus().getCode() : null);
         this.roles = new HashSet<>();

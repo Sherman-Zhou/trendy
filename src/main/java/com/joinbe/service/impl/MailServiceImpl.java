@@ -93,6 +93,22 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
+    //@Async
+    public void sendEmailFromTemplate(SystemUser staff, String templateName, String titleKey) {
+        if (staff.getEmail() == null) {
+            log.debug("Email doesn't exist for user '{}'", staff.getLogin());
+            return;
+        }
+        Locale locale = Locale.forLanguageTag(staff.getLangKey());
+        Context context = new Context(locale);
+        context.setVariable(USER, staff);
+        context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
+        String content = templateEngine.process(templateName, context);
+        String subject = messageSource.getMessage(titleKey, null, locale);
+        sendEmail(staff.getEmail(), subject, content, false, true);
+    }
+
+    @Override
     // @Async
     public void sendActivationEmail(Staff staff) {
         log.debug("Sending activation email to '{}'", staff.getEmail());
@@ -137,6 +153,13 @@ public class MailServiceImpl implements MailService {
     @Override
     //  @Async
     public void sendPasswordResetMail(Staff staff) {
+        log.debug("Sending password reset email to '{}'", staff.getEmail());
+        sendEmailFromTemplate(staff, "mail/passwordResetEmail", "email.reset.title");
+    }
+
+    @Override
+    //  @Async
+    public void sendPasswordResetMail(SystemUser staff) {
         log.debug("Sending password reset email to '{}'", staff.getEmail());
         sendEmailFromTemplate(staff, "mail/passwordResetEmail", "email.reset.title");
     }

@@ -6,10 +6,7 @@ import com.joinbe.domain.enumeration.PermissionType;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.PermissionService;
 import com.joinbe.service.StaffService;
-import com.joinbe.service.dto.PasswordChangeDTO;
-import com.joinbe.service.dto.PermissionDTO;
-import com.joinbe.service.dto.UserAccountDTO;
-import com.joinbe.service.dto.UserDetailsDTO;
+import com.joinbe.service.dto.*;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.errors.EmailAlreadyUsedException;
 import com.joinbe.web.rest.errors.InvalidPasswordException;
@@ -190,7 +187,8 @@ public class AccountResource {
         Optional<UserDetailsDTO> userDetailsDTO = staffService.getUserEmail(login);
 
         if (userDetailsDTO.isPresent()) {
-            Optional<Staff> user = staffService.requestPasswordReset(userDetailsDTO.get().getEmail());
+            staffService.requestPasswordReset(userDetailsDTO.get().getEmail(),
+                Constants.ADMIN_ACCOUNT.equalsIgnoreCase(userDetailsDTO.get().getLogin()));
 
         } else {
             // Pretend the request has been successful to prevent checking which emails really exist
@@ -231,7 +229,7 @@ public class AccountResource {
         if (!checkPasswordLength(keyAndPassword.getNewPassword())) {
             throw new InvalidPasswordException();
         }
-        Optional<Staff> user =
+        Optional<UserDTO> user =
             staffService.completePasswordReset(keyAndPassword.getNewPassword(), keyAndPassword.getKey());
 
         if (!user.isPresent()) {

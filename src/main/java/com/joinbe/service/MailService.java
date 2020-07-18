@@ -9,6 +9,8 @@ public interface MailService {
 
     void sendEmailFromTemplate(Staff staff, String templateName, String titleKey);
 
+    void sendEmailFromTemplate(SystemUser staff, String templateName, String titleKey);
+
     void sendActivationEmail(Staff staff);
 
     void sendEmailChangeEmail(Staff staff);
@@ -18,4 +20,6 @@ public interface MailService {
     void sendCreationEmail(Staff staff);
 
     void sendPasswordResetMail(Staff staff);
+
+    void sendPasswordResetMail(SystemUser staff);
 }

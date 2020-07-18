@@ -18,9 +18,9 @@ import java.util.Optional;
 public interface StaffService {
     Optional<Staff> activateRegistration(String key);
 
-    Optional<Staff> completePasswordReset(String newPassword, String key);
+    Optional<UserDTO> completePasswordReset(String newPassword, String key);
 
-    Optional<Staff> requestPasswordReset(String mail);
+    void requestPasswordReset(String mail, Boolean isAdmin);
 
     Optional<UserDTO> requestPasswordReset(Long userId);
 
