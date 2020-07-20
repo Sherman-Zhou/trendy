@@ -17,8 +17,6 @@ public interface MailService {
 
     void sendEmailChangeEmail(SystemUser staff);
 
-    void sendCreationEmail(Staff staff);
-
     void sendPasswordResetMail(Staff staff);
 
     void sendPasswordResetMail(SystemUser staff);

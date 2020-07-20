@@ -1,5 +1,6 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.domain.Merchant;
 import com.joinbe.service.MerchantService;
 import com.joinbe.service.dto.MerchantDTO;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
@@ -48,7 +49,7 @@ public class MerchantResource {
         if (merchantDTO.getId() != null) {
             throw new BadRequestAlertException("A new role cannot already have an ID", ENTITY_NAME, "idexists");
         } else if (merchantService.findByName(merchantDTO.getName()).isPresent()) {
-            throw new BadRequestAlertException("merchant name already used!", ENTITY_NAME, "nameexists");
+            throw new BadRequestAlertException("merchant name already used!", ENTITY_NAME, "merchant.name.exists");
         }
         MerchantDTO result = merchantService.save(merchantDTO);
         return ResponseEntity.created(new URI("/api/merchants/" + result.getId()))
@@ -69,8 +70,11 @@ public class MerchantResource {
         log.debug("REST request to update Role : {}", merchantDTO);
         if (merchantDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
-        } else if (merchantService.findByName(merchantDTO.getName()).isPresent()) {
-            throw new BadRequestAlertException("merchant name already used!", ENTITY_NAME, "nameexists");
+        } else {
+            Optional<Merchant> merchantOptional = merchantService.findByName(merchantDTO.getName());
+            if (merchantOptional.isPresent() && !merchantOptional.get().getId().equals(merchantDTO.getId())) {
+                throw new BadRequestAlertException("merchant name already used!", ENTITY_NAME, "merchant.name.exists");
+            }
         }
         MerchantDTO result = merchantService.save(merchantDTO);
         return ResponseEntity.ok()

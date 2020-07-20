@@ -34,13 +34,13 @@ public class BindingDataListener extends AnalysisEventListener<BindingData> {
         boolean hasError = false;
 
         if (StringUtils.isBlank(data.getLicensePlateNumber())) {
-            String message = messageSource.getMessage("binding.upload.vehicle.licensePlateNumber.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("error.binding.vehicle.licensePlateNumber.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
             recordError(message, rowIdx);
             hasError = true;
         }
         if (StringUtils.isBlank(data.getIdentifyNumber())) {
 
-            String message = messageSource.getMessage("binding.upload.vehicle.identifyNumber.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("error.binding.vehicle.identifyNumber.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
             recordError(message, rowIdx);
             hasError = true;
         }
@@ -88,7 +88,7 @@ public class BindingDataListener extends AnalysisEventListener<BindingData> {
 //        String message = messageSource.getMessage("excel.upload.parse.error",
 //            new String []  {exception.getMessage(), String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
 //          recordError(message, rowIdx);
-        throw new BadRequestAlertException(exception.getMessage(), "binding.upload", "file.error");
+        throw new BadRequestAlertException(exception.getMessage(), "binding.upload", "parse.error");
     }
 
     private void recordError(String message, int rowIdx) {

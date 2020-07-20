@@ -14,7 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -104,6 +106,8 @@ public class EquipmentOperationRecordServiceImpl implements EquipmentOperationRe
             };
             specification = specification.and(itemSpecification);
         }
+        pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+            pageable.getSort().and(Sort.by(Sort.Direction.DESC, "createdDate")));
 
         return equipmentOperationRecordRepository.findAll(specification, pageable)
             .map(EquipmentOperationRecordService::toDto);

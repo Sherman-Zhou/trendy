@@ -154,7 +154,7 @@ public class RoleServiceImpl implements RoleService {
         log.debug("Request to delete Role : {}", id);
         List<Staff> staff = staffRepository.findUsersByRoleId(id);
         if (!staff.isEmpty()) {
-            throw new BadRequestAlertException("Role is in use", "Role", "inuse");
+            throw new BadRequestAlertException("Role is in use", "Role", "role.in.use");
         }
         Role role = roleRepository.getOne(id);
         role.setStatus(RecordStatus.DELETED);

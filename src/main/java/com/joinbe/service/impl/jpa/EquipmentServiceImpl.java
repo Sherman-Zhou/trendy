@@ -87,15 +87,15 @@ public class EquipmentServiceImpl implements EquipmentService {
             log.debug("updating Equipment");
             equipment = equipmentRepository.getOne(equipmentDTO.getId());
             if (equipmentByIdNum.isPresent() && !equipmentByIdNum.get().getId().equals(equipment.getId())) {
-                throw new BadRequestAlertException("the IdentifyNumber is existed ", "Equipment", "equipment.upload.equipmentId.exists");
+                throw new BadRequestAlertException("the IdentifyNumber is existed ", "Equipment", "equipmentId.exists");
             }
             if (equipmentByImei.isPresent() && !equipmentByImei.get().getId().equals(equipment.getId())) {
-                throw new BadRequestAlertException("the IMEI is existed ", "Equipment", "equipment.upload.imei.exists");
+                throw new BadRequestAlertException("the IMEI is existed ", "Equipment", "imei.exists");
             }
             if (StringUtils.isNotEmpty(equipmentDTO.getBluetoothName())) {
                 Optional<Equipment> equipmentByBluetoothName = equipmentRepository.findOneByBluetoothName(equipmentDTO.getBluetoothName());
                 if (equipmentByBluetoothName.isPresent() && !equipmentByBluetoothName.get().getId().equals(equipment.getId())) {
-                    throw new BadRequestAlertException("the Bluetooth Name is existed ", "Equipment", "equipment.bluetooth.name.exists");
+                    throw new BadRequestAlertException("the Bluetooth Name is existed ", "Equipment", "bluetooth.name.exists");
                 }
             }
 
@@ -103,15 +103,15 @@ public class EquipmentServiceImpl implements EquipmentService {
             SecurityUtils.checkMerchantPermission(userLoginInfo, equipment.getMerchant());
         } else {
             if (equipmentByIdNum.isPresent()) {
-                throw new BadRequestAlertException("the IdentifyNumber is existed ", "Equipment", "equipment.upload.equipmentId.exists");
+                throw new BadRequestAlertException("the IdentifyNumber is existed ", "Equipment", "equipmentId.exists");
             }
             if (equipmentByImei.isPresent()) {
-                throw new BadRequestAlertException("the IMEI is existed ", "Equipment", "equipment.upload.imei.exists");
+                throw new BadRequestAlertException("the IMEI is existed ", "Equipment", "imei.exists");
             }
             if (StringUtils.isNotEmpty(equipmentDTO.getBluetoothName())) {
                 Optional<Equipment> equipmentByBluetoothName = equipmentRepository.findOneByBluetoothName(equipmentDTO.getBluetoothName());
                 if (equipmentByBluetoothName.isPresent()) {
-                    throw new BadRequestAlertException("the Bluetooth Name is existed ", "Equipment", "equipment.bluetooth.name.exists");
+                    throw new BadRequestAlertException("the Bluetooth Name is existed ", "Equipment", "bluetooth.name.exists");
                 }
             }
             equipment = EquipmentService.toEntity(equipmentDTO);

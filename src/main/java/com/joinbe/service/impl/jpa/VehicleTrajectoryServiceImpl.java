@@ -4,6 +4,8 @@ import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.Constants;
+import com.joinbe.data.collector.service.DataCollectService;
+import com.joinbe.data.collector.service.dto.VehicleCalcInfoResponseItemDTO;
 import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.*;
@@ -28,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.Predicate;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,15 +56,19 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     private final StaffRepository staffRepository;
 
+    private final DataCollectService dataCollectService;
+
     public VehicleTrajectoryServiceImpl(VehicleTrajectoryRepository vehicleTrajectoryRepository,
                                         VehicleRepository vehicleRepository, VehicleTrajectoryDetailsRepository trajectoryDetailsRepository,
-                                        CityRepository cityRepository, ShopRepository shopRepository, StaffRepository staffRepository) {
+                                        CityRepository cityRepository, ShopRepository shopRepository, StaffRepository staffRepository,
+                                        DataCollectService dataCollectService) {
         this.vehicleTrajectoryRepository = vehicleTrajectoryRepository;
         this.vehicleRepository = vehicleRepository;
         this.trajectoryDetailsRepository = trajectoryDetailsRepository;
         this.cityRepository = cityRepository;
         this.shopRepository = shopRepository;
         this.staffRepository = staffRepository;
+        this.dataCollectService = dataCollectService;
     }
 
     /**
@@ -278,9 +283,11 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
                 vehicleStateDTO.setEquipment(equipment);
             }
-            //TODO: to calculate....UserResource.java
-            vehicleStateDTO.setRemainingFuel(BigDecimal.valueOf(60));
-            vehicleStateDTO.setTotalMileage(vehicle.getTotalMileage());
+            VehicleCalcInfoResponseItemDTO vehicleCalcInfoResponseItemDTO = dataCollectService.getVehicleMileageAndFuelCalc(vehicleId);
+            if (vehicleCalcInfoResponseItemDTO != null) {
+                vehicleStateDTO.setRemainingFuel(vehicleCalcInfoResponseItemDTO.getRemainFuelConsumptionInLiter());
+                vehicleStateDTO.setTotalMileage(vehicleCalcInfoResponseItemDTO.getCurrentMileageInKM());
+            }
 
             //to search the latest TrajectoryDetail...
             QueryParams<VehicleTrajectoryDetails> queryParams = new QueryParams<>();

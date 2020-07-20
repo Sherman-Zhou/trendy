@@ -61,9 +61,9 @@ public class RoleResource {
         if (roleDTO.getId() != null) {
             throw new BadRequestAlertException("A new role cannot already have an ID", ENTITY_NAME, "idexists");
         } else if (roleService.findOneByCode(roleDTO.getCode()).isPresent()) {
-            throw new BadRequestAlertException("role code already used!", ENTITY_NAME, "codeexists");
+            throw new BadRequestAlertException("role code already used!", ENTITY_NAME, "role.code.exists");
         } else if (roleService.findOneByName(roleDTO.getName()).isPresent()) {
-            throw new BadRequestAlertException("role name already used!", ENTITY_NAME, "nameexists");
+            throw new BadRequestAlertException("role name already used!", ENTITY_NAME, "role.name.exists");
         }
         RoleDTO result = roleService.save(roleDTO);
         return ResponseEntity.created(new URI("/api/roles/" + result.getId()))
@@ -79,21 +79,21 @@ public class RoleResource {
      * or with status {@code 500 (Internal Server Error)} if the roleDTO couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PutMapping("/roles")
-    @ApiOperation("更新角色")
-    public ResponseEntity<RoleDTO> updateRole(@Valid @RequestBody RoleDTO roleDTO) throws URISyntaxException {
-        log.debug("REST request to update Role : {}", roleDTO);
-        if (roleDTO.getId() == null) {
-            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
-        } else if (roleService.findOneByCode(roleDTO.getCode()).isPresent()) {
-            throw new BadRequestAlertException("role code already used!", ENTITY_NAME, "codeexists");
-        } else if (roleService.findOneByName(roleDTO.getName()).isPresent()) {
-            throw new BadRequestAlertException("role name already used!", ENTITY_NAME, "nameexists");
-        }
-        RoleDTO result = roleService.save(roleDTO);
-        return ResponseEntity.ok()
-            .body(result);
-    }
+//    @PutMapping("/roles")
+//    @ApiOperation("更新角色")
+//    public ResponseEntity<RoleDTO> updateRole(@Valid @RequestBody RoleDTO roleDTO) throws URISyntaxException {
+//        log.debug("REST request to update Role : {}", roleDTO);
+//        if (roleDTO.getId() == null) {
+//            throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
+//        } else if (roleService.findOneByCode(roleDTO.getCode()).isPresent()) {
+//            throw new BadRequestAlertException("role code already used!", ENTITY_NAME, "codeexists");
+//        } else if (roleService.findOneByName(roleDTO.getName()).isPresent()) {
+//            throw new BadRequestAlertException("role name already used!", ENTITY_NAME, "nameexists");
+//        }
+//        RoleDTO result = roleService.save(roleDTO);
+//        return ResponseEntity.ok()
+//            .body(result);
+//    }
 
     /**
      * {@code GET  /roles} : get all the roles.

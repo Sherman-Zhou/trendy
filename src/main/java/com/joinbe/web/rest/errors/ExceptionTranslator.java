@@ -3,6 +3,8 @@ package com.joinbe.web.rest.errors;
 import com.joinbe.common.error.UsernameAlreadyUsedException;
 import io.github.jhipster.web.util.HeaderUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -40,6 +42,12 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
     @Value("${jhipster.clientApp.name}")
     private String applicationName;
 
+    private final MessageSource messageSource;
+
+    public ExceptionTranslator(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
+
     /**
      * Post-process the Problem payload to add the message key for the front-end if needed.
      */
@@ -49,8 +57,17 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
             return entity;
         }
         Problem problem = entity.getBody();
+
         if (!(problem instanceof ConstraintViolationProblem || problem instanceof DefaultProblem)) {
-            return entity;
+            String messageKey = (String) problem.getParameters().get(MESSAGE_KEY);
+            ProblemBuilder builder = Problem.builder()
+                .withType(problem.getType())
+                .withStatus(problem.getStatus())
+                .withTitle(problem.getTitle())
+                //.with(PATH_KEY, problem.)
+                // .with(VIOLATIONS_KEY, ((ConstraintViolationProblem) problem).getViolations())
+                .with(MESSAGE_KEY, messageSource.getMessage(messageKey, null, LocaleContextHolder.getLocale()));
+            return new ResponseEntity<>(builder.build(), entity.getHeaders(), entity.getStatusCode());
         }
         ProblemBuilder builder = Problem.builder()
             .withType(Problem.DEFAULT_TYPE.equals(problem.getType()) ? ErrorConstants.DEFAULT_TYPE : problem.getType())
@@ -94,8 +111,9 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
 
     @ExceptionHandler
     public ResponseEntity<Problem> handleEmailAlreadyUsedException(com.joinbe.common.error.EmailAlreadyUsedException ex, NativeWebRequest request) {
+        String errorMsg = messageSource.getMessage("error.email.exists", null, LocaleContextHolder.getLocale());
         EmailAlreadyUsedException problem = new EmailAlreadyUsedException();
-        return create(problem, request, HeaderUtil.createFailureAlert(applicationName, true, problem.getEntityName(), problem.getErrorKey(), problem.getMessage()));
+        return create(problem, request);
     }
 
     /* spring默认上传大小1MB 超出大小捕获异常MaxUploadSizeExceededException */

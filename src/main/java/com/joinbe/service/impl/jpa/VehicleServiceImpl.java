@@ -188,11 +188,11 @@ public class VehicleServiceImpl implements VehicleService {
 
         if (!vehicleOptional.isPresent()) {
             createOpRecord(null, equipmentOptional.isPresent() ? equipmentOptional.get() : null, OperationResult.FAILURE, EventType.BINDING);
-            throw new BadRequestAlertException("Invalid vehicle id", "Vehicle", "vehicle.notexist");
+            throw new BadRequestAlertException("Invalid vehicle id", "Vehicle", "binding.vehicle.not.exist");
         }
         if (!equipmentOptional.isPresent()) {
             createOpRecord(vehicleOptional.get(), null, OperationResult.FAILURE, EventType.BINDING);
-            throw new BadRequestAlertException("Invalid equipment id", "Equipment", "equipment.notexist");
+            throw new BadRequestAlertException("Invalid equipment id", "Equipment", "binding.equipment.not.exist");
         }
         Vehicle vehicle = vehicleOptional.get();
 
@@ -204,11 +204,11 @@ public class VehicleServiceImpl implements VehicleService {
 
         if (!EquipmentStatus.UNBOUND.equals(equipment.getStatus())) {
             createOpRecord(vehicle, equipment, OperationResult.FAILURE, EventType.BINDING);
-            throw new BadRequestAlertException("Equipment is bound already", "Binding", "equipment.binding.boundalready");
+            throw new BadRequestAlertException("Equipment is bound already", "Binding", "binding.equipment.bound.already");
         }
         if (vehicle.getBounded()) {
             createOpRecord(vehicle, equipment, OperationResult.FAILURE, EventType.BINDING);
-            throw new BadRequestAlertException("Vehicle is bound already", "Binding", "vehicle.binding.boundalready");
+            throw new BadRequestAlertException("Vehicle is bound already", "Binding", "binding.vehicle.bound.already");
         }
         equipment.setVehicle(vehicle);
         equipment.setStatus(EquipmentStatus.BOUND);
@@ -288,11 +288,11 @@ public class VehicleServiceImpl implements VehicleService {
             Optional<Equipment> equipmentOptional = equipmentRepository.findOneByIdentifyNumberAndStatusNot(bindingData.getIdentifyNumber(), EquipmentStatus.DELETED);
 
             if (!vehicleOptional.isPresent()) {
-                createResult("binding.upload.vehicle.not.exist", bindingData.getRowIdx(), false, response.getErrors());
+                createResult("error.binding.vehicle.not.exist", bindingData.getRowIdx(), false, response.getErrors());
                 hasError = true;
             }
             if (!equipmentOptional.isPresent()) {
-                createResult("binding.upload.equipment.not.exist", bindingData.getRowIdx(), false, response.getErrors());
+                createResult("error.binding.equipment.not.exist", bindingData.getRowIdx(), false, response.getErrors());
                 hasError = true;
 
             }
@@ -301,11 +301,11 @@ public class VehicleServiceImpl implements VehicleService {
                 Equipment equipment = equipmentOptional.get();
 
                 if (!EquipmentStatus.UNBOUND.equals(equipment.getStatus())) {
-                    createResult("binding.upload.equipment.bound.already", bindingData.getRowIdx(), false, response.getErrors());
+                    createResult("error.binding.equipment.bound.already", bindingData.getRowIdx(), false, response.getErrors());
                     hasError = true;
                 }
                 if (vehicle.getBounded()) {
-                    createResult("binding.upload.vehicle.bound.already", bindingData.getRowIdx(), false, response.getErrors());
+                    createResult("error.binding.vehicle.bound.already", bindingData.getRowIdx(), false, response.getErrors());
                     hasError = true;
                 }
             }
