@@ -84,23 +84,24 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             deviceIdAndChannelMap.remove(deviceNo);
             //移除device绑定的server
             redissonEquipmentStore.removeFromRedisForServer(deviceNo);
+            //车辆行驶状态设置为未知
+            redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
+            //Ibutton状态设置为未知
+            redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN,null);
+            //锁的状态设置为未知
+            redissonEquipmentStore.putInRedisForDoorStatus(deviceNo, VehicleDoorStatusEnum.UNKNOWN);
+            //开火/关火状态设置为未知
+            redissonEquipmentStore.putInRedisForFireStatus(deviceNo, VehicleFireStatusEnum.UNKNOWN);
+            //更新设备的状态为离线，车辆的行驶状态为未知
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    log.debug("ChannelUnregistered, Device is offline, set status to offline, deviceNo: {}", deviceNo);
+                    dataCollectService.updateStatus(deviceNo, false, false);
+                }
+            }).start();
         }
         channelIdAndDeviceIdMap.remove(channel.id().asLongText());
-        //车辆行驶状态设置为未知
-        redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
-        //Ibutton状态设置为未知
-        redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN,null);
-        //锁的状态设置为未知
-        redissonEquipmentStore.putInRedisForDoorStatus(deviceNo, VehicleDoorStatusEnum.UNKNOWN);
-        //更新设备的状态为离线，车辆的行驶状态为未知
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                log.debug("ChannelUnregistered, Device is offline, set status to offline, deviceNo: {}", deviceNo);
-                dataCollectService.updateStatus(deviceNo, false, false);
-            }
-        }).start();
-
         super.channelUnregistered(ctx);
     }
 
@@ -124,13 +125,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 deviceIdAndChannelMap.put(deviceNo, channel);
                 redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
                 //更新设备的状态为在线，车辆的行驶状态为未知
-                channel.eventLoop().execute(new Runnable() {
+                /*channel.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
                         log.debug("Get device's connection, set status to online, deviceNo: {}", deviceNo);
                         dataCollectService.updateStatus(deviceNo, true, false);
                     }
-                });
+                });*/
             }
             //handle event
         }else{

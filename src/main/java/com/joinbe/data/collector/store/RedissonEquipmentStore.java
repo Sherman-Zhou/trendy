@@ -3,9 +3,9 @@ package com.joinbe.data.collector.store;
 import cn.hutool.core.util.StrUtil;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
-import com.joinbe.data.collector.service.dto.ResponseDTO;
 import com.joinbe.domain.enumeration.IbuttonStatusEnum;
 import com.joinbe.domain.enumeration.VehicleDoorStatusEnum;
+import com.joinbe.domain.enumeration.VehicleFireStatusEnum;
 import com.joinbe.domain.enumeration.VehicleStatusEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RAtomicLong;
@@ -14,7 +14,6 @@ import org.redisson.api.RQueue;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.async.DeferredResult;
 
@@ -50,6 +49,9 @@ public class RedissonEquipmentStore {
     //Door状态相关
     private static final String DEVICE_REAL_TIME_DOOR_STATUS_KEY = "DEVICE_ID_DOOR_STATUS_KEY";
     private static final String DEVICE_REAL_TIME_DOOR_STATUS_KEY_PREFIX = "DEVICE_ID_DOOR:";
+    //打火熄火相关
+    private static final String DEVICE_REAL_TIME_FIRE_STATUS_KEY = "DEVICE_ID_FIRE_STATUS_KEY";
+    private static final String DEVICE_REAL_TIME_FIRE_STATUS_KEY_PREFIX = "DEVICE_ID_FIRE:";
 
     private final RedissonClient redissonClient;
 
@@ -295,6 +297,27 @@ public class RedissonEquipmentStore {
         return VehicleDoorStatusEnum.getByCode(status);
     }
 
+    /**
+     * save fire status
+     * @param deviceId
+     * @param status: OPEN_FIRE/CLOSE_FIRE/UNKNOWN
+     */
+    public void putInRedisForFireStatus(String deviceId, VehicleFireStatusEnum status) {
+        RMapCache<String, String> deviceFireMap = redissonClient.getMapCache(DEVICE_REAL_TIME_FIRE_STATUS_KEY);
+        deviceFireMap.put(DEVICE_REAL_TIME_FIRE_STATUS_KEY_PREFIX + deviceId, status.getCode());
+    }
+
+    /**
+     * Get fire status
+     * @param deviceId
+     * @return
+     */
+    public VehicleFireStatusEnum getDeviceFireStatus(String deviceId) {
+        RMapCache<String, String> deviceFireMap = redissonClient.getMapCache(DEVICE_REAL_TIME_FIRE_STATUS_KEY);
+        String status = deviceFireMap.get(DEVICE_REAL_TIME_FIRE_STATUS_KEY_PREFIX + deviceId);
+        log.debug("Fire status in redis for deviceId {}:{}", deviceId, status);
+        return VehicleFireStatusEnum.getByCode(status);
+    }
 
 
     /**

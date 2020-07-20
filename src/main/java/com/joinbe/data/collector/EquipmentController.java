@@ -1,5 +1,7 @@
 package com.joinbe.data.collector;
 
+import com.joinbe.common.util.Filter;
+import com.joinbe.common.util.QueryParams;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.cmd.register.Cmd;
 import com.joinbe.data.collector.cmd.register.impl.*;
@@ -8,30 +10,36 @@ import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
-import com.joinbe.domain.Equipment;
-import com.joinbe.domain.EquipmentOperationRecord;
-import com.joinbe.domain.Vehicle;
+import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.EventCategory;
 import com.joinbe.domain.enumeration.EventType;
 import com.joinbe.domain.enumeration.OperationResult;
 import com.joinbe.domain.enumeration.OperationSourceType;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleRepository;
+import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
 import com.joinbe.service.EquipmentService;
+import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.Optional;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/internal/equipment")
@@ -48,6 +56,9 @@ public class EquipmentController {
 
     @Autowired
     private VehicleRepository vehicleRepository;
+
+    @Autowired
+    private VehicleTrajectoryDetailsRepository vehicleTrajectoryDetailsRepository;
 
     @Autowired
     private EquipmentRepository equipmentRepository;
@@ -242,5 +253,101 @@ public class EquipmentController {
             LocalEquipmentStroe.get(deviceId, EventEnum.BLENAME);
         });
         return deferredResult;
+    }
+
+    /**
+     *
+     * @param vm
+     * @param bindingResult
+     * @return
+     */
+    @GetMapping("/vehicleMileageAndFuelCalc")
+    @ApiOperation("获取车辆剩余油量和目前里程数")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> getVehicleMileageAndFuelCalc(@Valid VehicleMaintenanceVM vm, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/internal/equipment/vehicleMileageAndFuelCalc validate error: {}", message);
+            return new ResponseEntity<>(new VehicleCalcInfoResponseDTO(1, message), HttpStatus.OK);
+        }
+
+        logger.debug("REST request to get VehicleMileageAndFuelCalc : {}", vm.toString());
+        VehicleCalcInfoResponseDTO vehicleCalcInfoResponseDTO  = new VehicleCalcInfoResponseDTO(0, "success");
+        try {
+            //最新一次的车辆维护信息
+            Optional<VehicleMaintenance> latestVehicleMaintenance = dataCollectService.findLatestVehicleMaintenance(Long.valueOf(vm.getVehicleId()));
+            BigDecimal maintainedFuel = BigDecimal.ZERO;
+            BigDecimal maintainedMileage = BigDecimal.ZERO;
+            Instant latestMaintenanceTime = Instant.EPOCH;
+            if(latestVehicleMaintenance.isPresent()){
+                maintainedFuel = latestVehicleMaintenance.get().getFuel();
+                maintainedMileage = latestVehicleMaintenance.get().getMileage();
+                latestMaintenanceTime = latestVehicleMaintenance.get().getLastModifiedDate();
+            }else{
+                Optional<Vehicle> vehicle = vehicleRepository.findById(Long.valueOf(vm.getVehicleId()));
+                if(vehicle.isPresent()){
+                    maintainedFuel = vehicle.get().getTankVolume() != null ?vehicle.get().getTankVolume() : BigDecimal.ZERO;
+                }else{
+                    String message = "Vehicle not maintained yet, vehicleId:" + vm.getVehicleId();
+                    logger.debug(message);
+                    return new ResponseEntity<>(new VehicleCalcInfoResponseDTO(1, message), HttpStatus.OK);
+                }
+            }
+
+            //获取车辆维护后的油耗和里程数
+            QueryParams<VehicleTrajectoryDetails> queryParams = new QueryParams<>();
+            queryParams.setDistinct(true);
+            if (StringUtils.isNotBlank(vm.getVehicleId())) {
+                queryParams.and(new Filter("vehicleTrajectory.vehicle.id", Filter.Operator.eq, vm.getVehicleId()));
+            }
+            if (latestMaintenanceTime != null) {
+                queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(latestMaintenanceTime, Instant.now().atZone(ZoneId.systemDefault()).toInstant())));
+            }
+
+            Specification<VehicleTrajectoryDetails> specification = Specification.where(queryParams);
+            List<VehicleTrajectoryDetails> trajectoryDetailList = vehicleTrajectoryDetailsRepository.findAll(specification);
+            BigDecimal fuelConsumption = BigDecimal.ZERO;
+            BigDecimal totalMileage = BigDecimal.ZERO;
+            BigDecimal totalFuelConsumption = BigDecimal.ZERO;
+            if(trajectoryDetailList != null && trajectoryDetailList.size() > 0){
+                Optional<VehicleTrajectoryDetails> oneTrajectoryDetail = trajectoryDetailList.stream().findAny();
+                if(oneTrajectoryDetail.get().getVehicleTrajectory() != null && oneTrajectoryDetail.get().getVehicleTrajectory().getEquipment() !=null){
+                    fuelConsumption = oneTrajectoryDetail.get().getVehicleTrajectory().getVehicle().getFuelConsumption();
+                }
+                List<VehicleTrajectoryDetails> sortedList = trajectoryDetailList.stream().filter(detail -> detail.getReceivedTime() != null)
+                    .sorted(Comparator.comparing(VehicleTrajectoryDetails::getReceivedTime)).collect(Collectors.toList());
+                //calculate total mileage
+                if(sortedList.size() > 1){
+                    for (int i = 1; i < sortedList.size(); i++) {
+                        BigDecimal lastOne = sortedList.get(i-1).getMileage() != null ? sortedList.get(i-1).getMileage() : BigDecimal.ZERO;
+                        BigDecimal currentOne = sortedList.get(i).getMileage() != null ? sortedList.get(i).getMileage() : BigDecimal.ZERO;
+                        BigDecimal subtract = currentOne.subtract(lastOne);
+                        if(subtract.compareTo(BigDecimal.ZERO) == 1){
+                            totalMileage = totalMileage.add(subtract);
+                        }
+                    }
+                }
+                //calculate fuelConsumption;
+                if(fuelConsumption != null && fuelConsumption.compareTo(BigDecimal.ZERO) == 1){
+                    totalFuelConsumption = totalMileage.divide(fuelConsumption,2, BigDecimal.ROUND_HALF_UP);
+                }
+            }
+
+            //final calculate
+            VehicleCalcInfoResponseItemDTO data = new VehicleCalcInfoResponseItemDTO();
+            BigDecimal remainFuelConsumptionInLiter = maintainedFuel.subtract(totalFuelConsumption);
+            if(remainFuelConsumptionInLiter.compareTo(BigDecimal.ZERO) == 1){
+                data.setRemainFuelConsumptionInLiter(remainFuelConsumptionInLiter);
+            }else{
+                data.setRemainFuelConsumptionInLiter(BigDecimal.ZERO);
+            }
+            data.setCurrentMileageInKM(maintainedMileage.add(totalMileage));
+            vehicleCalcInfoResponseDTO.setData(data);
+            logger.debug("End process vehicle mileage and fuel calc: {}", vehicleCalcInfoResponseDTO.toString());
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return new ResponseEntity<>(new VehicleCalcInfoResponseDTO(1, e.getMessage()), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(vehicleCalcInfoResponseDTO, HttpStatus.OK);
     }
 }

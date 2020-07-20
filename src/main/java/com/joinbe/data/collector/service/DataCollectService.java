@@ -6,10 +6,7 @@ import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.*;
-import com.joinbe.repository.EquipmentFaultRepository;
-import com.joinbe.repository.EquipmentOperationRecordRepository;
-import com.joinbe.repository.EquipmentRepository;
-import com.joinbe.repository.VehicleTrajectoryRepository;
+import com.joinbe.repository.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +35,8 @@ public class DataCollectService {
     private  EquipmentOperationRecordRepository equipmentOperationRecordRepository;
     @Autowired
     private EquipmentFaultRepository equipmentFaultRepository;
+    @Autowired
+    private VehicleMaintenanceRepository vehicleMaintenanceRepository;
 
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void saveTrajectory(PositionProtocol msg) {
@@ -54,24 +53,39 @@ public class DataCollectService {
         }
         //处理event
         handleEvent(msg, equipment.get());
-        //处理锁的状态
-        handleInputStatus(msg);
         //之前状态
         VehicleStatusEnum previousDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
-        //状态处理
+        VehicleFireStatusEnum previousFireStatus = redissonEquipmentStore.getDeviceFireStatus(msg.getUnitId());
+        //处理Input状态
+        handleInputStatus(msg);
+        //处理车辆状态
         handleRealTimeSpeed(msg);
         //当前状态
         VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
+        VehicleFireStatusEnum currentFireStatus = redissonEquipmentStore.getDeviceFireStatus(msg.getUnitId());
 
         log.debug("DeviceId: {}, previousDeviceStatus: {},  currentDeviceStatus: {}",msg.getUnitId(), previousDeviceStatus.getCode(), currentDeviceStatus.getCode());
+        log.debug("DeviceId: {}, previousFireStatus: {},  currentFireStatus: {}",msg.getUnitId(), previousFireStatus.getCode(), currentFireStatus.getCode());
 
         //更新车辆状态
-        if(previousDeviceStatus == null || !previousDeviceStatus.equals(currentDeviceStatus)){
-            log.debug("Vehicle's status is changed, update status, deviceNo: {}", msg.getUnitId());
-            boolean isRunning = VehicleStatusEnum.RUNNING.getCode().equals(currentDeviceStatus.getCode());
+        if(previousDeviceStatus == null || VehicleStatusEnum.UNKNOWN.equals(previousDeviceStatus) || !previousDeviceStatus.equals(currentDeviceStatus)){
+            boolean isRunning = VehicleStatusEnum.RUNNING.equals(currentDeviceStatus);
+            log.debug("Vehicle's status is changed, update status, deviceNo: {}, isRunning: {}", msg.getUnitId(), isRunning);
             this.updateStatus(msg.getUnitId(),true,isRunning);
         }
 
+        /**
+         * 判断数据是否接收
+         * 当前状态为关火 && 上一次状态为非开火
+         */
+        if(VehicleFireStatusEnum.CLOSE_FIRE.equals(currentFireStatus) && !VehicleFireStatusEnum.OPEN_FIRE.equals(previousFireStatus)){
+            log.debug("Ignore the position data, imei: {}",msg.getUnitId());
+            return;
+        }
+
+        /**
+         * 数据保存
+         */
         String existTrajectoryId = redissonEquipmentStore.getDeviceTrajectory(msg.getUnitId());
         VehicleTrajectory existTrajectory = null;
         VehicleTrajectory newVehicleTrajectory = null;
@@ -88,40 +102,41 @@ public class DataCollectService {
         vehicleTrajectoryDetails.setLatitude(BigDecimal.valueOf(msg.getLatitude()));
         vehicleTrajectoryDetails.setActualSpeed(BigDecimal.valueOf(msg.getSpeed()));
         vehicleTrajectoryDetails.setMileage(BigDecimal.valueOf(msg.getMileage()));
-        /**
-         *
-         * 规则：当静止状运行/未知状态/运行状态发生转换时，新产生轨迹
-         */
-        if(StringUtils.isBlank(existTrajectoryId) || existTrajectory == null ||
-            previousDeviceStatus == null || !previousDeviceStatus.equals(currentDeviceStatus)){
-            String newTrajectoryId = redissonEquipmentStore.genId();
-            log.info("Generate new trajectory: {}", newTrajectoryId);
 
-            newVehicleTrajectory = new VehicleTrajectory();
-            newVehicleTrajectory.setTrajectoryId(newTrajectoryId);
-            newVehicleTrajectory.setStartLongitude(BigDecimal.valueOf(msg.getLongitude()));
-            newVehicleTrajectory.setStartLatitude(BigDecimal.valueOf(msg.getLatitude()));
-            newVehicleTrajectory.setStartTime(Instant.now());
-            newVehicleTrajectory.setEquipment(equipment.get());
-            newVehicleTrajectory.setVehicle(equipment.get().getVehicle());
-            //第一条数据，不用计算, 为0
-            newVehicleTrajectory.setMileage(BigDecimal.ZERO);
-            newVehicleTrajectory.setDetails(new HashSet<VehicleTrajectoryDetails>() {{ add(vehicleTrajectoryDetails);}});
-            vehicleTrajectoryDetails.setVehicleTrajectory(newVehicleTrajectory);
-            //设置之前的轨迹为结束
-            if(existTrajectory != null){
+        /**
+         * 产生新轨迹： 当前为开火 && 上次为非开火
+         * 更新轨迹： 当前为开火 && 上次也为开火
+         * 结束轨迹： 当前为关火 && 上次为开火
+         */
+        if(VehicleFireStatusEnum.OPEN_FIRE.equals(currentFireStatus)){
+            if(!VehicleFireStatusEnum.OPEN_FIRE.equals(previousFireStatus) || existTrajectory == null){
+                String newTrajectoryId = redissonEquipmentStore.genId();
+                log.info("Generate new trajectory: {}", newTrajectoryId);
+
+                newVehicleTrajectory = new VehicleTrajectory();
+                newVehicleTrajectory.setTrajectoryId(newTrajectoryId);
+                newVehicleTrajectory.setStartLongitude(BigDecimal.valueOf(msg.getLongitude()));
+                newVehicleTrajectory.setStartLatitude(BigDecimal.valueOf(msg.getLatitude()));
+                newVehicleTrajectory.setStartTime(Instant.now());
+                newVehicleTrajectory.setEquipment(equipment.get());
+                newVehicleTrajectory.setVehicle(equipment.get().getVehicle());
+                //第一条数据，不用计算, 为0
+                newVehicleTrajectory.setMileage(BigDecimal.ZERO);
+                newVehicleTrajectory.setDetails(new HashSet<VehicleTrajectoryDetails>() {{ add(vehicleTrajectoryDetails);}});
+                vehicleTrajectoryDetails.setVehicleTrajectory(newVehicleTrajectory);
+                //覆盖之前的轨迹
+                redissonEquipmentStore.putInRedisForTrajectory(msg.getUnitId(), newTrajectoryId);
+            }else if(existTrajectory != null){
+                log.info("Use exist trajectory, {}", existTrajectoryId);
+                existTrajectory.getDetails().add(vehicleTrajectoryDetails);
+                //计算当前轨迹的实时里程
+                BigDecimal mileage = handleTrajectoryMileage(existTrajectory);
+                existTrajectory.setMileage(mileage);
+                vehicleTrajectoryDetails.setVehicleTrajectory(existTrajectory);
+            }
+        }else if(existTrajectory != null){
                 existTrajectory.setEndTime(Instant.now());
                 //TODO - 计算超速次数
-            }
-            //覆盖之前的轨迹
-            redissonEquipmentStore.putInRedisForTrajectory(msg.getUnitId(), newTrajectoryId);
-        }else{
-            log.info("Use exist trajectory, {}", existTrajectoryId);
-            existTrajectory.getDetails().add(vehicleTrajectoryDetails);
-            //计算当前轨迹的实时里程
-            BigDecimal mileage = handleTrajectoryMileage(existTrajectory);
-            existTrajectory.setMileage(mileage);
-            vehicleTrajectoryDetails.setVehicleTrajectory(existTrajectory);
         }
         //save
         if(existTrajectory != null){
@@ -133,7 +148,7 @@ public class DataCollectService {
     }
 
     /**
-     * handle door status
+     * handle input status
      * @param msg
      */
     private void handleInputStatus(PositionProtocol msg) {
@@ -141,10 +156,23 @@ public class DataCollectService {
         if(msg == null ||inputStatus == null){
             return;
         }
+        /**
+         * 开锁：2,3,7
+         * 关锁：1,4,5,6
+         */
         if(inputStatus == 2 || inputStatus == 3 || inputStatus == 7){
             redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.OPEN);
         }else{
             redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.CLOSE);
+        }
+        /**
+         * 点火：1,3,5,7
+         * 熄火：2,4,6
+         */
+        if(inputStatus == 2 || inputStatus == 4 || inputStatus == 6){
+            redissonEquipmentStore.putInRedisForFireStatus(msg.getUnitId(), VehicleFireStatusEnum.CLOSE_FIRE);
+        }else{
+            redissonEquipmentStore.putInRedisForFireStatus(msg.getUnitId(), VehicleFireStatusEnum.OPEN_FIRE);
         }
     }
 
@@ -232,7 +260,7 @@ public class DataCollectService {
         int speed = msg.getSpeed().intValue();
         String unitId = msg.getUnitId();
         VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(unitId);
-        if(speed > 0 && !VehicleStatusEnum.RUNNING.equals(currentDeviceStatus)){
+        if(speed > 0 && !VehicleStatusEnum.RUNNING.getCode().equals(currentDeviceStatus.getCode())){
             //设置为运行中 & 记录不为0的时间
             redissonEquipmentStore.putInRedisForStatus(unitId,VehicleStatusEnum.RUNNING);
             redissonEquipmentStore.putInRedisForCalcStatus(unitId, System.currentTimeMillis());
@@ -344,5 +372,11 @@ public class DataCollectService {
         Equipment ept = equipment.get();
         ept.setBluetoothName(bleName);
         equipmentRepository.save(ept);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<VehicleMaintenance> findLatestVehicleMaintenance(Long vehicleId){
+        log.debug("In findLatestVehicleMaintenance, request for get latest vehicle maintenance, vehicleId: {}", vehicleId);
+        return vehicleMaintenanceRepository.findFirstByVehicle_IdOrderByCreatedDateDesc(vehicleId);
     }
 }
