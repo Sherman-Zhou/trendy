@@ -5,7 +5,6 @@ import com.joinbe.domain.City;
 import com.joinbe.domain.EquipmentFault;
 import com.joinbe.domain.Shop;
 import com.joinbe.domain.Vehicle;
-import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.EquipmentFaultDTO;
 import com.joinbe.service.dto.EquipmentFaultHandleDTO;
 import com.joinbe.web.rest.vm.EquipmentFaultVM;
@@ -35,7 +34,7 @@ public interface EquipmentFaultService {
             dto.setVehicleId(vehicle.getId());
             Shop shop = vehicle.getShop();
             City city = vehicle.getCity();
-            SecurityUtils.checkDataPermission(shop);
+           // SecurityUtils.checkDataPermission(shop);
             Locale locale = LocaleContextHolder.getLocale();
             if (Locale.CHINESE.equals(locale)) {
                 //city & shop

@@ -18,15 +18,15 @@ import java.util.Optional;
 public interface StaffService {
     Optional<Staff> activateRegistration(String key);
 
-    Optional<Staff> completePasswordReset(String newPassword, String key);
+    Optional<UserDTO> completePasswordReset(String newPassword, String key);
 
-    Optional<Staff> requestPasswordReset(String mail);
+    void requestPasswordReset(String mail, Boolean isAdmin);
 
-    Optional<Staff> requestPasswordReset(Long userId);
+    Optional<UserDTO> requestPasswordReset(Long userId);
 
     Optional<Staff> registerUserEmail(UserRegisterVM userDTO);
 
-    Optional<Staff> changeUserEmail(ChangeEmailVM userDTO);
+    void changeUserEmail(ChangeEmailVM userDTO);
 
     Staff createUser(UserDTO userDTO);
 
@@ -61,6 +61,8 @@ public interface StaffService {
     Optional<UserDetailsDTO> findOneByEmailIgnoreCase(String email);
 
     Optional<UserDetailsDTO> findOneByLogin(String login);
+
+    void updateSystemUser(String name, String email, String langKey, String address, String mobileNo);
 
     List<Permission> findAllUserPermissionsByLogin(String login);
 

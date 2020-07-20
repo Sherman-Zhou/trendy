@@ -34,15 +34,17 @@ public class JWTFilter extends GenericFilterBean {
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
         throws IOException, ServletException {
-        Authentication authentication = null;
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         String jwt = resolveToken(httpServletRequest);
-        if (StringUtils.hasText(jwt)) {
-            authentication = this.tokenProvider.getAuthentication(jwt);
-        }
-        if (authentication != null && this.tokenProvider.validateToken(jwt)
-            && this.tokenStore.isTokenExisted(SecurityUtils.extractPrincipal(authentication))) {
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        if (StringUtils.hasText(jwt) && this.tokenProvider.validateToken(jwt)) {
+            Authentication authentication = this.tokenProvider.getAuthentication(jwt);
+            if (this.tokenStore.isTokenExisted(SecurityUtils.extractPrincipal(authentication))) {
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                logger.debug("the token does not exists in redis");
+            }
+
         }
         filterChain.doFilter(servletRequest, servletResponse);
     }

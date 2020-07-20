@@ -17,4 +17,8 @@ public interface SystemUserRepository extends JpaRepository<SystemUser, Long>, J
     //@EntityGraph(attributePaths = {"role"})
     Optional<SystemUser> findOneWithRoleByLogin(String login);
 
+    Optional<SystemUser> findOneByEmailIgnoreCase(String email);
+
+    Optional<SystemUser> findOneByResetKey(String resetKey);
+
 }

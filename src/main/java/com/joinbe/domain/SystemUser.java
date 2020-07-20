@@ -46,9 +46,17 @@ public class SystemUser extends AbstractAuditingEntity implements Serializable {
     private String name;
 
     @Email
-    @Size(min = 5, max = 200)
+    @Size(max = 200)
     @Column(length = 200)
     private String email;
+
+    @Size(max = 200)
+    @Column(name = "address", length = 200)
+    private String address;
+
+    @Size(min = 2, max = 10)
+    @Column(name = "lang_key", length = 10)
+    private String langKey;
 
     @Size(max = 20)
     @Column(name = "activation_key", length = 20)
@@ -66,9 +74,14 @@ public class SystemUser extends AbstractAuditingEntity implements Serializable {
     @Column(name = "status")
     private RecordStatus status;
 
+    @Size(max = 50)
+    @Column(length = 50)
+    private String mobileNo;
+
     @ManyToOne
     private Role role;
 
+    private transient String oldEmail;
 
     public Boolean getActivated() {
         return RecordStatus.ACTIVE.equals(status);
@@ -152,5 +165,37 @@ public class SystemUser extends AbstractAuditingEntity implements Serializable {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getLangKey() {
+        return langKey;
+    }
+
+    public void setLangKey(String langKey) {
+        this.langKey = langKey;
+    }
+
+    public String getMobileNo() {
+        return mobileNo;
+    }
+
+    public void setMobileNo(String mobileNo) {
+        this.mobileNo = mobileNo;
+    }
+
+    public String getOldEmail() {
+        return oldEmail;
+    }
+
+    public void setOldEmail(String oldEmail) {
+        this.oldEmail = oldEmail;
     }
 }
