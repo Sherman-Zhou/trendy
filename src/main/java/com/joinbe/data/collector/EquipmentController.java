@@ -34,6 +34,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.async.DeferredResult;
 
+import javax.persistence.criteria.JoinType;
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -303,7 +304,7 @@ public class EquipmentController {
             if (latestMaintenanceTime != null) {
                 queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(latestMaintenanceTime, Instant.now().atZone(ZoneId.systemDefault()).toInstant())));
             }
-
+            queryParams.addJoihFetch("vehicleTrajectory", JoinType.LEFT);
             Specification<VehicleTrajectoryDetails> specification = Specification.where(queryParams);
             List<VehicleTrajectoryDetails> trajectoryDetailList = vehicleTrajectoryDetailsRepository.findAll(specification);
             BigDecimal fuelConsumption = BigDecimal.ZERO;
