@@ -186,8 +186,8 @@ public class StaffServiceImpl implements StaffService {
             .filter(user -> !RecordStatus.DELETED.equals(user.getStatus()))
             .map(user -> {
                 user.setEmail(userDTO.getEmail().toLowerCase());
-                user.setStatus(RecordStatus.ACTIVE);
-                user.setActivationKey(null);
+//                user.setStatus(RecordStatus.ACTIVE);
+//                user.setActivationKey(null);
                 staffRepository.save(user);
                 log.debug("user is registered with email: {}", user.getEmail());
                 mailService.sendActivationEmail(user);
@@ -315,8 +315,8 @@ public class StaffServiceImpl implements StaffService {
         staff.setRemark(userDTO.getRemark());
         staff.setAddress(userDTO.getAddress());
 
-        staff.setResetKey(RandomUtil.generateResetKey());
-        staff.setResetDate(Instant.now());
+//        staff.setResetKey(RandomUtil.generateResetKey());
+//        staff.setResetDate(Instant.now());
         staff.setStatus(RecordStatus.INACTIVE);
         staff.setActivationKey(RandomUtil.generateActivationKey());
 
@@ -703,25 +703,6 @@ public class StaffServiceImpl implements StaffService {
         return userDTO;
     }
 
-    @Override
-    public UserDTO assignMerchant(Long userId, Long merchantId) {
-        UserDTO userDTO;
-        Optional<Staff> userOptional = staffRepository.findById(userId);
-
-        if (userOptional.isPresent()) {
-            Staff staff = userOptional.get();
-            Merchant merchant = new Merchant();
-            merchant.setId(merchantId);
-            staff.setMerchant(merchant);
-            staff.setShops(shopRepository.findByMerchant(staff.getMerchant()));
-            staff.setCities(cityRepository.findByMerchant(staff.getMerchant()));
-            this.clearUserCaches(staff);
-            userDTO = new UserDTO(staff);
-        } else {
-            throw new BadRequestAlertException("Invalid id", "User", "idnull");
-        }
-        return userDTO;
-    }
 
     @Override
     public List<String> findAllUserDivisionIds(Long userId) {

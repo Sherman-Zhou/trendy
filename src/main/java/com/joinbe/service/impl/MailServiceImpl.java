@@ -143,12 +143,6 @@ public class MailServiceImpl implements MailService {
         sendEmail(staff.getOldEmail(), subject, content, false, true);
     }
 
-    @Override
-    // @Async
-    public void sendCreationEmail(Staff staff) {
-        log.debug("Sending creation email to '{}'", staff.getEmail());
-        sendEmailFromTemplate(staff, "mail/creationEmail", "email.activation.title");
-    }
 
     @Override
     //  @Async

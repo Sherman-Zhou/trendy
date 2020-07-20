@@ -56,10 +56,13 @@ public class AccountResource {
             staffService.updateSystemUser(userDTO.getName(), userDTO.getEmail(),
                 userDTO.getLangKey(), userDTO.getAddress(), userDTO.getMobileNo());
         } else {
-            Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
-            if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
-                throw new EmailAlreadyUsedException();
+            if (StringUtils.isNotEmpty(userDTO.getEmail())) {
+                Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
+                if (existingUser.isPresent() && (!existingUser.get().getLogin().equalsIgnoreCase(userLogin))) {
+                    throw new EmailAlreadyUsedException();
+                }
             }
+
             Optional<UserDetailsDTO> user = staffService.findOneByLogin(userLogin);
             if (!user.isPresent()) {
                 throw new AccountResourceException("User could not be found");
@@ -247,25 +250,23 @@ public class AccountResource {
     @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation("注册用户邮件")
     public void registerEmail(@Valid @RequestBody UserRegisterVM managedUserVM) {
-
-        Optional<Staff> userOptional = staffService.registerUserEmail(managedUserVM);
-
+        staffService.registerUserEmail(managedUserVM);
     }
 
-//    /**
-//     * {@code GET  /account/activate} : activate the registered user.
-//     *
-//     * @param key the activation key.
-//     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
-//     */
-//    @GetMapping("/account/activate")
-//    @ApiOperation("激活邮件")
-//    public void activateAccount(@RequestParam(value = "key") String key) {
-//        Optional<User> user = userService.activateRegistration(key);
-//        if (!user.isPresent()) {
-//            throw new AccountResourceException("No user was found for this activation key");
-//        }
-//    }
+    /**
+     * {@code GET  /account/activate} : activate the registered user.
+     *
+     * @param key the activation key.
+     * @throws RuntimeException {@code 500 (Internal Server Error)} if the user couldn't be activated.
+     */
+    @GetMapping("/account/activate")
+    @ApiOperation("激活邮件")
+    public void activateAccount(@RequestParam(value = "key") String key) {
+        Optional<Staff> user = staffService.activateRegistration(key);
+        if (!user.isPresent()) {
+            throw new AccountResourceException("No user was found for this activation key");
+        }
+    }
 
     private static class AccountResourceException extends BadRequestAlertException {
         private AccountResourceException(String message) {

@@ -68,7 +68,6 @@ public interface StaffService {
 
     UserDTO assignDivision(Long userId, List<String> divisionIds);
 
-    UserDTO assignMerchant(Long userId, Long merchantId);
 
     List<String> findAllUserDivisionIds(Long userId);
 

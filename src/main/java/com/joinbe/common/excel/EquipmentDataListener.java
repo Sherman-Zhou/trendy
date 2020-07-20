@@ -44,7 +44,7 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
 //        String message = messageSource.getMessage("excel.upload.parse.error",
 //            new String []  {exception.getMessage(), String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
         //recordError(message, rowIdx);
-        throw new BadRequestAlertException(exception.getMessage(), "equipment.upload", "file.error");
+        throw new BadRequestAlertException(exception.getMessage(), "equipment.upload", "parse.error");
     }
 
     /**
@@ -58,27 +58,16 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
         boolean hasError = false;
         if (StringUtils.isBlank(data.getIdentifyNumber())) {
 
-            String message = messageSource.getMessage("equipment.upload.equipmentId.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("error.equipment.equipmentId.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
             recordError(message, rowIdx);
             hasError = true;
         }
         if (StringUtils.isBlank(data.getImei())) {
 
-            String message = messageSource.getMessage("equipment.upload.imei.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("error.equipment.imei.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
             recordError(message, rowIdx);
             hasError = true;
         }
-//        if (StringUtils.isBlank(data.getOrgName())) {
-//
-//            String message = messageSource.getMessage("equipment.upload.division.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
-//            recordError(message, rowIdx);
-//            hasError = true;
-//        }
-//        if (StringUtils.isBlank(data.getDivName())) {
-//            String message = messageSource.getMessage("equipment.upload.division.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
-//            recordError(message, rowIdx);
-//            hasError = true;
-//        }
 
         data.setRowIdx(rowIdx);
         response.increaseTotalRowsNum();
@@ -112,8 +101,8 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
         headMap.entrySet().forEach((entry -> log.info("{}:{}", entry.getKey(), entry.getValue())));
         //do header validation
         if (headMap.size() != 6) {
-            String message = messageSource.getMessage("excel.upload.wrong.template", null, LocaleContextHolder.getLocale());
-            throw new BadRequestAlertException(message, "equipment.upload", message);
+            String message = messageSource.getMessage("", null, LocaleContextHolder.getLocale());
+            throw new BadRequestAlertException(message, "equipment.upload", "wrong.template");
         }
     }
 

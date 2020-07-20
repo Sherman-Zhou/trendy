@@ -106,7 +106,7 @@ public class UserResource {
         } else if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(userDTO.getLogin())
             || staffService.findOneByLogin(userDTO.getLogin().toLowerCase()).isPresent()) {
             throw new LoginAlreadyUsedException();
-        } else if (staffService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
+        } else if (StringUtils.isNotEmpty(userDTO.getEmail()) && staffService.findOneByEmailIgnoreCase(userDTO.getEmail()).isPresent()) {
             throw new EmailAlreadyUsedException();
         } else {
             Staff newStaff = staffService.createUser(userDTO);
@@ -129,11 +129,14 @@ public class UserResource {
     @ApiOperation(value = "更新新用户")
     public ResponseEntity<UserDTO> updateUser(@Valid @RequestBody UserDTO userDTO) {
         log.debug("REST request to update User : {}", userDTO);
-        Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
-        if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
-            throw new EmailAlreadyUsedException();
+        if (StringUtils.isNotEmpty(userDTO.getEmail())) {
+            Optional<UserDetailsDTO> existingUser = staffService.findOneByEmailIgnoreCase(userDTO.getEmail());
+            if (existingUser.isPresent() && (!existingUser.get().getId().equals(userDTO.getId()))) {
+                throw new EmailAlreadyUsedException();
+            }
         }
-        existingUser = staffService.findOneByLogin(userDTO.getLogin().toLowerCase());
+
+        Optional<UserDetailsDTO> existingUser = staffService.findOneByLogin(userDTO.getLogin().toLowerCase());
         if (Constants.ADMIN_ACCOUNT.equalsIgnoreCase(userDTO.getLogin())) {
             throw new LoginAlreadyUsedException();
         }
