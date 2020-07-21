@@ -4,7 +4,6 @@ import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.data.collector.cmd.factory.CmdRegisterFactory;
 import com.joinbe.data.collector.cmd.register.Cmd;
-import com.joinbe.data.collector.cmd.register.impl.BleNameCmd;
 import com.joinbe.data.collector.cmd.register.impl.DoorCmd;
 import com.joinbe.data.collector.cmd.register.impl.SetTokenCmd;
 import com.joinbe.data.collector.netty.handler.ServerHandler;
@@ -579,5 +578,36 @@ public class EquipmentExtController {
             return new ResponseEntity<>(new TrajectoryInfoResponseDTO(1, e.getMessage()), HttpStatus.OK);
         }
         return new ResponseEntity<>(trajectoryInfoResponseDTO, HttpStatus.OK);
+    }
+
+    /**
+     *
+     * @param vehicleFireStatusQueryReq
+     * @param bindingResult
+     * @return
+     */
+    @ApiOperation("根据车牌号查询车辆开火/熄火的状态")
+    @PostMapping("/queryFireStatus")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> queryFireStatus(@RequestBody @Valid VehicleFireStatusQueryReq vehicleFireStatusQueryReq, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/external/equipment/queryFireStatus validate error: {}", message);
+            return new ResponseEntity<>(new VehicleFireStatusResponseDTO(1, message), HttpStatus.OK);
+        }
+
+        logger.debug("REST request to query vehiclle fire status : {}", vehicleFireStatusQueryReq.toString());
+        VehicleFireStatusResponseDTO vehicleFireStatusResponseDTO = new VehicleFireStatusResponseDTO(0, "success");
+        Optional<Equipment> equipment = equipmentService.findByLicensePlateNumber(vehicleFireStatusQueryReq.getPlateNumber());
+        if(equipment.isPresent()){
+            VehicleFireStatusResponseItemDTO vehicleFireStatusResponseItemDTO = new VehicleFireStatusResponseItemDTO();
+            vehicleFireStatusResponseItemDTO.setImei(equipment.get().getImei());
+            VehicleFireStatusEnum vehicleFireStatusEnum = redissonEquipmentStore.getDeviceFireStatus(equipment.get().getImei());
+            vehicleFireStatusResponseItemDTO.setFireStatus(vehicleFireStatusEnum != null ? vehicleFireStatusEnum.getCode() : VehicleDoorStatusEnum.UNKNOWN.getCode());
+            vehicleFireStatusResponseDTO.setData(vehicleFireStatusResponseItemDTO);
+        }else{
+            vehicleFireStatusResponseDTO.setMessage("No binding device found for the plate number: " + vehicleFireStatusQueryReq.getPlateNumber() );
+        }
+        return new ResponseEntity<>(vehicleFireStatusResponseDTO, HttpStatus.OK);
     }
 }

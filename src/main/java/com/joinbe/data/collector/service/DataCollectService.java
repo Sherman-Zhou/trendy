@@ -74,7 +74,7 @@ public class DataCollectService {
         //处理Input状态
         handleInputStatus(msg);
         //处理车辆状态
-        handleRealTimeSpeed(msg);
+        //handleRealTimeSpeed(msg);
         //当前状态
         VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
         VehicleFireStatusEnum currentFireStatus = redissonEquipmentStore.getDeviceFireStatus(msg.getUnitId());
@@ -168,7 +168,7 @@ public class DataCollectService {
      */
     private void handleInputStatus(PositionProtocol msg) {
         Integer inputStatus = msg.getInputStatus();
-        if(msg == null ||inputStatus == null){
+        if(msg == null ||inputStatus == null || StringUtils.isBlank(msg.getUnitId())){
             return;
         }
         /**
@@ -186,8 +186,12 @@ public class DataCollectService {
          */
         if(inputStatus == 2 || inputStatus == 4 || inputStatus == 6){
             redissonEquipmentStore.putInRedisForFireStatus(msg.getUnitId(), VehicleFireStatusEnum.CLOSE_FIRE);
+            //规则: 熄火状态 = 静止状态
+            redissonEquipmentStore.putInRedisForStatus(msg.getUnitId(), VehicleStatusEnum.STOPPED);
         }else{
             redissonEquipmentStore.putInRedisForFireStatus(msg.getUnitId(), VehicleFireStatusEnum.OPEN_FIRE);
+            //规则: 开火状态 = 行驶状态
+            redissonEquipmentStore.putInRedisForStatus(msg.getUnitId(),VehicleStatusEnum.RUNNING);
         }
     }
 
