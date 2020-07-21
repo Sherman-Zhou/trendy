@@ -34,13 +34,13 @@ public class BindingDataListener extends AnalysisEventListener<BindingData> {
         boolean hasError = false;
 
         if (StringUtils.isBlank(data.getLicensePlateNumber())) {
-            String message = messageSource.getMessage("error.binding.vehicle.licensePlateNumber.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("error.binding.vehicle.licensePlateNumber.empty", new String[]{String.valueOf(rowIdx)}, null, LocaleContextHolder.getLocale());
             recordError(message, rowIdx);
             hasError = true;
         }
         if (StringUtils.isBlank(data.getIdentifyNumber())) {
 
-            String message = messageSource.getMessage("error.binding.vehicle.identifyNumber.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("error.binding.vehicle.identifyNumber.empty", new String[]{String.valueOf(rowIdx)}, null, LocaleContextHolder.getLocale());
             recordError(message, rowIdx);
             hasError = true;
         }
@@ -76,7 +76,7 @@ public class BindingDataListener extends AnalysisEventListener<BindingData> {
         headMap.entrySet().forEach((entry -> log.info("{}:{}", entry.getKey(), entry.getValue())));
         //do header validation
         if (headMap.size() != 2) {
-            String message = messageSource.getMessage("excel.upload.wrong.template", null, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("excel.upload.wrong.template", null, null, LocaleContextHolder.getLocale());
             throw new RuntimeException(message);
         }
     }

@@ -153,7 +153,7 @@ public class EquipmentResource {
     @ApiOperation("下载导入excel模版")
     public ResponseEntity<byte[]> downloadTemplate() throws Exception {
         final String TEMPLATE_FILE_NAME = "Equipment.xlsx";
-        String fileName = messageSource.getMessage("equipment.upload.template", null, LocaleContextHolder.getLocale());
+        String fileName = messageSource.getMessage("equipment.upload.template", null, null, LocaleContextHolder.getLocale());
         log.debug("REST request to download template excel file !");
         InputStream template = this.getClass().getResourceAsStream("/templates/excel/" + TEMPLATE_FILE_NAME);
         byte[] files = IOUtils.toByteArray(template);

@@ -214,7 +214,7 @@ public class BindingResource {
     public ResponseEntity<byte[]> downloadTemplate() throws Exception {
         final String TEMPLATE_FILE_NAME = "Binding.xlsx";
         log.debug("REST request to download template excel file !");
-        String fileName = messageSource.getMessage("binding.upload.template", null, LocaleContextHolder.getLocale());
+        String fileName = messageSource.getMessage("binding.upload.template", null, null, LocaleContextHolder.getLocale());
         InputStream template = this.getClass().getResourceAsStream("/templates/excel/" + TEMPLATE_FILE_NAME);
         byte[] files = IOUtils.toByteArray(template);
         return download(files, fileName + ".xlsx");

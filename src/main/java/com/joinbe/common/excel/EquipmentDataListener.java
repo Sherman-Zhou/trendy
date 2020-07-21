@@ -58,13 +58,13 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
         boolean hasError = false;
         if (StringUtils.isBlank(data.getIdentifyNumber())) {
 
-            String message = messageSource.getMessage("error.equipment.equipmentId.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("error.equipment.equipmentId.empty", new String[]{String.valueOf(rowIdx)}, null, LocaleContextHolder.getLocale());
             recordError(message, rowIdx);
             hasError = true;
         }
         if (StringUtils.isBlank(data.getImei())) {
 
-            String message = messageSource.getMessage("error.equipment.imei.empty", new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("error.equipment.imei.empty", new String[]{String.valueOf(rowIdx)}, null, LocaleContextHolder.getLocale());
             recordError(message, rowIdx);
             hasError = true;
         }
@@ -101,7 +101,7 @@ public class EquipmentDataListener extends AnalysisEventListener<EquipmentData> 
         headMap.entrySet().forEach((entry -> log.info("{}:{}", entry.getKey(), entry.getValue())));
         //do header validation
         if (headMap.size() != 6) {
-            String message = messageSource.getMessage("", null, LocaleContextHolder.getLocale());
+            String message = messageSource.getMessage("", null, null, LocaleContextHolder.getLocale());
             throw new BadRequestAlertException(message, "equipment.upload", "wrong.template");
         }
     }
