@@ -2,6 +2,7 @@ package com.joinbe.web.rest.errors;
 
 import com.joinbe.common.error.UsernameAlreadyUsedException;
 import io.github.jhipster.web.util.HeaderUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -60,14 +61,20 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
 
         if (!(problem instanceof ConstraintViolationProblem || problem instanceof DefaultProblem)) {
             String messageKey = (String) problem.getParameters().get(MESSAGE_KEY);
-            ProblemBuilder builder = Problem.builder()
-                .withType(problem.getType())
-                .withStatus(problem.getStatus())
-                .withTitle(problem.getTitle())
-                //.with(PATH_KEY, problem.)
-                // .with(VIOLATIONS_KEY, ((ConstraintViolationProblem) problem).getViolations())
-                .with(MESSAGE_KEY, messageSource.getMessage(messageKey, null, LocaleContextHolder.getLocale()));
-            return new ResponseEntity<>(builder.build(), entity.getHeaders(), entity.getStatusCode());
+            if (StringUtils.isNotEmpty(messageKey)) {
+                String errorMsg = messageSource.getMessage(messageKey, null, null, LocaleContextHolder.getLocale());
+                if (StringUtils.isNotEmpty(errorMsg)) {
+                    ProblemBuilder builder = Problem.builder()
+                        .withType(problem.getType())
+                        .withStatus(problem.getStatus())
+                        .withTitle(problem.getTitle())
+                        //.with(PATH_KEY, problem.)
+                        // .with(VIOLATIONS_KEY, ((ConstraintViolationProblem) problem).getViolations())
+                        .with(MESSAGE_KEY, errorMsg);
+                    return new ResponseEntity<>(builder.build(), entity.getHeaders(), entity.getStatusCode());
+                }
+            }
+            return entity;
         }
         ProblemBuilder builder = Problem.builder()
             .withType(Problem.DEFAULT_TYPE.equals(problem.getType()) ? ErrorConstants.DEFAULT_TYPE : problem.getType())
@@ -111,7 +118,7 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
 
     @ExceptionHandler
     public ResponseEntity<Problem> handleEmailAlreadyUsedException(com.joinbe.common.error.EmailAlreadyUsedException ex, NativeWebRequest request) {
-        String errorMsg = messageSource.getMessage("error.email.exists", null, LocaleContextHolder.getLocale());
+        String errorMsg = messageSource.getMessage("error.email.exists", null, null, LocaleContextHolder.getLocale());
         EmailAlreadyUsedException problem = new EmailAlreadyUsedException();
         return create(problem, request);
     }

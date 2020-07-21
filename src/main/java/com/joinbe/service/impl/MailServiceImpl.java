@@ -67,6 +67,7 @@ public class MailServiceImpl implements MailService {
             MimeMessageHelper message = new MimeMessageHelper(mimeMessage, isMultipart, StandardCharsets.UTF_8.name());
             message.setTo(to);
             message.setFrom(jHipsterProperties.getMail().getFrom());
+
             message.setSubject(subject);
             message.setText(content, isHtml);
             javaMailSender.send(mimeMessage);
@@ -88,7 +89,7 @@ public class MailServiceImpl implements MailService {
         context.setVariable(USER, staff);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
         String content = templateEngine.process(templateName, context);
-        String subject = messageSource.getMessage(titleKey, null, locale);
+        String subject = messageSource.getMessage(titleKey, null, null, locale);
         sendEmail(staff.getEmail(), subject, content, false, true);
     }
 
@@ -104,7 +105,7 @@ public class MailServiceImpl implements MailService {
         context.setVariable(USER, staff);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
         String content = templateEngine.process(templateName, context);
-        String subject = messageSource.getMessage(titleKey, null, locale);
+        String subject = messageSource.getMessage(titleKey, null, null, locale);
         sendEmail(staff.getEmail(), subject, content, false, true);
     }
 
@@ -125,7 +126,7 @@ public class MailServiceImpl implements MailService {
         context.setVariable(USER, staff);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
         String content = templateEngine.process("mail/changeEmail", context);
-        String subject = messageSource.getMessage("email.change.title", null, locale);
+        String subject = messageSource.getMessage("email.change.title", null, null, locale);
         sendEmail(staff.getOldEmail(), subject, content, false, true);
     }
 
@@ -139,7 +140,7 @@ public class MailServiceImpl implements MailService {
         context.setVariable(USER, staff);
         context.setVariable(BASE_URL, jHipsterProperties.getMail().getBaseUrl());
         String content = templateEngine.process("mail/changeEmail", context);
-        String subject = messageSource.getMessage("email.change.title", null, locale);
+        String subject = messageSource.getMessage("email.change.title", null, null, locale);
         sendEmail(staff.getOldEmail(), subject, content, false, true);
     }
 

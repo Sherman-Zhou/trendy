@@ -536,7 +536,7 @@ public class VehicleServiceImpl implements VehicleService {
 
 
     private void createResult(String msgKey, int rowIdx, boolean success, List<RowParseError> results) {
-        String message = messageSource.getMessage(msgKey, new String[]{String.valueOf(rowIdx)}, LocaleContextHolder.getLocale());
+        String message = messageSource.getMessage(msgKey, new String[]{String.valueOf(rowIdx)}, null, LocaleContextHolder.getLocale());
         RowParseError result = new RowParseError();
         result.setMsg(message);
         result.setRowNum((long) rowIdx);

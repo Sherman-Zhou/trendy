@@ -98,18 +98,18 @@ public class SystemConfigResource {
         List<TrajectoryReportDTO> reportDTOS = trajectoryService.findAllTrajectory4backup(from, yesterday);
         Map<String, String> header = new HashMap<>();
 
-        header.put("identifyNumberTitle", messageSource.getMessage("trajectory.excel.identifyNumberTitle", null, locale));
-        header.put("imeiTitle", messageSource.getMessage("trajectory.excel.imeiTitle", null, locale));
-        header.put("trajectoryIdTitle", messageSource.getMessage("trajectory.excel.trajectoryIdTitle", null, locale));
-        header.put("receivedTimeTitle", messageSource.getMessage("trajectory.excel.receivedTimeTitle", null, locale));
-        header.put("lngTitle", messageSource.getMessage("trajectory.excel.lngTitle", null, locale));
-        header.put("latTitle", messageSource.getMessage("trajectory.excel.latTitle", null, locale));
+        header.put("identifyNumberTitle", messageSource.getMessage("trajectory.excel.identifyNumberTitle", null, null, locale));
+        header.put("imeiTitle", messageSource.getMessage("trajectory.excel.imeiTitle", null, null, locale));
+        header.put("trajectoryIdTitle", messageSource.getMessage("trajectory.excel.trajectoryIdTitle", null, null, locale));
+        header.put("receivedTimeTitle", messageSource.getMessage("trajectory.excel.receivedTimeTitle", null, null, locale));
+        header.put("lngTitle", messageSource.getMessage("trajectory.excel.lngTitle", null, null, locale));
+        header.put("latTitle", messageSource.getMessage("trajectory.excel.latTitle", null, null, locale));
 
         byte[] files = ExcelUtil.fillExcelReport(template, header, reportDTOS);
 
         dto.setLastBackupTime(yesterdayStr);
         systemConfigService.save(dto);
-        String fileName = messageSource.getMessage("trajectory.excel.fileName", null, locale) + dto.getLastBackupTime() + "-" + yesterdayStr + ".xlsx";
+        String fileName = messageSource.getMessage("trajectory.excel.fileName", null, null, locale) + dto.getLastBackupTime() + "-" + yesterdayStr + ".xlsx";
         return download(files, fileName);
     }
 
