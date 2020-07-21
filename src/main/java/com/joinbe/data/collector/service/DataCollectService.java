@@ -173,7 +173,7 @@ public class DataCollectService {
         }
         /**
          * 开锁：2,3,7
-         * 关锁：1,4,5,6
+         * 关锁：0,1,4,5,6
          */
         if(inputStatus == 2 || inputStatus == 3 || inputStatus == 7){
             redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.OPEN);
@@ -182,16 +182,16 @@ public class DataCollectService {
         }
         /**
          * 点火：1,3,5,7
-         * 熄火：2,4,6
+         * 熄火：0,2,4,6
          */
-        if(inputStatus == 2 || inputStatus == 4 || inputStatus == 6){
-            redissonEquipmentStore.putInRedisForFireStatus(msg.getUnitId(), VehicleFireStatusEnum.CLOSE_FIRE);
-            //规则: 熄火状态 = 静止状态
-            redissonEquipmentStore.putInRedisForStatus(msg.getUnitId(), VehicleStatusEnum.STOPPED);
-        }else{
+        if(inputStatus == 1 || inputStatus == 3 || inputStatus == 5 || inputStatus == 7){
             redissonEquipmentStore.putInRedisForFireStatus(msg.getUnitId(), VehicleFireStatusEnum.OPEN_FIRE);
             //规则: 开火状态 = 行驶状态
             redissonEquipmentStore.putInRedisForStatus(msg.getUnitId(),VehicleStatusEnum.RUNNING);
+        }else{
+            redissonEquipmentStore.putInRedisForFireStatus(msg.getUnitId(), VehicleFireStatusEnum.CLOSE_FIRE);
+            //规则: 熄火状态 = 静止状态
+            redissonEquipmentStore.putInRedisForStatus(msg.getUnitId(), VehicleStatusEnum.STOPPED);
         }
     }
 
