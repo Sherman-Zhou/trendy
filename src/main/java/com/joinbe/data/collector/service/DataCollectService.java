@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 
+import javax.persistence.criteria.JoinType;
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -438,7 +439,7 @@ public class DataCollectService {
             if (latestMaintenanceTime != null) {
                 queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(latestMaintenanceTime, Instant.now().atZone(ZoneId.systemDefault()).toInstant())));
             }
-
+            queryParams.addJoihFetch("vehicleTrajectory", JoinType.LEFT);
             Specification<VehicleTrajectoryDetails> specification = Specification.where(queryParams);
             List<VehicleTrajectoryDetails> trajectoryDetailList = vehicleTrajectoryDetailsRepository.findAll(specification);
             BigDecimal fuelConsumption = BigDecimal.ZERO;
