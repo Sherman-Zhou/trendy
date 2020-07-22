@@ -81,11 +81,11 @@ public class VehicleTrajectory implements Serializable {
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<VehicleTrajectoryDetails> details = new HashSet<>();
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties("trajectories")
     private Vehicle vehicle;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties("trajectories")
     private Equipment equipment;
 

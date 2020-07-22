@@ -3,6 +3,7 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.enumeration.RecordStatus;
+import com.joinbe.security.SecurityUtils;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.RoleDetailsDTO;
 import com.joinbe.web.rest.vm.RoleVM;
@@ -65,6 +66,7 @@ public interface RoleService {
     static RoleDetailsDTO toDetailDto(Role role) {
         RoleDetailsDTO dto = BeanConverter.toDto(role, RoleDetailsDTO.class,"permissions");
         dto.setStatus(role.getStatus().getCode());
+        SecurityUtils.checkMerchantPermission(role.getMerchant());
         return dto;
     }
 

@@ -308,8 +308,8 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     @Override
     public List<String> findAllTrajectoryIds(Long vehicleId) {
-        List<VehicleTrajectory> trajectories = vehicleTrajectoryRepository.findByVehicleId(vehicleId);
-        return trajectories.stream().map(VehicleTrajectory::getTrajectoryId).collect(Collectors.toList());
+        List<VehicleTrajectory> trajectories = vehicleTrajectoryRepository.findByVehicleIdOrderByTrajectoryIdDesc(vehicleId);
+        return trajectories.stream().map(VehicleTrajectory::getTrajectoryId).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
     }
 
     @Override

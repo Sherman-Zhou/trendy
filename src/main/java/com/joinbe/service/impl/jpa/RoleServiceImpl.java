@@ -3,12 +3,15 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.Constants;
+import com.joinbe.domain.Merchant;
 import com.joinbe.domain.Permission;
 import com.joinbe.domain.Role;
 import com.joinbe.domain.Staff;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.RoleRepository;
 import com.joinbe.repository.StaffRepository;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.RoleService;
 import com.joinbe.service.dto.RoleDTO;
 import com.joinbe.service.dto.RoleDetailsDTO;
@@ -53,15 +56,19 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleDTO save(RoleDTO roleDTO) {
         log.debug("Request to save Role : {}", roleDTO);
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
         Role role;
         if(roleDTO.getId()!=null) {
-             role = roleRepository.getOne(roleDTO.getId());
-             role.setStatus(RecordStatus.resolve(roleDTO.getStatus()));
-             role.setCode(roleDTO.getCode());
-             role.setDescription(roleDTO.getDescription());
-             role.setName(role.getName());
+            role = roleRepository.getOne(roleDTO.getId());
+            SecurityUtils.checkMerchantPermission(loginInfo.getMerchantId());
+            role.setStatus(RecordStatus.resolve(roleDTO.getStatus()));
+            role.setCode(roleDTO.getCode());
+            role.setDescription(roleDTO.getDescription());
+            role.setName(role.getName());
         }else {
-              role = RoleService.toEntity(roleDTO);
+            role = RoleService.toEntity(roleDTO);
+            role.setMerchant(new Merchant(loginInfo.getMerchantId()));
+
         }
         role.setRoleType(Constants.ROLE_TYPE_MERCHANT);
         role = roleRepository.save(role);
@@ -85,6 +92,7 @@ public class RoleServiceImpl implements RoleService {
 
         if (roleOptional.isPresent()) {
             Role role = roleOptional.get();
+            SecurityUtils.checkMerchantPermission(role.getMerchant());
             role.getPermissions().clear();
             for (Long permissionId : permissionIds) {
                 Permission permission = new Permission();
@@ -109,8 +117,10 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(readOnly = true)
     public Page<RoleDTO> findAll(Pageable pageable, RoleVM vm) {
         log.debug("Request to get all Roles");
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
         QueryParams<Role> queryParams = new QueryParams<>();
 
+        queryParams.and("merchant.id", Filter.Operator.eq, loginInfo.getMerchantId());
         queryParams.and("roleType", Filter.Operator.eq, Constants.ROLE_TYPE_MERCHANT);
 
         if (StringUtils.isNotEmpty(vm.getCode())) {
@@ -157,6 +167,7 @@ public class RoleServiceImpl implements RoleService {
             throw new BadRequestAlertException("Role is in use", "Role", "role.in.use");
         }
         Role role = roleRepository.getOne(id);
+        SecurityUtils.checkMerchantPermission(role.getMerchant());
         role.setStatus(RecordStatus.DELETED);
         // roleRepository.deleteById(id);
     }

@@ -2,8 +2,6 @@ package com.joinbe.repository;
 
 import com.joinbe.domain.Role;
 import com.joinbe.domain.enumeration.RecordStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -17,12 +15,7 @@ import java.util.Optional;
  * Spring Data JPA repository for the {@link Role} entity.
  */
 public interface RoleRepository extends JpaRepository<Role, Long>, JpaSpecificationExecutor<Role> {
-    @Query(value = "select distinct role from Role role left join fetch role.permissions",
-        countQuery = "select count(distinct role) from Role role")
-    Page<Role> findAllWithEagerRelationships(Pageable pageable);
 
-    @Query("select distinct role from Role role left join fetch role.permissions")
-    List<Role> findAllWithEagerRelationships();
 
     @Query("select role from Role role left join fetch role.permissions where role.id =:id")
     Optional<Role> findOneWithEagerRelationships(@Param("id") Long id);
@@ -33,7 +26,7 @@ public interface RoleRepository extends JpaRepository<Role, Long>, JpaSpecificat
 
     Optional<Role> findByCodeAndStatusNot(String code, RecordStatus recordStatus);
 
-    List<Role> findAllByRoleTypeAndStatus(String roleType, RecordStatus status);
+    List<Role> findAllByRoleTypeAndStatusAndMerchantId(String roleType, RecordStatus status, Long merchantId);
 
     @EntityGraph(attributePaths = {"permissions"})
     List<Role> findRoleWithPermissionsById(Long id);
