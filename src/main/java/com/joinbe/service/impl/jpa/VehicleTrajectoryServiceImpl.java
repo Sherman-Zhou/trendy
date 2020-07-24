@@ -135,7 +135,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             queryParams.and("vehicleTrajectory.vehicle.id", Filter.Operator.eq, vm.getVehicleId());
         }
         if (StringUtils.isNotEmpty(vm.getTrajectoryId())) {
-            queryParams.and("vehicleTrajectory.trajectoryId", Filter.Operator.like, vm.getTrajectoryId());
+            queryParams.and("vehicleTrajectory.trajectoryId", Filter.Operator.eq, vm.getTrajectoryId());
         }
         if (vm.getTrajectoryIds() != null && !vm.getTrajectoryIds().isEmpty()) {
             queryParams.and("vehicleTrajectory.trajectoryId", Filter.Operator.in, vm.getTrajectoryIds());
@@ -148,7 +148,8 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             Date endDate = DateUtils.parseDate(vm.getEndDate() + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME);
             queryParams.and("receivedTime", Filter.Operator.lessThanOrEqualTo, endDate);
         }
-        return trajectoryDetailsRepository.findAll(queryParams)
+
+        return trajectoryDetailsRepository.findAll(queryParams, Sort.by(Sort.Direction.ASC, "receivedTime", "id"))
             .stream().map(VehicleTrajectoryDetailsService::toDto).collect(Collectors.toList());
     }
 
@@ -319,7 +320,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         List<VehicleTrajectory> vehicleTrajectories = vehicleTrajectoryRepository.findTrajectoryAfter(startTime, endTime);
 
         List<TrajectoryReportDTO> reports = vehicleTrajectories.stream().map(VehicleTrajectory::getDetails)
-            .flatMap(details -> details.stream())
+            .flatMap(Collection::stream)
             .map(
                 vehicleTrajectoryDetails -> {
                     TrajectoryReportDTO trajectoryReportDTO = new TrajectoryReportDTO();

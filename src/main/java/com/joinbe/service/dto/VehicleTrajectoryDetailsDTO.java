@@ -70,6 +70,8 @@ public class VehicleTrajectoryDetailsDTO implements Serializable {
     @ApiModelProperty(value = "胎压(右后)")
     private BigDecimal tirePressureRearRight;
 
+    @ApiModelProperty(value = "累加里程数")
+    private BigDecimal mileage;
 
     private Long vehicleTrajectoryId;
 
