@@ -243,28 +243,29 @@ public class DataCollectService {
 
         if(EventIDEnum.IBUTTON_ATTACHED.getEventId().equals(eventId)){
             log.info("IButton is attached, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
-            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED,msg.getIbuttonId());
-            //for debug
-            log.debug("IButton current status in redis, iButtonStatus:{}", redissonEquipmentStore.getDeviceIButtonStatus(msg.getUnitId()));
-            log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
-            /*equipmentFault.setAlertType("Event");
-            equipmentFault.setAlertType("IButton Attached");
-            insertFaultLog(equipmentFault);*/
+            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED);
+            redissonEquipmentStore.putInRedisForIButtonId(msg.getUnitId(), msg.getIbuttonId());
         }else if(EventIDEnum.IBUTTON_REMOVED.getEventId().equals(eventId)){
             log.info("IButton is removed, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
-            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED,msg.getIbuttonId());
-            //for debug
-            log.debug("IButton current status in redis, iButtonStatus:{}", redissonEquipmentStore.getDeviceIButtonStatus(msg.getUnitId()));
-            log.debug("IButton current iButtonId in redis,iButtonId:{}", redissonEquipmentStore.getDeviceIButtonId(msg.getUnitId()));
-            //TODO: change to enum
+            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED);
+            //Insert log
             equipmentFault.setAlertType("Event");
             equipmentFault.setAlertType("IButton Removed");
             insertFaultLog(equipmentFault);
         }else if (EventIDEnum.MAIN_POWER_LOW_EVENT.getEventId().equals(eventId)){
             log.info("MAIN_POWER_LOW_EVENT, device:{}", msg.getUnitId());
-            //TODO: change to enum
             equipmentFault.setAlertType("Event");
             equipmentFault.setAlertType("Main power low event");
+        }
+
+        //handle iButton
+        if(StringUtils.isNotBlank(msg.getIbuttonId())){
+            log.debug("IButton in attached status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
+            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED);
+            redissonEquipmentStore.putInRedisForIButtonId(msg.getUnitId(), msg.getIbuttonId());
+        }else{
+            log.debug("IButton in removed status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
+            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED);
         }
     }
 

@@ -87,7 +87,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             //车辆行驶状态设置为未知
             redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
             //Ibutton状态设置为未知
-            redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN,null);
+            redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN);
             //锁的状态设置为未知
             redissonEquipmentStore.putInRedisForDoorStatus(deviceNo, VehicleDoorStatusEnum.UNKNOWN);
             //开火/关火状态设置为未知

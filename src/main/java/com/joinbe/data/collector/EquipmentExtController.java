@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.async.DeferredResult;
 
+import javax.persistence.criteria.JoinType;
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -282,7 +283,7 @@ public class EquipmentExtController {
             if (trajectoryReq.getStartDateFrom() != null && trajectoryReq.getEndDateFrom() != null) {
                 queryParams.and(new Filter("receivedTime", Filter.Operator.between, Arrays.asList(trajectoryReq.getStartDateFrom(), trajectoryReq.getEndDateFrom())));
             }
-
+            queryParams.addJoihFetch("vehicleTrajectory", JoinType.LEFT);
             Specification<VehicleTrajectoryDetails> specification = Specification.where(queryParams);
             Page<VehicleTrajectoryDetails> page = vehicleTrajectoryDetailsRepository.findAll(specification, pageable);
 
