@@ -23,6 +23,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -34,7 +35,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/api")
-@Api(value ="用户登陆相关接口", tags={"用户登陆相关接口"}, produces = "application/json" )
+@Api(value = "用户登陆相关接口", tags = {"用户登陆相关接口"}, produces = "application/json")
 public class UserJWTController {
 
 
@@ -45,15 +46,18 @@ public class UserJWTController {
     private final RedissonTokenStore redissonTokenStore;
     private final StaffService staffService;
 
+    private final PasswordEncoder passwordEncoder;
+
 
     public UserJWTController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder,
                              RedissonTokenStore redissonTokenStore,
-                             @Qualifier("JpaUserService") StaffService staffService) {
+                             @Qualifier("JpaUserService") StaffService staffService, PasswordEncoder passwordEncoder) {
         this.tokenProvider = tokenProvider;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.redissonTokenStore = redissonTokenStore;
 
         this.staffService = staffService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/authenticate")
@@ -71,11 +75,14 @@ public class UserJWTController {
                 userOptional = staffService.findOneByLogin(lowercaseLogin);
             }
             if (userOptional.isPresent()) {
-                //need register email before login
-                if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
-                    JWTToken token = new JWTToken();
-                    token.setNeedRegister(true);
-                    return new ResponseEntity<>(token, HttpStatus.OK);
+                String currentEncryptedPassword = userOptional.get().getPassword();
+                if (passwordEncoder.matches(loginVM.getPassword(), currentEncryptedPassword)) {
+                    //need register email before login
+                    if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
+                        JWTToken token = new JWTToken();
+                        token.setNeedRegister(true);
+                        return new ResponseEntity<>(token, HttpStatus.OK);
+                    }
                 }
             }
         } else {

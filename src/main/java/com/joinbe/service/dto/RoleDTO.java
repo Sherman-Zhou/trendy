@@ -29,6 +29,7 @@ public class RoleDTO implements Serializable {
     @ApiModelProperty(value = "角色代码")
     private String code;
 
+
     @NotNull
     @Pattern(regexp = "[ADI]")
     @ApiModelProperty(value = "状态", example = "A-已启用，I-已停用， D-已删除",  required = true)

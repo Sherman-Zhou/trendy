@@ -59,22 +59,22 @@ spring:
       hibernate.cache.use_query_cache: false
       hibernate.generate_statistics: false
   mail:
-#    host: smtp.qq.com
-    #    port: 465
-    #    username: 511070261@qq.com
-    #    password: cirmcyntedzhbigd
-    host: mail.tre-use.jp
-    port: 25
-    username: info@tre-use.jp
-    password: T5tsj9$5
+    host: smtp.qq.com
+    username: 511070261@qq.com
+    password: cirmcyntedzhbigd
+    #    host: mail.tre-use.jp
+    #    port: 25
+    port: 465
+    #    username: info@tre-use.jp
+    #    password: T5tsj9$5
     default-encoding: utf-8
     properties:
-      #      mail.smtp.ssl.enable: true
-      #      mail.imap.ssl.socketFactory.fallback: false
-      #      mail.smtp.ssl.socketFactory.class: javax.net.ssl.SSLSocketFactory
+      mail.smtp.ssl.enable: true
+      mail.imap.ssl.socketFactory.fallback: false
+      mail.smtp.ssl.socketFactory.class: javax.net.ssl.SSLSocketFactory
       mail.smtp.auth: true
-  #      mail.smtp.starttls.enable: true
-  #      mail.smtp.starttls.required: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
 
   messages:
     cache-duration: PT1S # 1 second, see the ISO 8601 standard
@@ -116,7 +116,8 @@ jhipster:
         token-validity-in-seconds-for-remember-me: 2592000
   mail: # specific JHipster mail property, for standard properties see MailProperties
     base-url: http://123.57.12.177
-    from: Trendy 24<info@tre-use.jp>
+    from: 511070261@qq.com
+  #    from: Trendy 24<info@tre-use.jp>
   metrics:
     logs: # Reports metrics in the logs
       enabled: false

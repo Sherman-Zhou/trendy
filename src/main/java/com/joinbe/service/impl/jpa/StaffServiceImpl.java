@@ -283,6 +283,7 @@ public class StaffServiceImpl implements StaffService {
             staff.setShops(shopRepository.findByMerchant(merchant));
             staff.setCities(cityRepository.findByMerchant(merchant));
 
+            staff.getCities().add(cityRepository.getOne(Constants.CITY_ROOT_ID));
         } else {
             staff.setMerchant(new Merchant(loginInfo.getMerchantId()));
             if (!CollectionUtils.isEmpty(userDTO.getRoleIds())) {
@@ -632,8 +633,15 @@ public class StaffServiceImpl implements StaffService {
      */
     @Override
     public List<RoleDTO> getRolesForMerchant() {
-        return roleRepository.findAllByRoleTypeAndStatus(Constants.ROLE_TYPE_MERCHANT, RecordStatus.ACTIVE)
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
+        List<RoleDTO> roles = roleRepository.findAllByRoleTypeAndStatusAndMerchantId(Constants.ROLE_TYPE_MERCHANT, RecordStatus.ACTIVE, loginInfo.getMerchantId())
             .stream().map(RoleService::toDto).collect(Collectors.toList());
+
+        roleRepository.findByCodeAndStatusNot(AuthoritiesConstants.ROLE_MERCHANT_ADMIN, RecordStatus.DELETED).ifPresent(role -> {
+            roles.add(RoleService.toDto(role));
+        });
+
+        return roles;
     }
 
     @Override

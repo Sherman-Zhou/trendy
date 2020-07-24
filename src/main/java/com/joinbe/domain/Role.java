@@ -3,6 +3,7 @@ package com.joinbe.domain;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.joinbe.domain.enumeration.RecordStatus;
 
 import javax.persistence.*;
@@ -47,6 +48,10 @@ public class Role extends AbstractAuditingEntity implements Serializable {
 
     @Column(name = "status")
     private RecordStatus status;
+
+    @ManyToOne
+    @JsonIgnoreProperties("staffs")
+    private Merchant merchant;
 
     @ManyToMany
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -121,5 +126,13 @@ public class Role extends AbstractAuditingEntity implements Serializable {
 
     public void setRoleType(String roleType) {
         this.roleType = roleType;
+    }
+
+    public Merchant getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Merchant merchant) {
+        this.merchant = merchant;
     }
 }

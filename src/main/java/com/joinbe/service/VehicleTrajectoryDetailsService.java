@@ -17,6 +17,7 @@ public interface VehicleTrajectoryDetailsService {
         VehicleTrajectoryDetailsDTO dto = BeanConverter.toDto(vehicleTrajectoryDetails, VehicleTrajectoryDetailsDTO.class);
         dto.setLat(vehicleTrajectoryDetails.getLatitude());
         dto.setLng(vehicleTrajectoryDetails.getLongitude());
+        dto.setMileage(vehicleTrajectoryDetails.getMileage());
         return dto;
     }
 

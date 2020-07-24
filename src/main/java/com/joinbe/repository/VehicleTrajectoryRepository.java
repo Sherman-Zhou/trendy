@@ -21,7 +21,7 @@ public interface VehicleTrajectoryRepository extends JpaRepository<VehicleTrajec
 
     Optional<VehicleTrajectory> findOneByTrajectoryId(String trajectoryId);
 
-    List<VehicleTrajectory> findByVehicleId(Long vehicleId);
+    List<VehicleTrajectory> findByVehicleIdOrderByTrajectoryIdDesc(Long vehicleId);
 
 
     @Query("select trajectory from VehicleTrajectory trajectory left join fetch trajectory.details " +

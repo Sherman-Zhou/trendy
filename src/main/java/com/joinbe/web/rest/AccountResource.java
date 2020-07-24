@@ -189,7 +189,7 @@ public class AccountResource {
 
         Optional<UserDetailsDTO> userDetailsDTO = staffService.getUserEmail(login);
 
-        if (userDetailsDTO.isPresent()) {
+        if (userDetailsDTO.isPresent() && StringUtils.isNotEmpty(userDetailsDTO.get().getEmail())) {
             staffService.requestPasswordReset(userDetailsDTO.get().getEmail(),
                 Constants.ADMIN_ACCOUNT.equalsIgnoreCase(userDetailsDTO.get().getLogin()));
 
