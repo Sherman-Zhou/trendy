@@ -210,7 +210,7 @@ public class EquipmentExtController {
         }
         EquipmentOperationRecord equipmentOperationRecord = new EquipmentOperationRecord();
         equipmentOperationRecord.setOperationSourceType(OperationSourceType.APP);
-        equipmentOperationRecord.setEventType(EventCategory.TOKEN);
+        equipmentOperationRecord.setEventType(EventCategory.BLUETOOTH);
         equipmentOperationRecord.setEquipment(equipment.get());
         equipmentOperationRecord.setVehicle(equipment.get().getVehicle());
         equipmentOperationRecord.setEventDesc(EventType.RELEASE);

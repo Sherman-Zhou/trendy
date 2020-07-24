@@ -344,6 +344,35 @@ public class DataCollectService {
 
     /**
      *
+     * @param deviceNo
+     * @param operationSourceType
+     * @param eventType
+     * @param eventDesc
+     * @param operationResult
+     */
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+    public void insertEventLog(String deviceNo, OperationSourceType operationSourceType,EventCategory eventType, EventType eventDesc, OperationResult operationResult){
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(deviceNo);
+        if (!equipment.isPresent()) {
+            log.warn("Refused to insertEventLog, equipment not maintained yet, imei: {}", deviceNo);
+            return;
+        } else if (equipment.get().getVehicle() == null) {
+            log.warn("Refused to insertEventLog, vehicle not bound yet, imei: {}", deviceNo);
+            return;
+        }
+        EquipmentOperationRecord equipmentOperationRecord = new EquipmentOperationRecord();
+        equipmentOperationRecord.setOperationSourceType(operationSourceType);
+        equipmentOperationRecord.setEventType(eventType);
+        equipmentOperationRecord.setEventDesc(eventDesc);
+        equipmentOperationRecord.setResult(operationResult);
+        equipmentOperationRecord.setEquipment(equipment.get());
+        equipmentOperationRecord.setVehicle(equipment.get().getVehicle());
+        log.debug("InsertEventLog, equipmentOperationRecord :{}", equipmentOperationRecord);
+        equipmentOperationRecordRepository.save(equipmentOperationRecord);
+    }
+
+    /**
+     *
      * @param equipmentFault
      */
     @Transactional

@@ -208,10 +208,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         tokenResponseItem.setExpireDate(expireDateTime);
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SETKEY);
                         if(deferredResult != null && "$OK".equals(setKeyProtocol.getOk())){
-                            dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.SUCCESS);
+                            dataCollectService.insertEventLog(deviceNo, OperationSourceType.APP,EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.SUCCESS);
                             deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(0, "success", tokenResponseItem), HttpStatus.OK));
                         }else if(deferredResult != null && "$ERR".equals(setKeyProtocol.getOk())){
-                            dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.FAILURE);
+                            dataCollectService.insertEventLog(deviceNo, OperationSourceType.APP,EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.FAILURE);
                             deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(1, "Get ERR response from device, device: " + deviceNo, tokenResponseItem), HttpStatus.OK));
                         }
                     }else if(msg instanceof CommonProtocol){
