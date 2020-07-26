@@ -50,7 +50,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     private static final ConcurrentHashMap<String, Channel> deviceIdAndChannelMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, String> channelIdAndDeviceIdMap = new ConcurrentHashMap<>();
 
-    @Value("${netty.server-ip}")
+    @Value("${netty.server-url}")
     private String serverIp;
 
     @Autowired
