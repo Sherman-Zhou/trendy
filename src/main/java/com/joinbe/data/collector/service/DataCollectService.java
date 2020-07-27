@@ -259,13 +259,15 @@ public class DataCollectService {
         }
 
         //handle iButton
-        if(StringUtils.isNotBlank(msg.getIbuttonId())){
-            log.debug("IButton in attached status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
-            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED);
-            redissonEquipmentStore.putInRedisForIButtonId(msg.getUnitId(), msg.getIbuttonId());
-        }else{
-            log.debug("IButton in removed status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
-            redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED);
+        if(EventIDEnum.TRACK_POSITION_DATA.getEventId().equals(eventId)){
+            if(StringUtils.isNotBlank(msg.getIbuttonId())){
+                log.debug("IButton in attached status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
+                redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED);
+                redissonEquipmentStore.putInRedisForIButtonId(msg.getUnitId(), msg.getIbuttonId());
+            }else{
+                log.debug("IButton in removed status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
+                redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED);
+            }
         }
     }
 
