@@ -187,7 +187,7 @@ public class VehicleServiceImpl implements VehicleService {
 
 
         if (!vehicleOptional.isPresent()) {
-            createOpRecord(null, equipmentOptional.isPresent() ? equipmentOptional.get() : null, OperationResult.FAILURE, EventType.BINDING);
+            createOpRecord(null, equipmentOptional.orElse(null), OperationResult.FAILURE, EventType.BINDING);
             throw new BadRequestAlertException("Invalid vehicle id", "Vehicle", "binding.vehicle.not.exist");
         }
         if (!equipmentOptional.isPresent()) {
@@ -327,6 +327,8 @@ public class VehicleServiceImpl implements VehicleService {
         Merchant userMerchant = new Merchant();
         userMerchant.setId(userLoginInfo.getMerchantId());
 
+        City root = cityRepository.getOne(Constants.CITY_ROOT_ID);
+
         int fetchSize = 9999;
         Map<String, String> urlParams = new HashMap<>();
         urlParams.put("pagesize", String.valueOf(fetchSize));
@@ -397,7 +399,7 @@ public class VehicleServiceImpl implements VehicleService {
             city.setStatus(RecordStatus.ACTIVE);
             city.setParentId(trendyCity.getParentId());
         }
-        City root = citiesInDb.get(Constants.CITY_ROOT_ID);
+
         Collection<City> allCitiesInDb = citiesInDb.values();
         for (City city : allCitiesInDb) {
             if (Constants.CITY_ROOT_ID.equals(city.getId())) {
