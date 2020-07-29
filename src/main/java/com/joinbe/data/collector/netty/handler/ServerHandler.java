@@ -50,7 +50,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     private static final ConcurrentHashMap<String, Channel> deviceIdAndChannelMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, String> channelIdAndDeviceIdMap = new ConcurrentHashMap<>();
 
-    @Value("${netty.server-ip}")
+    @Value("${netty.server-url}")
     private String serverIp;
 
     @Autowired
@@ -87,7 +87,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             //车辆行驶状态设置为未知
             redissonEquipmentStore.putInRedisForStatus(deviceNo,VehicleStatusEnum.UNKNOWN);
             //Ibutton状态设置为未知
-            redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN,null);
+            redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN);
             //锁的状态设置为未知
             redissonEquipmentStore.putInRedisForDoorStatus(deviceNo, VehicleDoorStatusEnum.UNKNOWN);
             //开火/关火状态设置为未知
@@ -208,10 +208,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         tokenResponseItem.setExpireDate(expireDateTime);
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SETKEY);
                         if(deferredResult != null && "$OK".equals(setKeyProtocol.getOk())){
-                            dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.SUCCESS);
+                            dataCollectService.insertEventLog(deviceNo, OperationSourceType.APP,EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.SUCCESS);
                             deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(0, "success", tokenResponseItem), HttpStatus.OK));
                         }else if(deferredResult != null && "$ERR".equals(setKeyProtocol.getOk())){
-                            dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.FAILURE);
+                            dataCollectService.insertEventLog(deviceNo, OperationSourceType.APP,EventCategory.BLUETOOTH, EventType.RELEASE,OperationResult.FAILURE);
                             deferredResult.setResult(new ResponseEntity<>(new TokenResponseDTO(1, "Get ERR response from device, device: " + deviceNo, tokenResponseItem), HttpStatus.OK));
                         }
                     }else if(msg instanceof CommonProtocol){

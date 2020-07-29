@@ -45,7 +45,9 @@ public class RedissonEquipmentStore {
     private static final String DEVICE_TRAJECTORY_KEY_PREFIX = "DEVICE_ID_CURRENT_TRAJECTORY:";
     //Ibutton状态相关
     private static final String DEVICE_REAL_TIME_IBUTTON_STATUS_KEY = "DEVICE_ID_IBUTTON_STATUS_KEY";
-    private static final String DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX = "DEVICE_ID|IBUTTON_STATUS:";
+    private static final String DEVICE_REAL_TIME_IBUTTON_ID_KEY = "DEVICE_ID_IBUTTON_ID_KEY";
+    private static final String DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX = "DEVICE_ID_IBUTTON_STATUS:";
+    private static final String DEVICE_REAL_TIME_IBUTTON_ID_KEY_PREFIX = "DEVICE_ID_IBUTTON_ID:";
     //Door状态相关
     private static final String DEVICE_REAL_TIME_DOOR_STATUS_KEY = "DEVICE_ID_DOOR_STATUS_KEY";
     private static final String DEVICE_REAL_TIME_DOOR_STATUS_KEY_PREFIX = "DEVICE_ID_DOOR:";
@@ -167,17 +169,19 @@ public class RedissonEquipmentStore {
      * @param deviceId
      * @param status: A - Attached;  R - Removed; U - Unkonwn
      */
-    public void putInRedisForIButtonStatus(String deviceId, IbuttonStatusEnum status, String iButtonId) {
+    public void putInRedisForIButtonStatus(String deviceId, IbuttonStatusEnum status) {
         RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY);
-        StringBuffer value = new StringBuffer(status.getCode());
-        String existIButtonId = iButtonId;
-        if(!IbuttonStatusEnum.ATTACHED.getCode().equals(status.getCode())){
-            existIButtonId = this.getDeviceIButtonId(deviceId);
-        }
-        if(StringUtils.isNotEmpty(existIButtonId)){
-            value.append(StrUtil.COMMA).append(existIButtonId);
-        }
-        deviceServerMap.put(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX + deviceId, value.toString());
+        deviceServerMap.put(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX + deviceId, status.getCode());
+    }
+
+    /**
+     * Ibutton Id
+     * @param deviceId
+     * @param iButtonId
+     */
+    public void putInRedisForIButtonId(String deviceId, String iButtonId) {
+        RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_IBUTTON_ID_KEY);
+        deviceServerMap.put(DEVICE_REAL_TIME_IBUTTON_ID_KEY_PREFIX + deviceId, iButtonId);
     }
 
     /**
@@ -188,27 +192,20 @@ public class RedissonEquipmentStore {
     public IbuttonStatusEnum getDeviceIButtonStatus(String deviceId) {
         RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY);
         String status = deviceServerMap.get(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX + deviceId);
-        log.debug("Ibutton in redis for deviceId {}:{}", deviceId, status);
-        if(StringUtils.isNotEmpty(status)){
-            status = status.split(StrUtil.COMMA)[0];
-        }
+        log.debug("IButton Status in redis for deviceId {}:{}", deviceId, status);
         return IbuttonStatusEnum.getByCode(status);
     }
 
     /**
-     * Get real ibutton status
+     * Get ibutton id
      * @param deviceId
      * @return
      */
     public String getDeviceIButtonId(String deviceId) {
-        RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY);
-        String status = deviceServerMap.get(DEVICE_REAL_TIME_IBUTTON_STATUS_KEY_PREFIX + deviceId);
-        log.debug("Ibutton in redis for deviceId {}:{}", deviceId, status);
-        if(StringUtils.isNotEmpty(status) && status.split(StrUtil.COMMA).length >=2){
-            return status.split(StrUtil.COMMA)[1];
-        }else{
-            return null;
-        }
+        RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_REAL_TIME_IBUTTON_ID_KEY);
+        String iButtonId = deviceServerMap.get(DEVICE_REAL_TIME_IBUTTON_ID_KEY_PREFIX + deviceId);
+        log.debug("IButtonId in redis for deviceId {}:{}", deviceId, iButtonId);
+        return iButtonId;
     }
 
 
