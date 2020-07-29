@@ -184,7 +184,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         BMacProtocol bMacProtocol = (BMacProtocol)msg;
                         BMacResponseItemDTO bMacResponseItemDTO = new BMacResponseItemDTO();
                         bMacResponseItemDTO.setData(bMacProtocol.getData());
-                        bMacResponseItemDTO.setMac(bMacProtocol.getMac());
+                        //bMacResponseItemDTO.setMac(bMacProtocol.getMac());
                         bMacResponseItemDTO.setImei(deviceNo);
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.BMAC);
                         if(deferredResult != null && "$OK".equals(bMacProtocol.getOk())){

@@ -15,11 +15,11 @@ public class BMacProtocol extends ProtocolMessage{
     @DataOrder(order = 0)
     private String ok;
 
-    @DataOrder(order = 1)
+    /*@DataOrder(order = 1)
     private String type;
 
     @DataOrder(order = 2)
-    private String mac;
+    private String mac;*/
 
     @Override
     public void processField(Field field, List<String> dataList) {
@@ -46,21 +46,5 @@ public class BMacProtocol extends ProtocolMessage{
 
     public void setOk(String ok) {
         this.ok = ok;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getMac() {
-        return mac;
-    }
-
-    public void setMac(String mac) {
-        this.mac = mac;
     }
 }
