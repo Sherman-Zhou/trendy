@@ -155,7 +155,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                     }
                     dataCollectService.saveTrajectory(positionProtocolMsg);
                 }else{
-                    //TODO : handle query message
                     if(msg instanceof LockUnlockProtocol){
                         LockUnlockProtocol lockUnlockProtocol = (LockUnlockProtocol)msg;
                         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SGPO);
@@ -180,6 +179,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         }else if (deferredResult != null && "$ERR".equals(bleNameProtocol.getOk())){
                             dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH_NAME, EventType.SETBLENAME,OperationResult.FAILURE);
                             deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, "Get ERR response from device, device: " + deviceNo, bleResponseItemDTO), HttpStatus.OK));
+                        }
+                    }else if(msg instanceof BMacProtocol){
+                        BMacProtocol bMacProtocol = (BMacProtocol)msg;
+                        BMacResponseItemDTO bMacResponseItemDTO = new BMacResponseItemDTO();
+                        bMacResponseItemDTO.setData(bMacProtocol.getData());
+                        bMacResponseItemDTO.setMac(bMacProtocol.getMac());
+                        bMacResponseItemDTO.setImei(deviceNo);
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.BMAC);
+                        if(deferredResult != null && "$OK".equals(bMacProtocol.getOk())){
+                            deferredResult.setResult(new ResponseEntity<>(new BMacResponseDTO(0, "success", bMacResponseItemDTO), HttpStatus.OK));
+                        }else if (deferredResult != null && "$ERR".equals(bMacProtocol.getOk())){
+                            deferredResult.setResult(new ResponseEntity<>(new BMacResponseDTO(1, "Get ERR response from device, device: " + deviceNo, bMacResponseItemDTO), HttpStatus.OK));
                         }
                     }else if(msg instanceof DoorProtocol){
                         DoorProtocol doorProtocol = (DoorProtocol)msg;
@@ -393,6 +404,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 return new TokenResponseDTO(code,message);
             case "BLENAME":
                 return new BleResponseDTO(code, message);
+            case "BMAC":
+                return new BMacResponseDTO(code, message);
             default:
                 return new CommonResponseDTO(code, message);
         }

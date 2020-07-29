@@ -148,6 +148,11 @@ public enum EventEnum {
      * 蓝牙名称查询
      */
     BLENAME_QRY("BLENAME_QRY"),
+
+    /**
+     * MAC地址
+     */
+    BMAC("BMAC"),
     ;
 
     EventEnum(String event) {

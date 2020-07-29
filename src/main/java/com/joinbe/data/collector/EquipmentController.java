@@ -351,4 +351,48 @@ public class EquipmentController {
         }
         return new ResponseEntity<>(vehicleCalcInfoResponseDTO, HttpStatus.OK);
     }
+
+
+    /**
+     *
+     * @param bMacReq
+     * @param bindingResult
+     * @return
+     */
+    @ApiOperation("根据设备的IMEI查询MAC")
+    @PostMapping("/queryBMac")
+    public DeferredResult<ResponseEntity<ResponseDTO>> queryBMac(@RequestBody @Valid BMacReq bMacReq, BindingResult bindingResult) {
+        logger.debug("REST request for query mac: {}", bMacReq);
+        ResponseEntity<BMacResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new BMacResponseDTO(1, "Query mac time out, maybe device is disconnecting, please try later, device: " + bMacReq.getImei()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/equipment/queryBMac validate error: {}", message);
+            deferredResult.setResult(new ResponseEntity<>(new BMacResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(bMacReq.getImei());
+        if (!equipment.isPresent()) {
+            String message = "Equipment not maintained yet : " + bMacReq.getImei();
+            logger.debug(message);
+            deferredResult.setResult(new ResponseEntity<>(new BMacResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+
+        HashMap<String, String> params = new HashMap<>(8);
+        Cmd cmd = factory.createInstance(EventEnum.BMAC.getEvent());
+        if (cmd == null) {
+            deferredResult.setResult(new ResponseEntity<>(new BMacResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
+            return deferredResult;
+        }
+        String bMacStr = cmd.initCmd(params);
+        logger.debug("REST request for query MAC, command: {}", bMacStr);
+        serverHandler.sendCommonQueryMessage(bMacReq.getImei(), bMacStr, EventEnum.BMAC, deferredResult);
+        deferredResult.onTimeout(() -> {
+            //remove from local store if timeout
+            logger.warn("Query BMac time out, maybe device is disconnecting, device: {}", bMacReq.getImei());
+            LocalEquipmentStroe.get(bMacReq.getImei(), EventEnum.BMAC);
+        });
+        return deferredResult;
+    }
 }

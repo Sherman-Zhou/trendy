@@ -38,7 +38,6 @@ public class MessageDecoder extends ByteToMessageDecoder {
         }
         ProtocolMessage message;
         if (data.startsWith("$OK") || data.startsWith("$ERR")) {
-            //TODO - handle query response
             String[] splitEventType = data.split(StrUtil.COMMA);
             String eventType = null;
             if(splitEventType.length >=2 && StringUtils.isNotEmpty(splitEventType[1])){
@@ -63,6 +62,10 @@ public class MessageDecoder extends ByteToMessageDecoder {
                 case "BLENAME":
                     message = new BleNameProtocol(data);
                     message.initData(BleNameProtocol.class);
+                    break;
+                case "BMAC":
+                    message = new BMacProtocol(data);
+                    message.initData(BMacProtocol.class);
                     break;
                 default:
                     message = new CommonProtocol(data);
