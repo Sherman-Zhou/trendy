@@ -67,7 +67,7 @@ public interface VehicleService {
             dto.setIsOnline(vehicle.getEquipment().getOnline());
             dto.setIdentifyNumber(equipment.getIdentifyNumber());
             dto.setBluetoothName(equipment.getBluetoothName());
-            dto.setMileageMultiple(equipment.getMultipleMileage());
+            dto.setInitMileage(equipment.getInitMileage());
         }
         return dto;
     }

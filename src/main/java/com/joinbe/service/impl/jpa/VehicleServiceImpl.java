@@ -97,7 +97,7 @@ public class VehicleServiceImpl implements VehicleService {
             vehicle = vehicleRepository.save(vehicle);
             Equipment equipment = vehicle.getEquipment();
             if (equipment != null) {
-                equipment.setMultipleMileage(vehicleDetailsDTO.getMileageMultiple());
+                equipment.setInitMileage(vehicleDetailsDTO.getInitMileage());
                 equipmentRepository.save(equipment);
             }
         }
