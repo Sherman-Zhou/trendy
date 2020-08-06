@@ -19,6 +19,8 @@ import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.SystemConfigRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import io.swagger.annotations.ApiOperation;
@@ -468,8 +470,9 @@ public class EquipmentController {
             deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
-        //TODO: change to common configuration
-        SystemConfig config = systemConfigRepository.findByKey("MILEAGE_MULTIPLE");
+        //Get global mileage multiple configuraion
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
+        SystemConfig config = systemConfigRepository.findByKeyAndMerchantId(SystemConfig.MILEAGE_MULTIPLE, loginInfo.getMerchantId());
         //Do validation
         BigDecimal initMileage = equipment.get().getInitMileage() != null ? equipment.get().getInitMileage() : BigDecimal.ZERO;
         BigDecimal multipleMileage = config != null ? new BigDecimal(config.getValue()) : BigDecimal.ONE;
