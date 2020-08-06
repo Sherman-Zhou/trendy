@@ -16,8 +16,11 @@ import com.joinbe.domain.enumeration.EventType;
 import com.joinbe.domain.enumeration.OperationResult;
 import com.joinbe.domain.enumeration.OperationSourceType;
 import com.joinbe.repository.EquipmentRepository;
+import com.joinbe.repository.SystemConfigRepository;
 import com.joinbe.repository.VehicleRepository;
 import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.EquipmentService;
 import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import io.swagger.annotations.ApiOperation;
@@ -63,6 +66,9 @@ public class EquipmentController {
 
     @Autowired
     private EquipmentRepository equipmentRepository;
+
+    @Autowired
+    private SystemConfigRepository systemConfigRepository;
 
     @Value("${netty.query-timeout}")
     private Long queryTimeout;
@@ -445,15 +451,15 @@ public class EquipmentController {
      * @param bindingResult
      * @return
      */
-    @ApiOperation("根据设备的IMEI设置初始里程数")
-    @PostMapping("/setInitMileage")
-    public DeferredResult<ResponseEntity<ResponseDTO>> setInitMileage(@RequestBody @Valid DeviceInitMileageReq deviceInitMileageReq, BindingResult bindingResult) {
-        logger.debug("REST request for set init meleag: {}", deviceInitMileageReq);
+    @ApiOperation("根据设备的IMEI设置里程数偏移值")
+    @PostMapping("/setMileageOffset")
+    public DeferredResult<ResponseEntity<ResponseDTO>> setMileageOffset(@RequestBody @Valid DeviceInitMileageReq deviceInitMileageReq, BindingResult bindingResult) {
+        logger.debug("REST request for set init mileage: {}", deviceInitMileageReq);
         ResponseEntity<MileageResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new MileageResponseDTO(1, "set init mileage time out, maybe device is disconnecting, please try later, device: " + deviceInitMileageReq.getImei()), HttpStatus.OK);
         DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
         if (bindingResult.hasErrors()) {
             String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
-            logger.warn("In /api/equipment/setInitMileage validate error: {}", message);
+            logger.warn("In /api/equipment/setMileageOffset validate error: {}", message);
             deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
@@ -464,9 +470,12 @@ public class EquipmentController {
             deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
+        //Get global mileage multiple configuraion
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
+        SystemConfig config = systemConfigRepository.findByKeyAndMerchantId(SystemConfig.MILEAGE_MULTIPLE, loginInfo.getMerchantId());
         //Do validation
         BigDecimal initMileage = equipment.get().getInitMileage() != null ? equipment.get().getInitMileage() : BigDecimal.ZERO;
-        BigDecimal multipleMileage = equipment.get().getMultipleMileage() != null ? equipment.get().getMultipleMileage() : BigDecimal.ZERO;
+        BigDecimal multipleMileage = config != null ? new BigDecimal(config.getValue()) : BigDecimal.ONE;
         String deviceId = equipment.get().getImei();
         if(deviceInitMileageReq.getInitMileage().compareTo(initMileage) == 0){
             String message = "No changes for current mileage offset setup: " + deviceInitMileageReq.getInitMileage();
@@ -490,64 +499,7 @@ public class EquipmentController {
         serverHandler.sendCommonQueryMessage(deviceId, smilStr, EventEnum.SMIL, deferredResult);
         deferredResult.onTimeout(() -> {
             //remove from local store if timeout
-            logger.warn("Set initial mileage time out, maybe device is disconnecting, device: {}", deviceId);
-            LocalEquipmentStroe.get(deviceId, EventEnum.SMIL);
-        });
-        return deferredResult;
-    }
-
-    /**
-     *
-     * @param deviceMileageMultipleReq
-     * @param bindingResult
-     * @return
-     */
-    @ApiOperation("根据设备的IMEI设置里程数倍数")
-    @PostMapping("/setMultipleMileage")
-    public DeferredResult<ResponseEntity<ResponseDTO>> setMultipleMileage(@RequestBody @Valid DeviceMileageMultipleReq deviceMileageMultipleReq, BindingResult bindingResult) {
-        logger.debug("REST request for set init meleag: {}", deviceMileageMultipleReq);
-        ResponseEntity<MileageResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new MileageResponseDTO(1, "set multiple mileage time out, maybe device is disconnecting, please try later, device: " + deviceMileageMultipleReq.getImei()), HttpStatus.OK);
-        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
-        if (bindingResult.hasErrors()) {
-            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
-            logger.warn("In /api/equipment/setMultipleMileage validate error: {}", message);
-            deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, message), HttpStatus.OK));
-            return deferredResult;
-        }
-        Optional<Equipment> equipment = equipmentRepository.findOneByImei(deviceMileageMultipleReq.getImei());
-        if (!equipment.isPresent()) {
-            String message = "Equipment not maintained yet : " + deviceMileageMultipleReq.getImei();
-            logger.debug(message);
-            deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, message), HttpStatus.OK));
-            return deferredResult;
-        }
-        //Do validation
-        BigDecimal initMileage = equipment.get().getInitMileage() != null ? equipment.get().getInitMileage() : BigDecimal.ZERO;
-        BigDecimal multipleMileage = equipment.get().getMultipleMileage() != null ? equipment.get().getMultipleMileage() : BigDecimal.ZERO;
-        String deviceId = equipment.get().getImei();
-        if(deviceMileageMultipleReq.getMultipleMileage().compareTo(multipleMileage) == 0){
-            String message = "No changes for current mutiple mileage setup: " + deviceMileageMultipleReq.getMultipleMileage();
-            logger.debug(message);
-            deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, message), HttpStatus.OK));
-            return deferredResult;
-        }
-
-        HashMap<String, String> params = new HashMap<>(8);
-        params.put(SetMileageCmd.MILEAGE_MODE, "1"); // Always set to open
-        params.put(SetMileageCmd.MILEAGE_OFFSET, String.valueOf(initMileage));
-        params.put(SetMileageCmd.MILEAGE_MULTIPLE, String.valueOf(deviceMileageMultipleReq.getMultipleMileage()));
-
-        Cmd cmd = factory.createInstance(EventEnum.SMIL.getEvent());
-        if (cmd == null) {
-            deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
-            return deferredResult;
-        }
-        String smilStr = cmd.initCmd(params);
-        logger.debug("REST request for set multiple mileage, command: {}", smilStr);
-        serverHandler.sendCommonQueryMessage(deviceId, smilStr, EventEnum.SMIL, deferredResult);
-        deferredResult.onTimeout(() -> {
-            //remove from local store if timeout
-            logger.warn("Set multiple mileage time out, maybe device is disconnecting, device: {}", deviceId);
+            logger.warn("Set mileage offset time out, maybe device is disconnecting, device: {}", deviceId);
             LocalEquipmentStroe.get(deviceId, EventEnum.SMIL);
         });
         return deferredResult;
