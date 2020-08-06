@@ -16,6 +16,8 @@ public class SystemConfig extends AbstractAuditingEntity {
 
     public static final String LAST_BACKUP_TIME = "LAST_BACKUP_TIME";
 
+    public static final String MILEAGE_MULTIPLE = "MILEAGE_MULTIPLE";
+
     private static final long serialVersionUID = 1L;
 
     @Id

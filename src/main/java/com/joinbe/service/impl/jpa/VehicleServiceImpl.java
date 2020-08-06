@@ -95,8 +95,12 @@ public class VehicleServiceImpl implements VehicleService {
             vehicle.setTankVolume(vehicleDetailsDTO.getTankVolume());
             SecurityUtils.checkDataPermission(vehicle.getShop());
             vehicle = vehicleRepository.save(vehicle);
+            Equipment equipment = vehicle.getEquipment();
+            if (equipment != null) {
+                equipment.setMultipleMileage(vehicleDetailsDTO.getMileageMultiple());
+                equipmentRepository.save(equipment);
+            }
         }
-
 
         return VehicleService.toDto(vehicle);
     }
