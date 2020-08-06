@@ -67,6 +67,10 @@ public class MessageDecoder extends ByteToMessageDecoder {
                     message = new BMacProtocol(data);
                     message.initData(BMacProtocol.class);
                     break;
+                case "SMIL":
+                    message = new SMILProtocol(data);
+                    message.initData(SMILProtocol.class);
+                    break;
                 default:
                     message = new CommonProtocol(data);
                     message.initData(CommonProtocol.class);

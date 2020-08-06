@@ -180,6 +180,23 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                             dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH_NAME, EventType.SETBLENAME,OperationResult.FAILURE);
                             deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, "Get ERR response from device, device: " + deviceNo, bleResponseItemDTO), HttpStatus.OK));
                         }
+                    }else if(msg instanceof SMILProtocol){
+                        SMILProtocol smilProtocol = (SMILProtocol)msg;
+                        MileageResponseItemDTO mileageResponseItemDTO = new MileageResponseItemDTO();
+                        mileageResponseItemDTO.setData(smilProtocol.getData());
+                        mileageResponseItemDTO.setOk(smilProtocol.getOk());
+                        mileageResponseItemDTO.setType(smilProtocol.getType());
+                        mileageResponseItemDTO.setMileageMode(smilProtocol.getMileageMode());
+                        mileageResponseItemDTO.setMileageOffset(smilProtocol.getMileageOffset());
+                        mileageResponseItemDTO.setMileageMultiple(smilProtocol.getMileageMultiple());
+                        mileageResponseItemDTO.setImei(deviceNo);
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.SMIL);
+                        if(deferredResult != null && "$OK".equals(smilProtocol.getOk())){
+                            dataCollectService.updateDeviceMileage(deviceNo, smilProtocol.getMileageOffset(),smilProtocol.getMileageMultiple());
+                            deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(0, "success", mileageResponseItemDTO), HttpStatus.OK));
+                        }else if (deferredResult != null && "$ERR".equals(smilProtocol.getOk())){
+                            deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, "Get ERR response from device, device: " + deviceNo, mileageResponseItemDTO), HttpStatus.OK));
+                        }
                     }else if(msg instanceof BMacProtocol){
                         BMacProtocol bMacProtocol = (BMacProtocol)msg;
                         BMacResponseItemDTO bMacResponseItemDTO = new BMacResponseItemDTO();
@@ -406,6 +423,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 return new BleResponseDTO(code, message);
             case "BMAC":
                 return new BMacResponseDTO(code, message);
+            case "SMIL":
+                return new MileageResponseDTO(code, message);
             default:
                 return new CommonResponseDTO(code, message);
         }

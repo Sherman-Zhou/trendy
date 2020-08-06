@@ -5,6 +5,7 @@ import com.joinbe.domain.enumeration.EquipmentStatus;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -81,6 +82,18 @@ public class Equipment extends AbstractAuditingEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Merchant merchant;
+    /**
+     * 初始里程数
+     */
+    @Column(name = "init_mileage", precision = 21, scale = 2)
+    private BigDecimal initMileage;
+
+    /**
+     * 里程数倍数
+     */
+    @Column(name = "multiple_mileage", precision = 21, scale = 2)
+    private BigDecimal multipleMileage;
+
 
     @OneToMany(mappedBy = "equipment")
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -235,21 +248,39 @@ public class Equipment extends AbstractAuditingEntity {
         this.bluetoothName = bluetoothName;
     }
 
+    public BigDecimal getInitMileage() {
+        return initMileage;
+    }
+
+    public void setInitMileage(BigDecimal initMileage) {
+        this.initMileage = initMileage;
+    }
+
+    public BigDecimal getMultipleMileage() {
+        return multipleMileage;
+    }
+
+    public void setMultipleMileage(BigDecimal multipleMileage) {
+        this.multipleMileage = multipleMileage;
+    }
+
     @Override
     public String toString() {
         return "Equipment{" +
-            "id=" + getId() +
-            ", identifyNumber='" + getIdentifyNumber() + "'" +
-            ", imei='" + getImei() + "'" +
-            ", version='" + getVersion() + "'" +
-            ", simCardNum='" + getSimCardNum() + "'" +
-            ", bluetoothName='" + getBluetoothName() + "'" +
-            ", remark='" + getRemark() + "'" +
-            ", status='" + getStatus() + "'" +
-            ", createdBy='" + getCreatedBy() + "'" +
-            ", createdDate='" + getCreatedDate() + "'" +
-            ", lastModifiedBy='" + getLastModifiedBy() + "'" +
-            ", lastModifiedDate='" + getLastModifiedDate() + "'" +
-            "}";
+            "id=" + id +
+            ", identifyNumber='" + identifyNumber + '\'' +
+            ", imei='" + imei + '\'' +
+            ", version='" + version + '\'' +
+            ", simCardNum='" + simCardNum + '\'' +
+            ", bluetoothName='" + bluetoothName + '\'' +
+            ", remark='" + remark + '\'' +
+            ", status=" + status +
+            ", isOnline=" + isOnline +
+            ", vehicle=" + vehicle +
+            ", merchant=" + merchant +
+            ", initMileage=" + initMileage +
+            ", multipleMileage=" + multipleMileage +
+            ", trajectories=" + trajectories +
+            '}';
     }
 }

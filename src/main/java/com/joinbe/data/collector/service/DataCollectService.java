@@ -5,28 +5,21 @@ import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventIDEnum;
 import com.joinbe.data.collector.netty.protocol.message.PositionProtocol;
-import com.joinbe.data.collector.service.dto.ResponseDTO;
-import com.joinbe.data.collector.service.dto.VehicleCalcInfoResponseDTO;
 import com.joinbe.data.collector.service.dto.VehicleCalcInfoResponseItemDTO;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.*;
 import com.joinbe.repository.*;
-import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindingResult;
 
 import javax.persistence.criteria.JoinType;
-import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -416,9 +409,6 @@ public class DataCollectService {
         if (!equipment.isPresent()) {
             log.warn("Refused to update blueName, equipment not maintained yet, imei: {}", deviceNo);
             return;
-        } else if (equipment.get().getVehicle() == null) {
-            log.warn("Refused to update blueName, vehicle not bound yet, imei: {}", deviceNo);
-            return;
         }
         log.debug("In updateBleName, request for update bluetooth name , deviceNo: {},  bleName: {},  isMoving: {}", deviceNo,bleName);
         Equipment ept = equipment.get();
@@ -513,5 +503,22 @@ public class DataCollectService {
             log.error(e.getMessage());
         }
         return data;
+    }
+
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+    public void updateDeviceMileage(String deviceNo, BigDecimal mileageOffset, BigDecimal mileageMultiple) {
+        if(StringUtils.isBlank(deviceNo)){
+            return;
+        }
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(deviceNo);
+        if (!equipment.isPresent()) {
+            log.error("Refused to update device mileage, equipment not maintained yet, imei: {}", deviceNo);
+            return;
+        }
+        log.debug("In updateDeviceMileage, request for update device initial mileage , deviceNo: {},  mileageOffset: {},  mileageMultiple: {}", deviceNo,mileageOffset,mileageMultiple);
+        Equipment ept = equipment.get();
+        ept.setInitMileage(mileageOffset);
+        ept.setMultipleMileage(mileageMultiple);
+        equipmentRepository.save(ept);
     }
 }
