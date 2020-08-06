@@ -84,6 +84,9 @@ public class VehicleDetailsDTO implements Serializable {
     @ApiModelProperty(value = "油箱容积(L)")
     private BigDecimal tankVolume;
 
+    @ApiModelProperty("里程数计算倍数")
+    private BigDecimal mileageMultiple;
+
     /**
      * 油耗（KM/L)
      */

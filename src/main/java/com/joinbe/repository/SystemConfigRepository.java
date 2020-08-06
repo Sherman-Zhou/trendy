@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
 public interface SystemConfigRepository extends JpaRepository<SystemConfig, Long>,
     JpaSpecificationExecutor<SystemConfig> {
 
-     SystemConfig findByKey(String key);
+     SystemConfig findByKeyAndMerchantId(String key, Long merchantId);
 
 }

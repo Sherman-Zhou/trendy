@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -45,15 +46,16 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     public SystemConfigDTO save(SystemConfigDTO systemConfigDTO) {
         log.debug("Request to save SystemConfig : {}", systemConfigDTO);
         UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
-        SystemConfig config = systemConfigRepository.findByKey(SystemConfig.TRAJECTORY_RESERVE_DAYS);
-        SecurityUtils.checkMerchantPermission(loginInfo, config.getMerchant());
+        SystemConfig config = systemConfigRepository.findByKeyAndMerchantId(SystemConfig.TRAJECTORY_RESERVE_DAYS, loginInfo.getMerchantId());
         config.setValue(String.valueOf(systemConfigDTO.getTrajectoryReserveDays()));
-        SystemConfig lastBackupTime = systemConfigRepository.findByKey(SystemConfig.LAST_BACKUP_TIME);
-        SecurityUtils.checkMerchantPermission(loginInfo, lastBackupTime.getMerchant());
+        SystemConfig lastBackupTime = systemConfigRepository.findByKeyAndMerchantId(SystemConfig.LAST_BACKUP_TIME, loginInfo.getMerchantId());
+
         if (StringUtils.isNotEmpty(systemConfigDTO.getLastBackupTime())) {
             lastBackupTime.setValue(systemConfigDTO.getLastBackupTime());
         }
         systemConfigDTO.setLastBackupTime(lastBackupTime.getValue());
+        SystemConfig mileageMultiple = systemConfigRepository.findByKeyAndMerchantId(SystemConfig.MILEAGE_MULTIPLE, loginInfo.getMerchantId());
+        mileageMultiple.setValue(systemConfigDTO.getMileageMultiple() != null ? systemConfigDTO.getMileageMultiple().toString() : null);
         return systemConfigDTO;
     }
 
@@ -88,6 +90,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         SystemConfigDTO dto = new SystemConfigDTO();
         dto.setLastBackupTime(configs.get(SystemConfig.LAST_BACKUP_TIME));
         dto.setTrajectoryReserveDays(Long.parseLong(configs.get(SystemConfig.TRAJECTORY_RESERVE_DAYS)));
+        dto.setMileageMultiple(new BigDecimal(configs.get(SystemConfig.MILEAGE_MULTIPLE)));
         return dto;
     }
 
