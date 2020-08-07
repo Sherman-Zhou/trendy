@@ -237,6 +237,15 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
                 dto.setIsMoving(vehicle.getIsMoving());
                 dto.setId(vehicle.getId());
                 dto.setDivisionId(vehicle.getShop().getId());
+
+                Locale locale = LocaleContextHolder.getLocale();
+                if (Locale.CHINESE.equals(locale)) {
+                    dto.setName(vehicle.getNameCn());
+                } else if (Locale.JAPANESE.equals(locale)) {
+                    dto.setName(vehicle.getNameJp());
+                } else {
+                    dto.setName(vehicle.getName());
+                }
                 return dto;
             })
             .collect(Collectors.groupingBy(VehicleSummaryDTO::getDivisionId));

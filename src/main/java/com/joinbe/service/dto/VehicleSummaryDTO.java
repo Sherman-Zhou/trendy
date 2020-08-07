@@ -3,6 +3,8 @@ package com.joinbe.service.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.Size;
+
 @Data
 public class VehicleSummaryDTO {
 
@@ -17,5 +19,9 @@ public class VehicleSummaryDTO {
 
     @ApiModelProperty(value = "门店主键")
     private String divisionId;
+
+    @Size(max = 50)
+    @ApiModelProperty(value = "名称")
+    private String name;
 
 }
