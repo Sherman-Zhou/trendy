@@ -166,10 +166,10 @@ public class DataCollectService {
             return;
         }
         /**
-         * 开锁：2,3,7
-         * 关锁：0,1,4,5,6
+         * 开锁：0,1,4,5
+         * 关锁：2,3,6,7
          */
-        if(inputStatus == 2 || inputStatus == 3 || inputStatus == 7){
+        if(inputStatus == 0 || inputStatus == 1 || inputStatus == 4 || inputStatus == 5){
             redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.OPEN);
         }else{
             redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.CLOSE);
