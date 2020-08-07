@@ -90,7 +90,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             redissonEquipmentStore.putInRedisForIButtonStatus(deviceNo, IbuttonStatusEnum.UNKNOWN);
             //锁的状态设置为未知
             redissonEquipmentStore.putInRedisForDoorStatus(deviceNo, VehicleDoorStatusEnum.UNKNOWN);
-            //开火/关火状态设置为未知
+            //开火/关火状态设置为未知 & 保存上次的状态
+            VehicleFireStatusEnum currentFireStatus = redissonEquipmentStore.getDeviceFireStatus(deviceNo);
+            if(!VehicleFireStatusEnum.UNKNOWN.equals(currentFireStatus)){
+                redissonEquipmentStore.putInRedisForPreFireStatus(deviceNo,currentFireStatus);
+            }
             redissonEquipmentStore.putInRedisForFireStatus(deviceNo, VehicleFireStatusEnum.UNKNOWN);
             //更新设备的状态为离线，车辆的行驶状态为未知
             new Thread(new Runnable() {
