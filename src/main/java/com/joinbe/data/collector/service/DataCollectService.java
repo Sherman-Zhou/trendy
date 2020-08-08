@@ -74,13 +74,19 @@ public class DataCollectService {
         VehicleFireStatusEnum currentFireStatus = redissonEquipmentStore.getDeviceFireStatus(msg.getUnitId());
 
         log.debug("DeviceId: {}, previousDeviceStatus: {},  currentDeviceStatus: {}",msg.getUnitId(), previousDeviceStatus.getCode(), currentDeviceStatus.getCode());
-        log.debug("DeviceId: {}, previousFireStatus: {},  currentFireStatus: {}",msg.getUnitId(), previousFireStatus.getCode(), currentFireStatus.getCode());
+        log.info("DeviceId: {}, previousFireStatus: {},  currentFireStatus: {}",msg.getUnitId(), previousFireStatus.getCode(), currentFireStatus.getCode());
 
         //更新车辆状态
         if(previousDeviceStatus == null || VehicleStatusEnum.UNKNOWN.equals(previousDeviceStatus) || !previousDeviceStatus.equals(currentDeviceStatus)){
             boolean isRunning = VehicleStatusEnum.RUNNING.equals(currentDeviceStatus);
-            log.debug("Vehicle's status is changed, update status, deviceNo: {}, isRunning: {}", msg.getUnitId(), isRunning);
+            log.info("Vehicle's status is changed, update status, deviceNo: {}, isRunning: {}", msg.getUnitId(), isRunning);
             this.updateStatus(msg.getUnitId(),true,isRunning);
+        }
+
+        //设备断开后，和上一次轨迹合并的问题
+        if(VehicleFireStatusEnum.UNKNOWN.equals(previousFireStatus)){
+            log.info("Set unknown fire status to real pre fire status : {}", msg.getUnitId());
+            previousFireStatus = redissonEquipmentStore.getDevicePreFireStatus(msg.getUnitId());
         }
 
         /**

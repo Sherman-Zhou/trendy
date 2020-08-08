@@ -54,6 +54,8 @@ public class RedissonEquipmentStore {
     //打火熄火相关
     private static final String DEVICE_REAL_TIME_FIRE_STATUS_KEY = "DEVICE_ID_FIRE_STATUS_KEY";
     private static final String DEVICE_REAL_TIME_FIRE_STATUS_KEY_PREFIX = "DEVICE_ID_FIRE:";
+    private static final String DEVICE_PRE_REAL_TIME_FIRE_STATUS_KEY = "DEVICE_ID_PRE_FIRE_STATUS_KEY";
+    private static final String DEVICE_PRE_REAL_TIME_FIRE_STATUS_KEY_PREFIX = "DEVICE_ID_PRE_FIRE:";
 
     private final RedissonClient redissonClient;
 
@@ -162,7 +164,6 @@ public class RedissonEquipmentStore {
         log.debug("status in redis for deviceId {}:{}", deviceId, status);
         return VehicleStatusEnum.getByCode(status);
     }
-
 
     /**
      * save real ibutton status
@@ -305,6 +306,16 @@ public class RedissonEquipmentStore {
     }
 
     /**
+     * save pre fire status
+     * @param deviceId
+     * @param status: OPEN_FIRE/CLOSE_FIRE/UNKNOWN
+     */
+    public void putInRedisForPreFireStatus(String deviceId, VehicleFireStatusEnum status) {
+        RMapCache<String, String> deviceFireMap = redissonClient.getMapCache(DEVICE_PRE_REAL_TIME_FIRE_STATUS_KEY);
+        deviceFireMap.put(DEVICE_PRE_REAL_TIME_FIRE_STATUS_KEY_PREFIX + deviceId, status.getCode());
+    }
+
+    /**
      * Get fire status
      * @param deviceId
      * @return
@@ -316,6 +327,17 @@ public class RedissonEquipmentStore {
         return VehicleFireStatusEnum.getByCode(status);
     }
 
+    /**
+     * Get pre fire status
+     * @param deviceId
+     * @return
+     */
+    public VehicleFireStatusEnum getDevicePreFireStatus(String deviceId) {
+        RMapCache<String, String> deviceFireMap = redissonClient.getMapCache(DEVICE_PRE_REAL_TIME_FIRE_STATUS_KEY);
+        String status = deviceFireMap.get(DEVICE_PRE_REAL_TIME_FIRE_STATUS_KEY_PREFIX + deviceId);
+        log.debug("Pre fire status in redis for deviceId {}:{}", deviceId, status);
+        return VehicleFireStatusEnum.getByCode(status);
+    }
 
     /**
      * @return
