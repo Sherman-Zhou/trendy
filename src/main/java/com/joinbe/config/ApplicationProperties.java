@@ -27,6 +27,8 @@ public class ApplicationProperties {
 
         private String vehiclePath;
 
+        private String housekeepingJobCron;
+
         public String getUrl() {
             return url;
         }
@@ -41,6 +43,14 @@ public class ApplicationProperties {
 
         public void setVehiclePath(String vehiclePath) {
             this.vehiclePath = vehiclePath;
+        }
+
+        public String getHousekeepingJobCron() {
+            return housekeepingJobCron;
+        }
+
+        public void setHousekeepingJobCron(String housekeepingJobCron) {
+            this.housekeepingJobCron = housekeepingJobCron;
         }
     }
 }

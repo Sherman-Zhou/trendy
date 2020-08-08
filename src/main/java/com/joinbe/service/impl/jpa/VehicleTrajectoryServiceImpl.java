@@ -3,6 +3,7 @@ package com.joinbe.service.impl.jpa;
 import com.joinbe.common.util.DateUtils;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
+import com.joinbe.config.ApplicationProperties;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.VehicleCalcInfoResponseItemDTO;
@@ -25,14 +26,18 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.Predicate;
+import java.text.Collator;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service Implementation for managing {@link VehicleTrajectory}.
@@ -58,10 +63,14 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     private final DataCollectService dataCollectService;
 
+    private final ApplicationProperties applicationProperties;
+
+    private final SystemConfigRepository systemConfigRepository;
+
     public VehicleTrajectoryServiceImpl(VehicleTrajectoryRepository vehicleTrajectoryRepository,
                                         VehicleRepository vehicleRepository, VehicleTrajectoryDetailsRepository trajectoryDetailsRepository,
                                         CityRepository cityRepository, ShopRepository shopRepository, StaffRepository staffRepository,
-                                        DataCollectService dataCollectService) {
+                                        DataCollectService dataCollectService, ApplicationProperties applicationProperties, SystemConfigRepository systemConfigRepository) {
         this.vehicleTrajectoryRepository = vehicleTrajectoryRepository;
         this.vehicleRepository = vehicleRepository;
         this.trajectoryDetailsRepository = trajectoryDetailsRepository;
@@ -69,6 +78,8 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         this.shopRepository = shopRepository;
         this.staffRepository = staffRepository;
         this.dataCollectService = dataCollectService;
+        this.applicationProperties = applicationProperties;
+        this.systemConfigRepository = systemConfigRepository;
     }
 
     /**
@@ -229,7 +240,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             };
             specification = specification.and(itemSpecification);
         }
-
+        Locale locale = LocaleContextHolder.getLocale();
         Map<String, List<VehicleSummaryDTO>> vehicleMap = vehicleRepository.findAll(specification).stream()
             .map(vehicle -> {
                 VehicleSummaryDTO dto = new VehicleSummaryDTO();
@@ -237,8 +248,13 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
                 dto.setIsMoving(vehicle.getIsMoving());
                 dto.setId(vehicle.getId());
                 dto.setDivisionId(vehicle.getShop().getId());
+                if (vehicle.getEquipment() != null) {
+                    dto.setIsOnline(vehicle.getEquipment().getOnline() == null ? false : vehicle.getEquipment().getOnline());
+                } else {
+                    dto.setIsOnline(false);
+                }
 
-                Locale locale = LocaleContextHolder.getLocale();
+
                 if (Locale.CHINESE.equals(locale)) {
                     dto.setName(vehicle.getNameCn());
                 } else if (Locale.JAPANESE.equals(locale)) {
@@ -252,7 +268,24 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
         //group by parentId
         List<DivisionWithVehicesleDTO> children = divisions.stream()
-            .peek(division -> division.setVehicles(vehicleMap.get(division.getId())))
+            .peek(division -> {
+                List<VehicleSummaryDTO> divisionVehicles = vehicleMap.get(division.getId());
+                if (divisionVehicles != null) {
+                    List<VehicleSummaryDTO> onlineVehicle = divisionVehicles
+                        .stream().filter(VehicleSummaryDTO::getIsOnline).
+                            sorted((o1, o2) -> {
+                                return Collator.getInstance(locale).compare(o1.getName(), o2.getName());
+                            })
+                        .collect(Collectors.toList());
+
+                    List<VehicleSummaryDTO> offlineVehicle = divisionVehicles
+                        .stream().filter(vehicleSummaryDTO -> !vehicleSummaryDTO.getIsOnline()).
+                            sorted((o1, o2) -> Collator.getInstance(locale).compare(o1.getName(), o2.getName()))
+                        .collect(Collectors.toList());
+                    onlineVehicle.addAll(offlineVehicle);
+                    division.setVehicles(onlineVehicle);
+                }
+            })
             .filter(division -> division.getParentId() != null)
             .sorted(Comparator.comparing(DivisionDTO::getName))
             .collect(Collectors.toList());
@@ -350,5 +383,19 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             .collect(Collectors.toList());
 
         return reports;
+    }
+
+    @Scheduled(cron = "${application.trendy.housekeeping-job-cron}")
+    public void removeOldTrajectory() {
+        List<SystemConfig> systemConfigs = systemConfigRepository.findAllByKey(SystemConfig.TRAJECTORY_RESERVE_DAYS);
+        for (SystemConfig config : systemConfigs) {
+            log.debug("merchant: {}, trajectory reserve days: {}", config.getMerchant().getId(), config.getValue());
+            Instant purgeTime = Instant.now().minus(Long.valueOf(config.getValue()), ChronoUnit.DAYS);
+            Stream<VehicleTrajectory> trajectoryStream = vehicleTrajectoryRepository.findOldTrajectory(config.getMerchant().getId(), purgeTime);
+            trajectoryStream.forEach(trajectory -> {
+                trajectoryDetailsRepository.deleteByVehicleTrajectoryId(trajectory.getId());
+                vehicleTrajectoryRepository.delete(trajectory);
+            });
+        }
     }
 }

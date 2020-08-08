@@ -77,7 +77,7 @@ public class VehicleTrajectory implements Serializable {
      @Column(name = "status", length = 1)
     private PaymentStatus status = PaymentStatus.UNSETTLED;
 
-    @OneToMany(mappedBy = "vehicleTrajectory" ,cascade=CascadeType.ALL)
+    @OneToMany(mappedBy = "vehicleTrajectory", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = false)
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<VehicleTrajectoryDetails> details = new HashSet<>();
 
