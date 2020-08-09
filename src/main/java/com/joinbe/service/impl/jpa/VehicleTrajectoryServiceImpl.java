@@ -191,6 +191,8 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     @Override
     public List<DivisionWithVehicesleDTO> findCurrentUserDivisionsAndVehicles(SearchVehicleVM vm) {
+
+        Locale locale = LocaleContextHolder.getLocale();
         //List<String> userDivisionIds = SecurityUtils.getCurrentUserDivisionIds();
         Staff staff = staffRepository.findOneWithShopsAndCitiesByLogin(SecurityUtils.getCurrentUserLogin().get()).get();
         List<DivisionWithVehicesleDTO> divisions = staff.getShops().stream().map(shop ->
@@ -240,7 +242,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             };
             specification = specification.and(itemSpecification);
         }
-        Locale locale = LocaleContextHolder.getLocale();
+
         Map<String, List<VehicleSummaryDTO>> vehicleMap = vehicleRepository.findAll(specification).stream()
             .map(vehicle -> {
                 VehicleSummaryDTO dto = new VehicleSummaryDTO();
@@ -273,9 +275,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
                 if (divisionVehicles != null) {
                     List<VehicleSummaryDTO> onlineVehicle = divisionVehicles
                         .stream().filter(VehicleSummaryDTO::getIsOnline).
-                            sorted((o1, o2) -> {
-                                return Collator.getInstance(locale).compare(o1.getName(), o2.getName());
-                            })
+                            sorted((o1, o2) -> Collator.getInstance(locale).compare(o1.getName(), o2.getName()))
                         .collect(Collectors.toList());
 
                     List<VehicleSummaryDTO> offlineVehicle = divisionVehicles
@@ -301,7 +301,9 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         //establish relationship for child menu
         for (DivisionDTO divisionDTO : divisions) {
             if (!CollectionUtils.isEmpty(childMenusMap.get(divisionDTO.getId()))) {
-                divisionDTO.setChildren(childMenusMap.get(divisionDTO.getId()));
+                List<DivisionDTO> sorted = childMenusMap.get(divisionDTO.getId()).stream()
+                    .sorted((o1, o2) -> Collator.getInstance(locale).compare(o1.getName(), o2.getName())).collect(Collectors.toList());
+                divisionDTO.setChildren(sorted);
 //                permissionDTO.setExpand(true);
             }
         }
@@ -309,6 +311,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         //get Root Menus
         List<DivisionWithVehicesleDTO> rootDivision = divisions.stream()
             .filter(menu -> menu.getParentId() == null)
+            .sorted((o1, o2) -> Collator.getInstance(locale).compare(o1.getName(), o2.getName()))
             .collect(Collectors.toList());
 
         return rootDivision;
@@ -390,7 +393,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         List<SystemConfig> systemConfigs = systemConfigRepository.findAllByKey(SystemConfig.TRAJECTORY_RESERVE_DAYS);
         for (SystemConfig config : systemConfigs) {
             log.debug("merchant: {}, trajectory reserve days: {}", config.getMerchant().getId(), config.getValue());
-            Instant purgeTime = Instant.now().minus(Long.valueOf(config.getValue()), ChronoUnit.DAYS);
+            Instant purgeTime = Instant.now().minus(Long.parseLong(config.getValue()), ChronoUnit.DAYS);
             Stream<VehicleTrajectory> trajectoryStream = vehicleTrajectoryRepository.findOldTrajectory(config.getMerchant().getId(), purgeTime);
             trajectoryStream.forEach(trajectory -> {
                 trajectoryDetailsRepository.deleteByVehicleTrajectoryId(trajectory.getId());
