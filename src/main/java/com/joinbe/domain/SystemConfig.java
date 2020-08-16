@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
  * A SystemConfig.
  */
 @Entity
-@Table(name = "system_config")
+@Table(name = "sys_config")
 //@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class SystemConfig extends AbstractAuditingEntity {
 

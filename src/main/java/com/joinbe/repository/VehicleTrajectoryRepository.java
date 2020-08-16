@@ -25,7 +25,7 @@ public interface VehicleTrajectoryRepository extends JpaRepository<VehicleTrajec
     List<VehicleTrajectory> findByVehicleIdOrderByTrajectoryIdDesc(Long vehicleId);
 
 
-    @Query("select trajectory from VehicleTrajectory trajectory left join fetch trajectory.details " +
+    @Query("select distinct trajectory from VehicleTrajectory trajectory left join fetch trajectory.details " +
         "where trajectory.endTime between :startTime and :endTime order by trajectory.trajectoryId, trajectory.startTime")
     List<VehicleTrajectory> findTrajectoryAfter(@Param("startTime") Instant startTime, @Param("endTime") Instant endTime);
 

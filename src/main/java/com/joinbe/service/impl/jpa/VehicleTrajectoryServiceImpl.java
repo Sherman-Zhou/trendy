@@ -1,6 +1,7 @@
 package com.joinbe.service.impl.jpa;
 
 import com.joinbe.common.util.DateUtils;
+import com.joinbe.common.util.ExcelUtil;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.ApplicationProperties;
@@ -11,27 +12,34 @@ import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.RecordStatus;
 import com.joinbe.repository.*;
 import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.EquipmentService;
+import com.joinbe.service.SystemConfigService;
 import com.joinbe.service.VehicleTrajectoryDetailsService;
 import com.joinbe.service.VehicleTrajectoryService;
 import com.joinbe.service.dto.*;
 import com.joinbe.web.rest.vm.SearchVehicleVM;
 import com.joinbe.web.rest.vm.TrajectoryVM;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import javax.persistence.criteria.Predicate;
+import java.io.File;
+import java.io.InputStream;
 import java.text.Collator;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -67,10 +75,17 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
     private final SystemConfigRepository systemConfigRepository;
 
+    private final SystemConfigService systemConfigService;
+
+
+    private final MessageSource messageSource;
+
     public VehicleTrajectoryServiceImpl(VehicleTrajectoryRepository vehicleTrajectoryRepository,
                                         VehicleRepository vehicleRepository, VehicleTrajectoryDetailsRepository trajectoryDetailsRepository,
                                         CityRepository cityRepository, ShopRepository shopRepository, StaffRepository staffRepository,
-                                        DataCollectService dataCollectService, ApplicationProperties applicationProperties, SystemConfigRepository systemConfigRepository) {
+                                        DataCollectService dataCollectService, ApplicationProperties applicationProperties,
+                                        SystemConfigRepository systemConfigRepository, SystemConfigService systemConfigService,
+                                        MessageSource messageSource) {
         this.vehicleTrajectoryRepository = vehicleTrajectoryRepository;
         this.vehicleRepository = vehicleRepository;
         this.trajectoryDetailsRepository = trajectoryDetailsRepository;
@@ -80,6 +95,8 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         this.dataCollectService = dataCollectService;
         this.applicationProperties = applicationProperties;
         this.systemConfigRepository = systemConfigRepository;
+        this.systemConfigService = systemConfigService;
+        this.messageSource = messageSource;
     }
 
     /**
@@ -387,6 +404,59 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
         return reports;
     }
+
+    @Override
+    @Async
+    public void backupTrajectory(Locale locale, UserLoginInfo loginInfo) {
+        final String TEMPLATE_FILE_NAME = "TrajectoryReport.xlsx";
+
+
+        SystemConfigDTO dto = systemConfigService.find();
+
+        String yesterdayStr = DateUtils.formatDate(Instant.now().minus(1, ChronoUnit.DAYS), DateUtils.PATTERN_DATE);
+        Instant yesterday = DateUtils.parseDate(yesterdayStr, DateUtils.PATTERN_DATE).toInstant();
+        Instant from = DateUtils.parseDate(dto.getLastBackupTime(), DateUtils.PATTERN_DATE).toInstant().plus(1, ChronoUnit.DAYS);
+
+        String fileName = messageSource.getMessage("trajectory.excel.fileName", null, null, locale)
+            + dto.getLastBackupTime() + "-" + yesterdayStr + ".xlsx";
+
+        VehicleTrajectoryBackupFile vehicleTrajectoryBackupFile = new VehicleTrajectoryBackupFile();
+        vehicleTrajectoryBackupFile.setCompleted(false);
+        vehicleTrajectoryBackupFile.setFromDate(dto.getLastBackupTime());
+        vehicleTrajectoryBackupFile.setToDate(yesterdayStr);
+        vehicleTrajectoryBackupFile.setRptName(fileName);
+        vehicleTrajectoryBackupFile.setGeneratedBy(loginInfo.getLogin());
+        vehicleTrajectoryBackupFile.setMerchantId(loginInfo.getMerchantId());
+
+        systemConfigService.saveBackupFile(vehicleTrajectoryBackupFile);
+
+        InputStream template = this.getClass().getResourceAsStream("/templates/excel/" + TEMPLATE_FILE_NAME);
+
+        List<TrajectoryReportDTO> reportDTOS = findAllTrajectory4backup(from, yesterday);
+        Map<String, String> header = new HashMap<>();
+
+        header.put("identifyNumberTitle", messageSource.getMessage("trajectory.excel.identifyNumberTitle", null, null, locale));
+        header.put("imeiTitle", messageSource.getMessage("trajectory.excel.imeiTitle", null, null, locale));
+        header.put("trajectoryIdTitle", messageSource.getMessage("trajectory.excel.trajectoryIdTitle", null, null, locale));
+        header.put("receivedTimeTitle", messageSource.getMessage("trajectory.excel.receivedTimeTitle", null, null, locale));
+        header.put("lngTitle", messageSource.getMessage("trajectory.excel.lngTitle", null, null, locale));
+        header.put("latTitle", messageSource.getMessage("trajectory.excel.latTitle", null, null, locale));
+
+        try {
+            byte[] fileContent = ExcelUtil.fillExcelReport(template, header, reportDTOS);
+            FileUtils.writeByteArrayToFile(new File(applicationProperties.getTrendy().getTrajectoryBackupFolder() + File.separator + fileName), fileContent);
+            dto.setLastBackupTime(yesterdayStr);
+            vehicleTrajectoryBackupFile.setSuccess(true);
+            vehicleTrajectoryBackupFile.setCompleted(true);
+
+        } catch (Exception e) {
+            vehicleTrajectoryBackupFile.setSuccess(false);
+            vehicleTrajectoryBackupFile.setErrMsg(e.getMessage());
+        }
+        systemConfigService.saveBackupFile(vehicleTrajectoryBackupFile);
+        systemConfigService.save(dto, loginInfo.getMerchantId());
+    }
+
 
     @Scheduled(cron = "${application.trendy.housekeeping-job-cron}")
     public void removeOldTrajectory() {
