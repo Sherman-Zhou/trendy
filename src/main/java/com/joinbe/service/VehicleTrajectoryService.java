@@ -3,6 +3,7 @@ package com.joinbe.service;
 import com.joinbe.common.util.BeanConverter;
 import com.joinbe.domain.VehicleTrajectory;
 import com.joinbe.domain.enumeration.PaymentStatus;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.dto.*;
 import com.joinbe.web.rest.vm.SearchVehicleVM;
 import com.joinbe.web.rest.vm.TrajectoryVM;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -75,4 +77,6 @@ public interface VehicleTrajectoryService {
     List<String> findAllTrajectoryIds(Long vehicleId);
 
     List<TrajectoryReportDTO> findAllTrajectory4backup(Instant from, Instant to);
+
+    void backupTrajectory(Locale locale, UserLoginInfo loginInfo);
 }

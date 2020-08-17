@@ -1,14 +1,17 @@
 package com.joinbe.web.rest;
 
-import com.joinbe.common.util.DateUtils;
-import com.joinbe.common.util.ExcelUtil;
+import com.joinbe.config.ApplicationProperties;
 import com.joinbe.domain.SystemConfig;
+import com.joinbe.domain.VehicleTrajectoryBackupFile;
+import com.joinbe.security.SecurityUtils;
+import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.SystemConfigService;
 import com.joinbe.service.VehicleTrajectoryService;
 import com.joinbe.service.dto.SystemConfigDTO;
-import com.joinbe.service.dto.TrajectoryReportDTO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
@@ -20,14 +23,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.io.InputStream;
+import java.io.File;
 import java.net.URLEncoder;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * REST controller for managing {@link SystemConfig}.
@@ -39,16 +38,21 @@ public class SystemConfigResource {
 
 
     private final Logger log = LoggerFactory.getLogger(SystemConfigResource.class);
+
     private final SystemConfigService systemConfigService;
 
     private final VehicleTrajectoryService trajectoryService;
 
     private final MessageSource messageSource;
 
-    public SystemConfigResource(SystemConfigService systemConfigService, VehicleTrajectoryService trajectoryService, MessageSource messageSource) {
+    private final ApplicationProperties properties;
+
+    public SystemConfigResource(SystemConfigService systemConfigService, VehicleTrajectoryService trajectoryService,
+                                MessageSource messageSource, ApplicationProperties properties) {
         this.systemConfigService = systemConfigService;
         this.trajectoryService = trajectoryService;
         this.messageSource = messageSource;
+        this.properties = properties;
     }
 
     /**
@@ -63,7 +67,8 @@ public class SystemConfigResource {
     @ApiOperation("更新系统配置")
     public ResponseEntity<SystemConfigDTO> updateSystemConfig(@Valid @RequestBody SystemConfigDTO systemConfigDTO) {
         log.debug("REST request to update SystemConfig : {}", systemConfigDTO);
-        SystemConfigDTO result = systemConfigService.save(systemConfigDTO);
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
+        SystemConfigDTO result = systemConfigService.save(systemConfigDTO, loginInfo.getMerchantId());
         return ResponseEntity.ok()
             .body(result);
     }
@@ -81,46 +86,37 @@ public class SystemConfigResource {
         return dto;
     }
 
-    @GetMapping("/trajectories/download")
+    @GetMapping("/trajectories/backup")
     @ApiOperation("设备轨迹备份")
-    public ResponseEntity<byte[]> downloadOrderStatsReport() throws Exception {
-        final String TEMPLATE_FILE_NAME = "TrajectoryReport.xlsx";
+    public ResponseEntity<Void> backupTrajectory() {
+
         log.debug("REST request to download TrajectoryReport!");
+        UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
         Locale locale = LocaleContextHolder.getLocale();
+        trajectoryService.backupTrajectory(locale, loginInfo);
+        return ResponseEntity.noContent().build();
+    }
 
-        SystemConfigDTO dto = systemConfigService.find();
-        String yesterdayStr = DateUtils.formatDate(Instant.now().minus(1, ChronoUnit.DAYS), DateUtils.PATTERN_DATE);
-        Instant yesterday = DateUtils.parseDate(yesterdayStr, DateUtils.PATTERN_DATE).toInstant();
-        Instant from = DateUtils.parseDate(dto.getLastBackupTime(), DateUtils.PATTERN_DATE).toInstant().plus(1, ChronoUnit.DAYS);
+    @GetMapping("/trajectories/backup-files")
+    @ApiOperation("获取所有轨迹备份文件")
+    public List<VehicleTrajectoryBackupFile> getBackupFiles() {
+        return systemConfigService.getAllBackupFiles();
+    }
 
-        InputStream template = this.getClass().getResourceAsStream("/templates/excel/" + TEMPLATE_FILE_NAME);
-
-        List<TrajectoryReportDTO> reportDTOS = trajectoryService.findAllTrajectory4backup(from, yesterday);
-        Map<String, String> header = new HashMap<>();
-
-        header.put("identifyNumberTitle", messageSource.getMessage("trajectory.excel.identifyNumberTitle", null, null, locale));
-        header.put("imeiTitle", messageSource.getMessage("trajectory.excel.imeiTitle", null, null, locale));
-        header.put("trajectoryIdTitle", messageSource.getMessage("trajectory.excel.trajectoryIdTitle", null, null, locale));
-        header.put("receivedTimeTitle", messageSource.getMessage("trajectory.excel.receivedTimeTitle", null, null, locale));
-        header.put("lngTitle", messageSource.getMessage("trajectory.excel.lngTitle", null, null, locale));
-        header.put("latTitle", messageSource.getMessage("trajectory.excel.latTitle", null, null, locale));
-
-        byte[] files = ExcelUtil.fillExcelReport(template, header, reportDTOS);
-
-        dto.setLastBackupTime(yesterdayStr);
-        systemConfigService.save(dto);
-        String fileName = messageSource.getMessage("trajectory.excel.fileName", null, null, locale) + dto.getLastBackupTime() + "-" + yesterdayStr + ".xlsx";
-        return download(files, fileName);
+    @GetMapping("/trajectories/download/{id}")
+    @ApiOperation("设备轨迹备份")
+    public ResponseEntity<byte[]> downloadOrderStatsReport(@PathVariable @ApiParam(value = "备份文件id", required = true) Long id) throws Exception {
+        VehicleTrajectoryBackupFile backupFile = systemConfigService.getBackFileById(id);
+        byte[] fileContent = FileUtils.readFileToByteArray(new File(properties.getTrendy().getTrajectoryBackupFolder() + File.separator + backupFile.getRptName()));
+        return download(fileContent, backupFile.getRptName());
     }
 
     private ResponseEntity<byte[]> download(byte[] content, String fileName) throws Exception {
-
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.add("Content-Disposition",
             "attachment;filename=" + URLEncoder.encode(fileName, "UTF-8"));
         return new ResponseEntity<>(content, headers, HttpStatus.CREATED);
     }
-
 
 }

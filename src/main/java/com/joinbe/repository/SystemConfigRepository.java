@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 /**
  * Spring Data  repository for the SystemConfig entity.
  */
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Repository;
 public interface SystemConfigRepository extends JpaRepository<SystemConfig, Long>,
     JpaSpecificationExecutor<SystemConfig> {
 
-     SystemConfig findByKeyAndMerchantId(String key, Long merchantId);
+    SystemConfig findByKeyAndMerchantId(String key, Long merchantId);
 
+    List<SystemConfig> findAllByKey(String key);
 }

@@ -27,6 +27,10 @@ public class ApplicationProperties {
 
         private String vehiclePath;
 
+        private String housekeepingJobCron;
+
+        private String trajectoryBackupFolder;
+
         public String getUrl() {
             return url;
         }
@@ -41,6 +45,22 @@ public class ApplicationProperties {
 
         public void setVehiclePath(String vehiclePath) {
             this.vehiclePath = vehiclePath;
+        }
+
+        public String getHousekeepingJobCron() {
+            return housekeepingJobCron;
+        }
+
+        public void setHousekeepingJobCron(String housekeepingJobCron) {
+            this.housekeepingJobCron = housekeepingJobCron;
+        }
+
+        public String getTrajectoryBackupFolder() {
+            return trajectoryBackupFolder;
+        }
+
+        public void setTrajectoryBackupFolder(String trajectoryBackupFolder) {
+            this.trajectoryBackupFolder = trajectoryBackupFolder;
         }
     }
 }

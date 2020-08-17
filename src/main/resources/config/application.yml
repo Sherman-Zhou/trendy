@@ -77,7 +77,7 @@ spring:
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQLDialect
     properties:
-      hibernate.jdbc.time_zone: Asia/Shanghai
+      hibernate.jdbc.time_zone: Asia/Tokyo
       hibernate.id.new_generator_mappings: true
       hibernate.connection.provider_disables_autocommit: true
       hibernate.cache.use_second_level_cache: false
