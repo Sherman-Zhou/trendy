@@ -71,6 +71,10 @@ public class MessageDecoder extends ByteToMessageDecoder {
                     message = new SMILProtocol(data);
                     message.initData(SMILProtocol.class);
                     break;
+                case "DLFW":
+                    message = new DLFWProtocol(data);
+                    message.initData(DLFWProtocol.class);
+                    break;
                 default:
                     message = new CommonProtocol(data);
                     message.initData(CommonProtocol.class);

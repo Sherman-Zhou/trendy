@@ -167,6 +167,13 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         }else if (deferredResult != null && "$ERR".equals(lockUnlockProtocol.getOk())){
                             deferredResult.setResult(new ResponseEntity<>(new LockResponseDTO(1, "Get ERR response from device, device: " + deviceNo, lockUnlockProtocol), HttpStatus.OK));
                         }
+                    }if(msg instanceof DLFWProtocol){
+                        DLFWProtocol dlfwProtocol = (DLFWProtocol)msg;
+                        DLFWeResponseItemDTO dlfWeResponseItemDTO = new DLFWeResponseItemDTO();
+                        dlfWeResponseItemDTO.setData(dlfwProtocol.getData());
+                        dlfWeResponseItemDTO.setImei(deviceNo);
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo, EventEnum.DLFW);
+                        deferredResult.setResult(new ResponseEntity<>(new DLFWResponseDTO(0, "Get response.", dlfWeResponseItemDTO), HttpStatus.OK));
                     }else if(msg instanceof BleNameProtocol){
                         BleNameProtocol bleNameProtocol = (BleNameProtocol)msg;
                         BleResponseItemDTO bleResponseItemDTO = new BleResponseItemDTO();
@@ -429,6 +436,8 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 return new BMacResponseDTO(code, message);
             case "SMIL":
                 return new MileageResponseDTO(code, message);
+            case "DLFW":
+                return new DLFWResponseDTO(code, message);
             default:
                 return new CommonResponseDTO(code, message);
         }
