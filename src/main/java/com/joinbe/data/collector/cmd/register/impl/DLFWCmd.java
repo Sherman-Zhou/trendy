@@ -21,7 +21,7 @@ public class DLFWCmd extends AbstractCmdRegister implements Cmd {
 
     @Override
     String getEvent() {
-        return EventEnum.SETKEY.getEvent();
+        return EventEnum.DLFW.getEvent();
     }
 
 
