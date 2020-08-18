@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Service
 public class DataCollectService {
     private final Logger log = LoggerFactory.getLogger(DataCollectService.class);
-
+    public static final String CMD_END = "\r\n";
     @Autowired
     VehicleTrajectoryRepository vehicleTrajectoryRepository;
     @Autowired

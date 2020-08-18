@@ -553,4 +553,41 @@ public class EquipmentController {
         });
         return deferredResult;
     }
+
+    /**
+     *
+     * @param commonReq
+     * @param bindingResult
+     * @return
+     */
+    @ApiOperation("Common Command")
+    @PostMapping("/cmd")
+    public DeferredResult<ResponseEntity<ResponseDTO>> commonCmd(@RequestBody @Valid CommonReq commonReq, BindingResult bindingResult) {
+        logger.debug("REST request for common command: {}", commonReq);
+        ResponseEntity<CommonResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new CommonResponseDTO(1, "Command is time out, maybe device is disconnecting, please try later, device: " + commonReq.getImei()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/equipment/cmd validate error: {}", message);
+            deferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(commonReq.getImei());
+        if (!equipment.isPresent()) {
+            String message = "Equipment not maintained yet : " + commonReq.getImei();
+            logger.debug(message);
+            deferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+
+        String cmd = commonReq.getCmd() + DataCollectService.CMD_END;
+        logger.debug("REST request for common command: {}", cmd);
+        serverHandler.sendCommonQueryMessage(commonReq.getImei(), cmd, EventEnum.C_CMD, deferredResult);
+        deferredResult.onTimeout(() -> {
+            //remove from local store if timeout
+            logger.warn("C_CMD time out, maybe device is disconnecting, device: {}", commonReq.getImei());
+            LocalEquipmentStroe.get(commonReq.getImei(), EventEnum.C_CMD);
+        });
+        return deferredResult;
+    }
 }

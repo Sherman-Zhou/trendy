@@ -255,12 +255,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         }
                     }else if(msg instanceof CommonProtocol){
                         CommonProtocol commonProtocol = (CommonProtocol)msg;
-                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.getCommonResult(deviceNo);
-                        if(deferredResult != null && commonProtocol != null && StringUtils.isNotEmpty(commonProtocol.getData()) && commonProtocol.getData().startsWith("$OK")){
-                            deferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(0, "success", commonProtocol), HttpStatus.OK));
-                        }else if (deferredResult != null && commonProtocol != null && StringUtils.isNotEmpty(commonProtocol.getData()) && commonProtocol.getData().startsWith("$ERR")){
-                            deferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(1, "Get ERR response from device, device: " + deviceNo, commonProtocol), HttpStatus.OK));
-                        }
+                        commonProtocol.setImei(deviceNo);
+                        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = LocalEquipmentStroe.get(deviceNo,EventEnum.C_CMD);
+                        deferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(0, "Device's response message", commonProtocol), HttpStatus.OK));
                     }
                 }
             }
