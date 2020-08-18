@@ -37,7 +37,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
             return;
         }
         ProtocolMessage message;
-        if (data.startsWith("$OK") || data.startsWith("$ERR")) {
+        if (data.startsWith("$OK") || data.startsWith("$ERR") || data.startsWith("$MSG")) {
             String[] splitEventType = data.split(StrUtil.COMMA);
             String eventType = null;
             if(splitEventType.length >=2 && StringUtils.isNotEmpty(splitEventType[1])){

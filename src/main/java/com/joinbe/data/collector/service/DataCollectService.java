@@ -66,7 +66,7 @@ public class DataCollectService {
         VehicleStatusEnum previousDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
         VehicleFireStatusEnum previousFireStatus = redissonEquipmentStore.getDeviceFireStatus(msg.getUnitId());
         //处理Input状态
-        handleInputStatus(msg);
+        handleInputStatus(msg,equipment.get().getVehicle().getSignalInd());
         //处理车辆状态
         //handleRealTimeSpeed(msg);
         //当前状态
@@ -166,7 +166,7 @@ public class DataCollectService {
      * handle input status
      * @param msg
      */
-    private void handleInputStatus(PositionProtocol msg) {
+    private void handleInputStatus(PositionProtocol msg,Long signalInd) {
         Integer inputStatus = msg.getInputStatus();
         if(msg == null ||inputStatus == null || StringUtils.isBlank(msg.getUnitId())){
             return;
@@ -175,9 +175,8 @@ public class DataCollectService {
          * 开锁：0,1,4,5
          * 关锁：2,3,6,7
          */
-        DoorSignalEnum doorSignal = redissonEquipmentStore.getDoorSignal(msg.getUnitId());
-        //反向讯号
-        if(DoorSignalEnum.NEGATIVE.equals(doorSignal)){
+        //0-正向讯号，1-反向讯号
+        if(Long.valueOf("1").equals(signalInd)){
             if(inputStatus == 2 || inputStatus == 3 || inputStatus == 6 || inputStatus == 7){
                 redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.OPEN);
             }else{
