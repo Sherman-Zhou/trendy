@@ -254,8 +254,10 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
             //name or account search...
             Specification<Vehicle> itemSpecification = (Specification<Vehicle>) (root, criteriaQuery, criteriaBuilder) -> {
                 Predicate namePredicate = criteriaBuilder.like(root.get("licensePlateNumber"), "%" + vm.getLicensePlateNumberOrDeviceId().trim() + "%");
+                Predicate cnPredicate = criteriaBuilder.like(root.get("licensePlateNumberCn"), "%" + vm.getLicensePlateNumberOrDeviceId().trim() + "%");
+                Predicate jpPredicate = criteriaBuilder.like(root.get("licensePlateNumberJp"), "%" + vm.getLicensePlateNumberOrDeviceId().trim() + "%");
                 Predicate loginPredicate = criteriaBuilder.like(root.get("equipment").get("identifyNumber"), "%" + vm.getLicensePlateNumberOrDeviceId().trim() + "%");
-                return criteriaBuilder.or(namePredicate, loginPredicate);
+                return criteriaBuilder.or(namePredicate, cnPredicate, jpPredicate, loginPredicate);
             };
             specification = specification.and(itemSpecification);
         }

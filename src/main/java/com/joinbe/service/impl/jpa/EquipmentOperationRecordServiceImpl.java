@@ -102,7 +102,9 @@ public class EquipmentOperationRecordServiceImpl implements EquipmentOperationRe
                 Predicate identifyNumberPredicate = criteriaBuilder.like(root.get("equipment").get("identifyNumber"), "%" + vm.getUserId().trim() + "%");
                 Predicate createdByPredicate = criteriaBuilder.like(root.get("createdBy"), "%" + vm.getUserId().trim() + "%");
                 Predicate licensePlateNumberPredicate = criteriaBuilder.like(root.get("vehicle").get("licensePlateNumber"), "%" + vm.getUserId().trim() + "%");
-                return criteriaBuilder.or(identifyNumberPredicate, createdByPredicate, licensePlateNumberPredicate);
+                Predicate licensePlateNumberPredicateCn = criteriaBuilder.like(root.get("vehicle").get("licensePlateNumberCn"), "%" + vm.getUserId().trim() + "%");
+                Predicate licensePlateNumberPredicateJp = criteriaBuilder.like(root.get("vehicle").get("licensePlateNumberJp"), "%" + vm.getUserId().trim() + "%");
+                return criteriaBuilder.or(identifyNumberPredicate, createdByPredicate, licensePlateNumberPredicate, licensePlateNumberPredicateJp, licensePlateNumberPredicateCn);
             };
             specification = specification.and(itemSpecification);
         }

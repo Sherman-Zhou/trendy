@@ -27,12 +27,14 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -141,16 +143,7 @@ public class VehicleServiceImpl implements VehicleService {
         // only active vehicle...
         queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
 
-        if (StringUtils.isNotEmpty(vm.getBrand())) {
-            queryParams.and("brand", Filter.Operator.like, vm.getBrand());
-        }
-        if (StringUtils.isNotEmpty(vm.getName())) {
-            queryParams.and("name", Filter.Operator.like, vm.getName());
-        }
 
-        if (StringUtils.isNotEmpty(vm.getLicensePlateNumber())) {
-            queryParams.and("licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
-        }
         if (vm.getIsBounded() != null) {
             queryParams.and("bounded", Filter.Operator.eq, vm.getIsBounded());
         }
@@ -167,7 +160,41 @@ public class VehicleServiceImpl implements VehicleService {
         }
         queryParams.addJoihFetch("equipment", JoinType.LEFT);
 
-        return vehicleRepository.findAll(queryParams, pageable)
+        Specification<Vehicle> specification = Specification.where(queryParams);
+
+        if (StringUtils.isNotEmpty(vm.getBrand())) {
+            // queryParams.and("brand", Filter.Operator.like, vm.getBrand());
+            Specification<Vehicle> brandSpecification = (Specification<Vehicle>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate cnPredicate = criteriaBuilder.like(root.get("brandCn"), "%" + vm.getBrand().trim() + "%");
+                Predicate jpPredicate = criteriaBuilder.like(root.get("brandJp"), "%" + vm.getBrand().trim() + "%");
+                Predicate enPredicate = criteriaBuilder.like(root.get("brand"), "%" + vm.getBrand().trim() + "%");
+                return criteriaBuilder.or(enPredicate, jpPredicate, cnPredicate);
+            };
+            specification = specification.and(brandSpecification);
+        }
+        if (StringUtils.isNotEmpty(vm.getName())) {
+            // queryParams.and("name", Filter.Operator.like, vm.getName());
+            Specification<Vehicle> nameSpecification = (Specification<Vehicle>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate cnPredicate = criteriaBuilder.like(root.get("nameCn"), "%" + vm.getName().trim() + "%");
+                Predicate jpPredicate = criteriaBuilder.like(root.get("nameJp"), "%" + vm.getName().trim() + "%");
+                Predicate enPredicate = criteriaBuilder.like(root.get("name"), "%" + vm.getName().trim() + "%");
+                return criteriaBuilder.or(enPredicate, jpPredicate, cnPredicate);
+            };
+            specification = specification.and(nameSpecification);
+        }
+
+        if (StringUtils.isNotEmpty(vm.getLicensePlateNumber())) {
+            //queryParams.and("licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
+            Specification<Vehicle> nameSpecification = (Specification<Vehicle>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate cnPredicate = criteriaBuilder.like(root.get("licensePlateNumberCn"), "%" + vm.getLicensePlateNumber().trim() + "%");
+                Predicate jpPredicate = criteriaBuilder.like(root.get("licensePlateNumberJp"), "%" + vm.getLicensePlateNumber().trim() + "%");
+                Predicate enPredicate = criteriaBuilder.like(root.get("licensePlateNumber"), "%" + vm.getLicensePlateNumber().trim() + "%");
+                return criteriaBuilder.or(enPredicate, jpPredicate, cnPredicate);
+            };
+            specification = specification.and(nameSpecification);
+        }
+
+        return vehicleRepository.findAll(specification, pageable)
             .map(VehicleService::toDto);
     }
 
