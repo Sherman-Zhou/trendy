@@ -7,6 +7,7 @@ import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.config.ApplicationProperties;
 import com.joinbe.config.Constants;
+import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.*;
 import com.joinbe.repository.*;
@@ -63,9 +64,12 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final ObjectMapper mapper;
 
+    private final RedissonEquipmentStore redisStore;
+
     public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
                               ShopRepository shopRepository, CityRepository cityRepository, MessageSource messageSource,
-                              RestfulClient restfulClient, EquipmentOperationRecordRepository operationRecordRepository, ApplicationProperties applicationProperties) {
+                              RestfulClient restfulClient, EquipmentOperationRecordRepository operationRecordRepository,
+                              ApplicationProperties applicationProperties, RedissonEquipmentStore redisStore) {
         this.vehicleRepository = vehicleRepository;
         this.equipmentRepository = equipmentRepository;
         this.shopRepository = shopRepository;
@@ -74,6 +78,7 @@ public class VehicleServiceImpl implements VehicleService {
         this.restfulClient = restfulClient;
         this.operationRecordRepository = operationRecordRepository;
         this.applicationProperties = applicationProperties;
+        this.redisStore = redisStore;
         mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }
@@ -217,6 +222,8 @@ public class VehicleServiceImpl implements VehicleService {
         equipment.setVehicle(vehicle);
         equipment.setStatus(EquipmentStatus.BOUND);
         vehicle.setBounded(true);
+        vehicle.setSignalInd(vm.getSignalInd());
+        redisStore.putInRedisForDoorSignal(equipment.getImei(), Long.valueOf("1").equals(vm.getSignalInd()) ? DoorSignalEnum.NEGATIVE : DoorSignalEnum.POSITIVE);
         createOpRecord(vehicle, equipment, OperationResult.SUCCESS, EventType.BINDING);
     }
 
