@@ -131,6 +131,9 @@ public class VehicleDetailsDTO implements Serializable {
     @ApiModelProperty(value = "蓝牙名称")
     private String bluetoothName;
 
+    @ApiModelProperty(value = "设备IMEI")
+    private String imei;
+
     @Size(max = 1)
     @Pattern(regexp = "[AD]")
     @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除", required = true)
