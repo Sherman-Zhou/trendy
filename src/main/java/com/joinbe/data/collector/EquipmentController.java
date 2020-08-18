@@ -504,4 +504,53 @@ public class EquipmentController {
         });
         return deferredResult;
     }
+
+    /**
+     *
+     * @param dlfwReq
+     * @param bindingResult
+     * @return
+     */
+    @ApiOperation("DLFW Command")
+    @PostMapping("/dlfw")
+    public DeferredResult<ResponseEntity<ResponseDTO>> dlfwCmd(@RequestBody @Valid DLFWReq dlfwReq, BindingResult bindingResult) {
+        logger.debug("REST request for DLFW command: {}", dlfwReq);
+        ResponseEntity<DLFWResponseDTO> timeoutResponseDTOResponseEntity = new ResponseEntity<>(new DLFWResponseDTO(1, "DLFW command is time out, maybe device is disconnecting, please try later, device: " + dlfwReq.getImei()), HttpStatus.OK);
+        DeferredResult<ResponseEntity<ResponseDTO>> deferredResult = new DeferredResult<>(queryTimeout, timeoutResponseDTOResponseEntity);
+        if (bindingResult.hasErrors()) {
+            String message = bindingResult.getAllErrors().get(0).getDefaultMessage();
+            logger.warn("In /api/equipment/dlfwCmd validate error: {}", message);
+            deferredResult.setResult(new ResponseEntity<>(new DLFWResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(dlfwReq.getImei());
+        if (!equipment.isPresent()) {
+            String message = "Equipment not maintained yet : " + dlfwReq.getImei();
+            logger.debug(message);
+            deferredResult.setResult(new ResponseEntity<>(new DLFWResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
+        }
+
+        HashMap<String, String> params = new HashMap<>(8);
+        if(StringUtils.isNotBlank(dlfwReq.getCmd())){
+            params.put(DLFWCmd.CMD, dlfwReq.getCmd());
+        }else{
+            params.put(DLFWCmd.CMD, "1,GPRS,internet,220.135.124.143,JC,jc654321,AT35.41U.STD.JC.V1.004.04.BIN,/,D9EE,1,300");
+        }
+
+        Cmd cmd = factory.createInstance(EventEnum.DLFW.getEvent());
+        if (cmd == null) {
+            deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
+            return deferredResult;
+        }
+        String dlfwCmd = cmd.initCmd(params);
+        logger.debug("REST request for DLFW, command: {}", dlfwCmd);
+        serverHandler.sendCommonQueryMessage(dlfwReq.getImei(), dlfwCmd, EventEnum.DLFW, deferredResult);
+        deferredResult.onTimeout(() -> {
+            //remove from local store if timeout
+            logger.warn("DLFW time out, maybe device is disconnecting, device: {}", dlfwReq.getImei());
+            LocalEquipmentStroe.get(dlfwReq.getImei(), EventEnum.DLFW);
+        });
+        return deferredResult;
+    }
 }

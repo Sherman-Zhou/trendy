@@ -158,6 +158,10 @@ public enum EventEnum {
      * MAC0地址
      */
     BMAC0("BMAC0"),
+    /**
+     * DLFW
+     */
+    DLFW("DLFW"),
     ;
 
     EventEnum(String event) {
