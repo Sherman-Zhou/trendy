@@ -3,10 +3,7 @@ package com.joinbe.data.collector.store;
 import cn.hutool.core.util.StrUtil;
 import com.joinbe.config.Constants;
 import com.joinbe.data.collector.netty.protocol.code.EventEnum;
-import com.joinbe.domain.enumeration.IbuttonStatusEnum;
-import com.joinbe.domain.enumeration.VehicleDoorStatusEnum;
-import com.joinbe.domain.enumeration.VehicleFireStatusEnum;
-import com.joinbe.domain.enumeration.VehicleStatusEnum;
+import com.joinbe.domain.enumeration.*;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RMapCache;
@@ -56,6 +53,9 @@ public class RedissonEquipmentStore {
     private static final String DEVICE_REAL_TIME_FIRE_STATUS_KEY_PREFIX = "DEVICE_ID_FIRE:";
     private static final String DEVICE_PRE_REAL_TIME_FIRE_STATUS_KEY = "DEVICE_ID_PRE_FIRE_STATUS_KEY";
     private static final String DEVICE_PRE_REAL_TIME_FIRE_STATUS_KEY_PREFIX = "DEVICE_ID_PRE_FIRE:";
+    //讯号相关
+    private static final String DEVICE_DOOR_SIGNAL_KEY = "DEVICE_DOOR_SIGNAL_KEY";
+    private static final String DEVICE_DOOR_SIGNAL_KEY_PREFIX = "DEVICE_ID_DOOR_SIGNAL:";
 
     private final RedissonClient redissonClient;
 
@@ -293,6 +293,30 @@ public class RedissonEquipmentStore {
         String status = deviceServerMap.get(DEVICE_REAL_TIME_DOOR_STATUS_KEY_PREFIX + deviceId);
         log.debug("Door status in redis for deviceId {}:{}", deviceId, status);
         return VehicleDoorStatusEnum.getByCode(status);
+    }
+
+
+    /**
+     *
+     * @param imei
+     * @param sign
+     */
+    public void putInRedisForDoorSignal(String imei, DoorSignalEnum sign) {
+        RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_DOOR_SIGNAL_KEY);
+        deviceServerMap.put(DEVICE_DOOR_SIGNAL_KEY_PREFIX + imei, sign.getCode());
+    }
+
+
+    /**
+     *
+     * @param imei
+     * @return
+     */
+    public DoorSignalEnum getDoorSignal(String imei) {
+        RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_DOOR_SIGNAL_KEY);
+        String sign = deviceServerMap.get(DEVICE_DOOR_SIGNAL_KEY_PREFIX + imei);
+        log.debug("Signal in redis for deviceId {}:{}", imei, sign);
+        return DoorSignalEnum.getByCode(sign);
     }
 
     /**
