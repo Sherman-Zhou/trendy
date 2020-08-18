@@ -176,6 +176,9 @@ public class DataCollectService {
          * 关锁：2,3,6,7
          */
         DoorSignalEnum doorSignal = redissonEquipmentStore.getDoorSignal(msg.getUnitId());
+        if(doorSignal == null){
+
+        }
         //反向讯号
         if(DoorSignalEnum.NEGATIVE.equals(doorSignal)){
             if(inputStatus == 2 || inputStatus == 3 || inputStatus == 6 || inputStatus == 7){
