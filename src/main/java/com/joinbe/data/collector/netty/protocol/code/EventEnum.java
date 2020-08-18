@@ -162,6 +162,10 @@ public enum EventEnum {
      * DLFW
      */
     DLFW("DLFW"),
+    /**
+     * C_CMD
+     */
+    C_CMD("C_CMD"),
     ;
 
     EventEnum(String event) {

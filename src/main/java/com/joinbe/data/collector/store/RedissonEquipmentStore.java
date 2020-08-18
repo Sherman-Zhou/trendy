@@ -297,7 +297,7 @@ public class RedissonEquipmentStore {
 
 
     /**
-     *
+     * POSITIVE: 正向讯号;  NEGATIVE: 反向讯号
      * @param imei
      * @param sign
      */

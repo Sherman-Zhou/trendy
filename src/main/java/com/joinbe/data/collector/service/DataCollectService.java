@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Service
 public class DataCollectService {
     private final Logger log = LoggerFactory.getLogger(DataCollectService.class);
-
+    public static final String CMD_END = "\r\n";
     @Autowired
     VehicleTrajectoryRepository vehicleTrajectoryRepository;
     @Autowired
@@ -175,11 +175,22 @@ public class DataCollectService {
          * 开锁：0,1,4,5
          * 关锁：2,3,6,7
          */
-        if(inputStatus == 0 || inputStatus == 1 || inputStatus == 4 || inputStatus == 5){
-            redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.OPEN);
+        DoorSignalEnum doorSignal = redissonEquipmentStore.getDoorSignal(msg.getUnitId());
+        //反向讯号
+        if(DoorSignalEnum.NEGATIVE.equals(doorSignal)){
+            if(inputStatus == 2 || inputStatus == 3 || inputStatus == 6 || inputStatus == 7){
+                redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.OPEN);
+            }else{
+                redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.CLOSE);
+            }
         }else{
-            redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.CLOSE);
+            if(inputStatus == 0 || inputStatus == 1 || inputStatus == 4 || inputStatus == 5){
+                redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.OPEN);
+            }else{
+                redissonEquipmentStore.putInRedisForDoorStatus(msg.getUnitId(), VehicleDoorStatusEnum.CLOSE);
+            }
         }
+
         /**
          * 点火：1,3,5,7
          * 熄火：0,2,4,6

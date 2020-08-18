@@ -5,14 +5,14 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
 
-public class DLFWReq {
+public class CommonReq {
 
     @NotEmpty(message = "device IMEI number cant not be empty")
     @Length(min = 1, max = 100, message = "device IMEI number length should between 1~100")
     @ApiModelProperty(value = "设备IMEI", required=true)
     private String imei;
 
-    @ApiModelProperty(value = "密码后的命令",required = false)
+    @ApiModelProperty(value = "命令, 命令末尾不带回车换行符",required = false)
     private String cmd;
 
     public String getImei() {
@@ -33,7 +33,7 @@ public class DLFWReq {
 
     @Override
     public String toString() {
-        return "DLFWReq{" +
+        return "CommonReq{" +
             "imei='" + imei + '\'' +
             ", cmd='" + cmd + '\'' +
             '}';
