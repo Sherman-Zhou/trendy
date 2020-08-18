@@ -213,6 +213,10 @@ public class Vehicle extends AbstractAuditingEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Merchant merchant;
 
+
+    @Column(name = "signal_ind", length = 1)
+    private Long signalInd;
+
     @OneToMany(mappedBy = "vehicle")
 //    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<VehicleTrajectory> trajectories = new HashSet<>();
@@ -581,6 +585,14 @@ public class Vehicle extends AbstractAuditingEntity {
 
     public void setMerchant(Merchant merchant) {
         this.merchant = merchant;
+    }
+
+    public Long getSignalInd() {
+        return signalInd;
+    }
+
+    public void setSignalInd(Long signalInd) {
+        this.signalInd = signalInd;
     }
 
     @Override

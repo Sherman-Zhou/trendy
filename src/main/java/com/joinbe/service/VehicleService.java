@@ -69,6 +69,7 @@ public interface VehicleService {
             dto.setBluetoothName(equipment.getBluetoothName());
             dto.setInitMileage(equipment.getInitMileage());
             dto.setImei(equipment.getImei());
+            dto.setSignalInd(vehicle.getSignalInd());
         }
         return dto;
     }

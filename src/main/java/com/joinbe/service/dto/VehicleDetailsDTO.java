@@ -134,6 +134,9 @@ public class VehicleDetailsDTO implements Serializable {
     @ApiModelProperty(value = "设备IMEI")
     private String imei;
 
+    @ApiModelProperty(value = "讯号方向")
+    private Long signalInd;
+
     @Size(max = 1)
     @Pattern(regexp = "[AD]")
     @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除", required = true)
