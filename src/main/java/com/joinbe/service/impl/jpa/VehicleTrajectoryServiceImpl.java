@@ -416,8 +416,8 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         SystemConfigDTO dto = systemConfigService.find();
 
         String yesterdayStr = DateUtils.formatDate(Instant.now().minus(1, ChronoUnit.DAYS), DateUtils.PATTERN_DATE);
-        Instant yesterday = DateUtils.parseDate(yesterdayStr, DateUtils.PATTERN_DATE).toInstant();
-        Instant from = DateUtils.parseDate(dto.getLastBackupTime(), DateUtils.PATTERN_DATE).toInstant().plus(1, ChronoUnit.DAYS);
+        Instant yesterday = DateUtils.parseDate(yesterdayStr + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME).toInstant();
+        Instant from = DateUtils.parseDate(dto.getLastBackupTime(), DateUtils.PATTERN_DATE).toInstant();
 
         String fileName = messageSource.getMessage("trajectory.excel.fileName", null, null, locale)
             + dto.getLastBackupTime() + "-" + yesterdayStr + ".xlsx";

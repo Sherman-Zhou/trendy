@@ -128,6 +128,6 @@ public class SystemConfigServiceImpl implements SystemConfigService {
     @Override
     public List<VehicleTrajectoryBackupFile> getAllBackupFiles() {
         UserLoginInfo loginInfo = SecurityUtils.getCurrentUserLoginInfo();
-        return backupFileRepository.getAllByMerchantId(loginInfo.getMerchantId());
+        return backupFileRepository.getAllByMerchantIdOrderByGeneratedOnDesc(loginInfo.getMerchantId());
     }
 }
