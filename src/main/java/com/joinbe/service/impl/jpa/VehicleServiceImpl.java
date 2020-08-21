@@ -11,6 +11,7 @@ import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.*;
 import com.joinbe.repository.*;
+import com.joinbe.security.AuthoritiesConstants;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.VehicleService;
@@ -60,6 +61,8 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final RestfulClient restfulClient;
 
+    private final StaffRepository staffRepository;
+
     private final EquipmentOperationRecordRepository operationRecordRepository;
 
     private final ApplicationProperties applicationProperties;
@@ -70,7 +73,8 @@ public class VehicleServiceImpl implements VehicleService {
 
     public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
                               ShopRepository shopRepository, CityRepository cityRepository, MessageSource messageSource,
-                              RestfulClient restfulClient, EquipmentOperationRecordRepository operationRecordRepository,
+                              RestfulClient restfulClient, StaffRepository staffRepository,
+                              EquipmentOperationRecordRepository operationRecordRepository,
                               ApplicationProperties applicationProperties, RedissonEquipmentStore redisStore) {
         this.vehicleRepository = vehicleRepository;
         this.equipmentRepository = equipmentRepository;
@@ -78,6 +82,7 @@ public class VehicleServiceImpl implements VehicleService {
         this.cityRepository = cityRepository;
         this.messageSource = messageSource;
         this.restfulClient = restfulClient;
+        this.staffRepository = staffRepository;
         this.operationRecordRepository = operationRecordRepository;
         this.applicationProperties = applicationProperties;
         this.redisStore = redisStore;
@@ -365,7 +370,7 @@ public class VehicleServiceImpl implements VehicleService {
         Merchant userMerchant = new Merchant();
         userMerchant.setId(userLoginInfo.getMerchantId());
 
-        City root = cityRepository.getOne(Constants.CITY_ROOT_ID);
+        City root = cityRepository.findById(Constants.CITY_ROOT_ID).orElse(new City(Constants.CITY_ROOT_ID));
 
         int fetchSize = 9999;
         Map<String, String> urlParams = new HashMap<>();
@@ -435,15 +440,18 @@ public class VehicleServiceImpl implements VehicleService {
                 city.setNameCn(cityCn.getName());
             }
             city.setStatus(RecordStatus.ACTIVE);
-            city.setParentId(trendyCity.getParentId());
+            if (trendyCity.getParentId() != null) {
+                city.setParentId(Constants.CITY_ID_PREFIX + trendyCity.getParentId());
+            }
         }
+
 
         Collection<City> allCitiesInDb = citiesInDb.values();
         for (City city : allCitiesInDb) {
             if (Constants.CITY_ROOT_ID.equals(city.getId())) {
                 continue;
             }
-            if (StringUtils.isNotEmpty(city.getParentId())) {
+            if (StringUtils.isNotEmpty(city.getParentId()) && !Constants.CITY_ROOT_ID.equals(city.getParentId())) {
                 City parent = citiesInDb.get(Constants.CITY_ID_PREFIX + city.getParentId());
                 parent.getChildren().add(city);
                 city.setParent(parent);
@@ -488,6 +496,12 @@ public class VehicleServiceImpl implements VehicleService {
             // shop.setArea(citiesInDb.get(Constants.CITY_ID_PREFIX + trendyShop.getArea()));
             shop.setStatus(RecordStatus.ACTIVE);
             shopRepository.save(shop);
+        }
+        //add new cities and shops to merchant's admin
+        List<Staff> admins = staffRepository.findMerchantAdmin(AuthoritiesConstants.ROLE_MERCHANT_ADMIN, userLoginInfo.getMerchantId());
+        for (Staff admin : admins) {
+            admin.getCities().addAll(newCities);
+            admin.getShops().addAll(newShops);
         }
 
         for (TrendyResponse.Car car : en) {
