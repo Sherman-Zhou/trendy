@@ -37,7 +37,7 @@ spring:
       indent-output: true
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://123.57.12.177:3306/trendy?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=Asia/Tokyo&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://123.57.12.177:3306/trendy-merchant?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=Asia/Tokyo&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
     username: root
     # Jasypt加密 可用JasyptUtil加解密工具类生成加密结果 格式为ENC(加密结果) 以下解密结果为123456
     # password: ENC(uOtmALFgsfxgYzEg1uLXl3O/tg6X1Dy25I3SdAeqqETOyZbDwmaW0/EZEusIh6hK)
