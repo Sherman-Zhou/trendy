@@ -518,7 +518,7 @@ public class VehicleServiceImpl implements VehicleService {
 
             if (jpCarMap.get(car.getId()) != null) {
                 TrendyResponse.Car jpCar = jpCarMap.get(car.getId());
-                vehicle.setLicensePlateNumber(jpCar.getPlate_number());
+                vehicle.setLicensePlateNumberJp(jpCar.getPlate_number());
                 vehicle.setBrandJp(jpCar.getBrand_name());
                 vehicle.setStyleJp(jpCar.getBrand_style());
                 vehicle.setTypeJp(jpCar.getBrand_model());
