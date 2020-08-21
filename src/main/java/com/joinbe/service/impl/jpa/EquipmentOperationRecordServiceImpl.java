@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import java.util.Date;
 import java.util.Optional;
@@ -96,6 +97,8 @@ public class EquipmentOperationRecordServiceImpl implements EquipmentOperationRe
             queryParams.and("createdDate", Filter.Operator.lessThanOrEqualTo, endDate);
         }
 
+        queryParams.addJoihFetch("vehicle", JoinType.LEFT);
+        queryParams.addJoihFetch("equipment", JoinType.LEFT);
         Specification<EquipmentOperationRecord> specification = Specification.where(queryParams);
         if (StringUtils.isNotEmpty(vm.getUserId())) {
             Specification<EquipmentOperationRecord> itemSpecification = (Specification<EquipmentOperationRecord>) (root, criteriaQuery, criteriaBuilder) -> {

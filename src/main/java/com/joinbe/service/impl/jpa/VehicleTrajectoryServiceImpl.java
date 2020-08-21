@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import java.io.File;
 import java.io.InputStream;
@@ -249,6 +250,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
                 queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
             }
         }
+        queryParams.addJoihFetch("equipment", JoinType.LEFT);
         Specification<Vehicle> specification = Specification.where(queryParams);
         if (StringUtils.isNotEmpty(vm.getLicensePlateNumberOrDeviceId())) {
             //name or account search...

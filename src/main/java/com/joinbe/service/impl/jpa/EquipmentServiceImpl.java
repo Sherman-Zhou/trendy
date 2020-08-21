@@ -30,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.JoinType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -154,6 +155,7 @@ public class EquipmentServiceImpl implements EquipmentService {
         if (vm.getIsBounded() != null) {
             queryParams.and("vehicle", vm.getIsBounded() ? Filter.Operator.isNotNull : Filter.Operator.isNull, null);
         }
+        queryParams.addJoihFetch("vehicle", JoinType.LEFT);
         return equipmentRepository.findAll(queryParams, pageable)
             .map(EquipmentService::toDto);
     }
