@@ -4,6 +4,8 @@ package com.joinbe.security;
 import com.joinbe.domain.Merchant;
 import com.joinbe.domain.Shop;
 import com.joinbe.service.util.SpringContextUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.Authentication;
@@ -21,6 +23,8 @@ import java.util.stream.Stream;
  * Utility class for Spring Security.
  */
 public final class SecurityUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityUtils.class);
 
     private SecurityUtils() {
 
@@ -86,6 +90,7 @@ public final class SecurityUtils {
      */
     public static void checkDataPermission(UserLoginInfo loginInfo, Shop shop) {
         if (shop == null) {
+            log.warn("the user {} try to access data of shop {}  ", getCurrentUserLoginInfo().getLogin(), shop);
             throw new AccessDeniedException("No Permission to view this record");
         }
         checkDataPermission(loginInfo, shop.getId());
@@ -99,6 +104,7 @@ public final class SecurityUtils {
     public static void checkDataPermission(UserLoginInfo loginInfo, String shopId) {
 
         if (!loginInfo.getDivisionIds().contains(shopId)) {
+            log.warn("the user {} try to access data from shop{}", loginInfo.getLogin(), shopId);
             throw new AccessDeniedException("No Permission to view this record");
         }
     }
@@ -111,6 +117,7 @@ public final class SecurityUtils {
     public static void checkDataPermission(String shopId) {
 
         if (!getCurrentUserLoginInfo().getDivisionIds().contains(shopId)) {
+            log.warn("the user {} try to access data from shop{}", getCurrentUserLoginInfo().getLogin(), shopId);
             throw new AccessDeniedException("No Permission to view this record");
         }
     }
@@ -121,6 +128,7 @@ public final class SecurityUtils {
             return;
         }
         if (merchant == null || !merchant.getId().equals(loginInfo.getMerchantId())) {
+            log.warn("the user {} try to access data from merchant{}", getCurrentUserLoginInfo().getLogin(), merchant);
             throw new AccessDeniedException("No Permission");
         }
     }
@@ -131,6 +139,7 @@ public final class SecurityUtils {
             return;
         }
         if (!merchantId.equals(loginInfo.getMerchantId())) {
+            log.warn("the user {} try to access data from merchant{}", getCurrentUserLoginInfo().getLogin(), merchantId);
             throw new AccessDeniedException("No Permission");
         }
     }
@@ -138,6 +147,7 @@ public final class SecurityUtils {
 
     public static void checkMerchantPermission(UserLoginInfo loginInfo, Merchant merchant) {
         if (merchant == null || !merchant.getId().equals(loginInfo.getMerchantId())) {
+            log.warn("the user {} try to access data from merchant{}", getCurrentUserLoginInfo().getLogin(), merchant);
             throw new AccessDeniedException("No Permission");
         }
     }
