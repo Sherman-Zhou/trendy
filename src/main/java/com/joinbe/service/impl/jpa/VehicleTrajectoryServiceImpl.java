@@ -238,6 +238,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
         QueryParams<Vehicle> queryParams = new QueryParams<>();
         queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
+        queryParams.and("equipment.isOnline", Filter.Operator.eq, Boolean.TRUE);
 //        if (vm.getDivisionId() != null) {
 //            SecurityUtils.checkDataPermission(vm.getDivisionId());
 //            queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
@@ -245,11 +246,11 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 //            // add user's division condition
 //            queryParams.and("division.id", Filter.Operator.in, SecurityUtils.getCurrentUserDivisionIds());
 //        } //FIXME: permission check
-        if (vm.getOnlineOnly() != null) {
-            if (vm.getOnlineOnly()) {
-                queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
-            }
-        }
+//        if (vm.getOnlineOnly() != null) {
+//            if (vm.getOnlineOnly()) {
+//                queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
+//            }
+//        }
         queryParams.addJoihFetch("equipment", JoinType.LEFT);
         Specification<Vehicle> specification = Specification.where(queryParams);
         if (StringUtils.isNotEmpty(vm.getLicensePlateNumberOrDeviceId())) {

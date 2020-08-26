@@ -137,8 +137,8 @@ public class VehicleDetailsDTO implements Serializable {
     private Long signalInd;
 
     @Size(max = 1)
-    @Pattern(regexp = "[AD]")
-    @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除", required = true)
+    @Pattern(regexp = "[ADI]")
+    @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除, I-已隐藏", required = true)
     private String status;
 
     @Size(max = 20)

@@ -34,6 +34,7 @@ public interface VehicleService {
         City city = vehicle.getCity();
         SecurityUtils.checkDataPermission(shop);
 
+
         dto.setShopId(shop.getId());
         if (Locale.CHINESE.equals(locale)) {
             //city & shop

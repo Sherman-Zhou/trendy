@@ -29,5 +29,8 @@ public class VehicleVM implements Serializable {
     @ApiModelProperty(value = "是否已绑定")
     private Boolean isBounded;
 
+    @ApiModelProperty("车辆状态： A-正常，  D-已删除, I-已隐藏")
+    private String status;
+
 
 }

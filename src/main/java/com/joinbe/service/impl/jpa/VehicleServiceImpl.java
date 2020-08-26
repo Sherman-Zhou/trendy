@@ -549,8 +549,14 @@ public class VehicleServiceImpl implements VehicleService {
                 vehicle.setNameCn(jpCar.getTitle());
                 vehicle.setContactNameCn(jpCar.getUser_name());
             }
+            if ("1".equals(car.getIsdel())) {
+                vehicle.setStatus(RecordStatus.DELETED);
+            } else if ("0".equals(car.getIsopen())) {
+                vehicle.setStatus(RecordStatus.INACTIVE);
+            } else {
+                vehicle.setStatus(RecordStatus.ACTIVE);
+            }
 
-            vehicle.setStatus(RecordStatus.ACTIVE);
             TrendyResponse.Shop shop = car.getShoplist();
             if (shop != null) {
                 vehicle.setShop(shopsInDb.get(Constants.SHOP_ID_PREFIX + shop.getId()));

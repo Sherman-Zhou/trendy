@@ -53,6 +53,10 @@ public class TrendyResponse implements Serializable {
         private Shop shoplist;
         // 城市
         private City citylist;
+
+        private String isdel;
+
+        private String isopen;
     }
 
     @Data
