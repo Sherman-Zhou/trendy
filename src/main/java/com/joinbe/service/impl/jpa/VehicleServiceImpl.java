@@ -146,8 +146,11 @@ public class VehicleServiceImpl implements VehicleService {
         }
 
         // only active vehicle...
-        queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
-
+        if (StringUtils.isNotEmpty(vm.getStatus())) {
+            queryParams.and("status", Filter.Operator.eq, RecordStatus.resolve(vm.getStatus()));
+        } else {
+            queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
+        }
 
         if (vm.getIsBounded() != null) {
             queryParams.and("bounded", Filter.Operator.eq, vm.getIsBounded());
