@@ -1,7 +1,6 @@
 package com.joinbe.service.impl.jpa;
 
 import com.joinbe.common.excel.EquipmentData;
-import com.joinbe.common.util.BeanConverter;
 import com.joinbe.common.util.Filter;
 import com.joinbe.common.util.QueryParams;
 import com.joinbe.domain.Equipment;
@@ -100,7 +99,12 @@ public class EquipmentServiceImpl implements EquipmentService {
                 }
             }
 
-            BeanConverter.copyProperties(equipmentDTO, equipment, true);
+            //BeanConverter.copyProperties(equipmentDTO, equipment, true);
+            equipment.setIdentifyNumber(equipmentDTO.getIdentifyNumber());
+            equipment.setImei(equipmentDTO.getImei());
+            equipment.setSimCardNum(equipmentDTO.getSimCardNum());
+            equipment.setVersion(equipmentDTO.getVersion());
+            equipment.setRemark(equipmentDTO.getRemark());
             SecurityUtils.checkMerchantPermission(userLoginInfo, equipment.getMerchant());
         } else {
             if (equipmentByIdNum.isPresent()) {
