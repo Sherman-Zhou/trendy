@@ -65,4 +65,7 @@ public interface StaffRepository extends JpaRepository<Staff, Long>, JpaSpecific
 
     @EntityGraph(attributePaths = {"cities", "shops"})
     Optional<Staff> findOneWithDivisionsByLogin(String login);
+
+    @Query("select user from Staff user join user.roles roles join user.merchant m where roles.code =:roleCode and user.status <> 'D' and m.id =:merchantId")
+    List<Staff> findMerchantAdmin(@Param("roleCode") String roleCode, @Param("merchantId") Long merchantId);
 }

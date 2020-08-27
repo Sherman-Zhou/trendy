@@ -22,6 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import java.time.Instant;
 import java.util.Date;
@@ -125,6 +126,8 @@ public class EquipmentFaultServiceImpl implements EquipmentFaultService {
             Date endDate = DateUtils.parseDate(vm.getEndDate() + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME);
             queryParams.and("createdDate", Filter.Operator.lessThanOrEqualTo, endDate);
         }
+        queryParams.addJoihFetch("equipment", JoinType.LEFT);
+        queryParams.addJoihFetch("vehicle", JoinType.LEFT);
         Specification<EquipmentFault> specification = Specification.where(queryParams);
         if (StringUtils.isNotEmpty(vm.getEquipmentIdNum())) {
 

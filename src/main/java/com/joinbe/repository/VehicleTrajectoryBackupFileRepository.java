@@ -15,7 +15,7 @@ import java.util.List;
 public interface VehicleTrajectoryBackupFileRepository extends JpaRepository<VehicleTrajectoryBackupFile, Long>,
     JpaSpecificationExecutor<VehicleTrajectoryBackupFile> {
 
-    List<VehicleTrajectoryBackupFile> getAllByMerchantId(Long merchantId);
+    List<VehicleTrajectoryBackupFile> getAllByMerchantIdOrderByGeneratedOnDesc(Long merchantId);
 
 }
 

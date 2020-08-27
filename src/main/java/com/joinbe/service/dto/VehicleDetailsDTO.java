@@ -3,7 +3,6 @@ package com.joinbe.service.dto;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -24,7 +23,7 @@ public class VehicleDetailsDTO implements Serializable {
      * 车牌
      */
     @Size(max = 20)
-    @NotBlank
+//    @NotBlank
     @ApiModelProperty(value = "车牌")
     private String licensePlateNumber;
 
@@ -138,8 +137,8 @@ public class VehicleDetailsDTO implements Serializable {
     private Long signalInd;
 
     @Size(max = 1)
-    @Pattern(regexp = "[AD]")
-    @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除", required = true)
+    @Pattern(regexp = "[ADI]")
+    @ApiModelProperty(value = "状态", example = "A-已启用，  D-已删除, I-已隐藏", required = true)
     private String status;
 
     @Size(max = 20)

@@ -11,6 +11,7 @@ import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.*;
 import com.joinbe.repository.*;
+import com.joinbe.security.AuthoritiesConstants;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.VehicleService;
@@ -27,12 +28,14 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -58,6 +61,8 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final RestfulClient restfulClient;
 
+    private final StaffRepository staffRepository;
+
     private final EquipmentOperationRecordRepository operationRecordRepository;
 
     private final ApplicationProperties applicationProperties;
@@ -68,7 +73,8 @@ public class VehicleServiceImpl implements VehicleService {
 
     public VehicleServiceImpl(VehicleRepository vehicleRepository, EquipmentRepository equipmentRepository,
                               ShopRepository shopRepository, CityRepository cityRepository, MessageSource messageSource,
-                              RestfulClient restfulClient, EquipmentOperationRecordRepository operationRecordRepository,
+                              RestfulClient restfulClient, StaffRepository staffRepository,
+                              EquipmentOperationRecordRepository operationRecordRepository,
                               ApplicationProperties applicationProperties, RedissonEquipmentStore redisStore) {
         this.vehicleRepository = vehicleRepository;
         this.equipmentRepository = equipmentRepository;
@@ -76,6 +82,7 @@ public class VehicleServiceImpl implements VehicleService {
         this.cityRepository = cityRepository;
         this.messageSource = messageSource;
         this.restfulClient = restfulClient;
+        this.staffRepository = staffRepository;
         this.operationRecordRepository = operationRecordRepository;
         this.applicationProperties = applicationProperties;
         this.redisStore = redisStore;
@@ -139,18 +146,12 @@ public class VehicleServiceImpl implements VehicleService {
         }
 
         // only active vehicle...
-        queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
-
-        if (StringUtils.isNotEmpty(vm.getBrand())) {
-            queryParams.and("brand", Filter.Operator.like, vm.getBrand());
-        }
-        if (StringUtils.isNotEmpty(vm.getName())) {
-            queryParams.and("name", Filter.Operator.like, vm.getName());
+        if (StringUtils.isNotEmpty(vm.getStatus())) {
+            queryParams.and("status", Filter.Operator.eq, RecordStatus.resolve(vm.getStatus()));
+        } else {
+            queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
         }
 
-        if (StringUtils.isNotEmpty(vm.getLicensePlateNumber())) {
-            queryParams.and("licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
-        }
         if (vm.getIsBounded() != null) {
             queryParams.and("bounded", Filter.Operator.eq, vm.getIsBounded());
         }
@@ -167,7 +168,41 @@ public class VehicleServiceImpl implements VehicleService {
         }
         queryParams.addJoihFetch("equipment", JoinType.LEFT);
 
-        return vehicleRepository.findAll(queryParams, pageable)
+        Specification<Vehicle> specification = Specification.where(queryParams);
+
+        if (StringUtils.isNotEmpty(vm.getBrand())) {
+            // queryParams.and("brand", Filter.Operator.like, vm.getBrand());
+            Specification<Vehicle> brandSpecification = (Specification<Vehicle>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate cnPredicate = criteriaBuilder.like(root.get("brandCn"), "%" + vm.getBrand().trim() + "%");
+                Predicate jpPredicate = criteriaBuilder.like(root.get("brandJp"), "%" + vm.getBrand().trim() + "%");
+                Predicate enPredicate = criteriaBuilder.like(root.get("brand"), "%" + vm.getBrand().trim() + "%");
+                return criteriaBuilder.or(enPredicate, jpPredicate, cnPredicate);
+            };
+            specification = specification.and(brandSpecification);
+        }
+        if (StringUtils.isNotEmpty(vm.getName())) {
+            // queryParams.and("name", Filter.Operator.like, vm.getName());
+            Specification<Vehicle> nameSpecification = (Specification<Vehicle>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate cnPredicate = criteriaBuilder.like(root.get("nameCn"), "%" + vm.getName().trim() + "%");
+                Predicate jpPredicate = criteriaBuilder.like(root.get("nameJp"), "%" + vm.getName().trim() + "%");
+                Predicate enPredicate = criteriaBuilder.like(root.get("name"), "%" + vm.getName().trim() + "%");
+                return criteriaBuilder.or(enPredicate, jpPredicate, cnPredicate);
+            };
+            specification = specification.and(nameSpecification);
+        }
+
+        if (StringUtils.isNotEmpty(vm.getLicensePlateNumber())) {
+            //queryParams.and("licensePlateNumber", Filter.Operator.like, vm.getLicensePlateNumber());
+            Specification<Vehicle> nameSpecification = (Specification<Vehicle>) (root, criteriaQuery, criteriaBuilder) -> {
+                Predicate cnPredicate = criteriaBuilder.like(root.get("licensePlateNumberCn"), "%" + vm.getLicensePlateNumber().trim() + "%");
+                Predicate jpPredicate = criteriaBuilder.like(root.get("licensePlateNumberJp"), "%" + vm.getLicensePlateNumber().trim() + "%");
+                Predicate enPredicate = criteriaBuilder.like(root.get("licensePlateNumber"), "%" + vm.getLicensePlateNumber().trim() + "%");
+                return criteriaBuilder.or(enPredicate, jpPredicate, cnPredicate);
+            };
+            specification = specification.and(nameSpecification);
+        }
+
+        return vehicleRepository.findAll(specification, pageable)
             .map(VehicleService::toDto);
     }
 
@@ -338,7 +373,7 @@ public class VehicleServiceImpl implements VehicleService {
         Merchant userMerchant = new Merchant();
         userMerchant.setId(userLoginInfo.getMerchantId());
 
-        City root = cityRepository.getOne(Constants.CITY_ROOT_ID);
+        City root = cityRepository.findById(Constants.CITY_ROOT_ID).orElse(new City(Constants.CITY_ROOT_ID));
 
         int fetchSize = 9999;
         Map<String, String> urlParams = new HashMap<>();
@@ -408,15 +443,18 @@ public class VehicleServiceImpl implements VehicleService {
                 city.setNameCn(cityCn.getName());
             }
             city.setStatus(RecordStatus.ACTIVE);
-            city.setParentId(trendyCity.getParentId());
+            if (trendyCity.getParentId() != null) {
+                city.setParentId(Constants.CITY_ID_PREFIX + trendyCity.getParentId());
+            }
         }
+
 
         Collection<City> allCitiesInDb = citiesInDb.values();
         for (City city : allCitiesInDb) {
             if (Constants.CITY_ROOT_ID.equals(city.getId())) {
                 continue;
             }
-            if (StringUtils.isNotEmpty(city.getParentId())) {
+            if (StringUtils.isNotEmpty(city.getParentId()) && !Constants.CITY_ROOT_ID.equals(city.getParentId())) {
                 City parent = citiesInDb.get(Constants.CITY_ID_PREFIX + city.getParentId());
                 parent.getChildren().add(city);
                 city.setParent(parent);
@@ -462,6 +500,12 @@ public class VehicleServiceImpl implements VehicleService {
             shop.setStatus(RecordStatus.ACTIVE);
             shopRepository.save(shop);
         }
+        //add new cities and shops to merchant's admin
+        List<Staff> admins = staffRepository.findMerchantAdmin(AuthoritiesConstants.ROLE_MERCHANT_ADMIN, userLoginInfo.getMerchantId());
+        for (Staff admin : admins) {
+            admin.getCities().addAll(newCities);
+            admin.getShops().addAll(newShops);
+        }
 
         for (TrendyResponse.Car car : en) {
 
@@ -491,7 +535,7 @@ public class VehicleServiceImpl implements VehicleService {
 
             if (jpCarMap.get(car.getId()) != null) {
                 TrendyResponse.Car jpCar = jpCarMap.get(car.getId());
-                vehicle.setLicensePlateNumber(jpCar.getPlate_number());
+                vehicle.setLicensePlateNumberJp(jpCar.getPlate_number());
                 vehicle.setBrandJp(jpCar.getBrand_name());
                 vehicle.setStyleJp(jpCar.getBrand_style());
                 vehicle.setTypeJp(jpCar.getBrand_model());
@@ -508,8 +552,14 @@ public class VehicleServiceImpl implements VehicleService {
                 vehicle.setNameCn(jpCar.getTitle());
                 vehicle.setContactNameCn(jpCar.getUser_name());
             }
+            if ("1".equals(car.getIsdel())) {
+                vehicle.setStatus(RecordStatus.DELETED);
+            } else if ("0".equals(car.getIsopen())) {
+                vehicle.setStatus(RecordStatus.INACTIVE);
+            } else {
+                vehicle.setStatus(RecordStatus.ACTIVE);
+            }
 
-            vehicle.setStatus(RecordStatus.ACTIVE);
             TrendyResponse.Shop shop = car.getShoplist();
             if (shop != null) {
                 vehicle.setShop(shopsInDb.get(Constants.SHOP_ID_PREFIX + shop.getId()));

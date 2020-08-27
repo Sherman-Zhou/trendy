@@ -21,6 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import java.util.Date;
 import java.util.Optional;
@@ -96,13 +97,17 @@ public class EquipmentOperationRecordServiceImpl implements EquipmentOperationRe
             queryParams.and("createdDate", Filter.Operator.lessThanOrEqualTo, endDate);
         }
 
+        queryParams.addJoihFetch("vehicle", JoinType.LEFT);
+        queryParams.addJoihFetch("equipment", JoinType.LEFT);
         Specification<EquipmentOperationRecord> specification = Specification.where(queryParams);
         if (StringUtils.isNotEmpty(vm.getUserId())) {
             Specification<EquipmentOperationRecord> itemSpecification = (Specification<EquipmentOperationRecord>) (root, criteriaQuery, criteriaBuilder) -> {
                 Predicate identifyNumberPredicate = criteriaBuilder.like(root.get("equipment").get("identifyNumber"), "%" + vm.getUserId().trim() + "%");
                 Predicate createdByPredicate = criteriaBuilder.like(root.get("createdBy"), "%" + vm.getUserId().trim() + "%");
                 Predicate licensePlateNumberPredicate = criteriaBuilder.like(root.get("vehicle").get("licensePlateNumber"), "%" + vm.getUserId().trim() + "%");
-                return criteriaBuilder.or(identifyNumberPredicate, createdByPredicate, licensePlateNumberPredicate);
+                Predicate licensePlateNumberPredicateCn = criteriaBuilder.like(root.get("vehicle").get("licensePlateNumberCn"), "%" + vm.getUserId().trim() + "%");
+                Predicate licensePlateNumberPredicateJp = criteriaBuilder.like(root.get("vehicle").get("licensePlateNumberJp"), "%" + vm.getUserId().trim() + "%");
+                return criteriaBuilder.or(identifyNumberPredicate, createdByPredicate, licensePlateNumberPredicate, licensePlateNumberPredicateJp, licensePlateNumberPredicateCn);
             };
             specification = specification.and(itemSpecification);
         }

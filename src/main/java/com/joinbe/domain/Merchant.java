@@ -89,5 +89,12 @@ public class Merchant extends AbstractAuditingEntity implements Serializable {
         this.staffs = staffs;
     }
 
-
+    @Override
+    public String toString() {
+        return "Merchant{" +
+            "id=" + id +
+            ", name='" + name + '\'' +
+            ", description='" + description + '\'' +
+            '}';
+    }
 }

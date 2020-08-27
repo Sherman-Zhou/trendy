@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import java.io.File;
 import java.io.InputStream;
@@ -237,6 +238,7 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 
         QueryParams<Vehicle> queryParams = new QueryParams<>();
         queryParams.and("status", Filter.Operator.eq, RecordStatus.ACTIVE);
+        queryParams.and("equipment.isOnline", Filter.Operator.eq, Boolean.TRUE);
 //        if (vm.getDivisionId() != null) {
 //            SecurityUtils.checkDataPermission(vm.getDivisionId());
 //            queryParams.and("division.id", Filter.Operator.eq, vm.getDivisionId());
@@ -244,18 +246,21 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
 //            // add user's division condition
 //            queryParams.and("division.id", Filter.Operator.in, SecurityUtils.getCurrentUserDivisionIds());
 //        } //FIXME: permission check
-        if (vm.getOnlineOnly() != null) {
-            if (vm.getOnlineOnly()) {
-                queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
-            }
-        }
+//        if (vm.getOnlineOnly() != null) {
+//            if (vm.getOnlineOnly()) {
+//                queryParams.and("equipment.isOnline", Filter.Operator.eq, vm.getOnlineOnly());
+//            }
+//        }
+        queryParams.addJoihFetch("equipment", JoinType.LEFT);
         Specification<Vehicle> specification = Specification.where(queryParams);
         if (StringUtils.isNotEmpty(vm.getLicensePlateNumberOrDeviceId())) {
             //name or account search...
             Specification<Vehicle> itemSpecification = (Specification<Vehicle>) (root, criteriaQuery, criteriaBuilder) -> {
                 Predicate namePredicate = criteriaBuilder.like(root.get("licensePlateNumber"), "%" + vm.getLicensePlateNumberOrDeviceId().trim() + "%");
+                Predicate cnPredicate = criteriaBuilder.like(root.get("licensePlateNumberCn"), "%" + vm.getLicensePlateNumberOrDeviceId().trim() + "%");
+                Predicate jpPredicate = criteriaBuilder.like(root.get("licensePlateNumberJp"), "%" + vm.getLicensePlateNumberOrDeviceId().trim() + "%");
                 Predicate loginPredicate = criteriaBuilder.like(root.get("equipment").get("identifyNumber"), "%" + vm.getLicensePlateNumberOrDeviceId().trim() + "%");
-                return criteriaBuilder.or(namePredicate, loginPredicate);
+                return criteriaBuilder.or(namePredicate, cnPredicate, jpPredicate, loginPredicate);
             };
             specification = specification.and(itemSpecification);
         }
@@ -414,8 +419,8 @@ public class VehicleTrajectoryServiceImpl implements VehicleTrajectoryService {
         SystemConfigDTO dto = systemConfigService.find();
 
         String yesterdayStr = DateUtils.formatDate(Instant.now().minus(1, ChronoUnit.DAYS), DateUtils.PATTERN_DATE);
-        Instant yesterday = DateUtils.parseDate(yesterdayStr, DateUtils.PATTERN_DATE).toInstant();
-        Instant from = DateUtils.parseDate(dto.getLastBackupTime(), DateUtils.PATTERN_DATE).toInstant().plus(1, ChronoUnit.DAYS);
+        Instant yesterday = DateUtils.parseDate(yesterdayStr + DateUtils.END_DATE_TIME, DateUtils.PATTERN_DATEALLTIME).toInstant();
+        Instant from = DateUtils.parseDate(dto.getLastBackupTime(), DateUtils.PATTERN_DATE).toInstant();
 
         String fileName = messageSource.getMessage("trajectory.excel.fileName", null, null, locale)
             + dto.getLastBackupTime() + "-" + yesterdayStr + ".xlsx";
