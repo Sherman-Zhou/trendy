@@ -130,8 +130,20 @@ public class RedissonEquipmentStore {
     public boolean isDeviceExisted(String deviceId) {
         RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_SERVER_KEY);
         String serverIp = deviceServerMap.get(DEVICE_SERVER_KEY_PREFIX + deviceId);
-        log.debug("serverIp in redis for deviceId {}:{}", serverIp, deviceId);
+        log.debug("serverIp in redis for deviceId {}:{}", deviceId, serverIp);
         return StringUtils.isNotEmpty(serverIp);
+    }
+
+    /**
+     *
+     * @param deviceId
+     * @return
+     */
+    public String getForServer(String deviceId) {
+        RMapCache<String, String> deviceServerMap = redissonClient.getMapCache(DEVICE_SERVER_KEY);
+        String serverIp = deviceServerMap.get(DEVICE_SERVER_KEY_PREFIX + deviceId);
+        log.debug("serverIp in redis for deviceId {}:{}", deviceId, serverIp);
+        return serverIp;
     }
 
     /**

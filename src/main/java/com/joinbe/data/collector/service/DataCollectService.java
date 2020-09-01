@@ -394,6 +394,12 @@ public class DataCollectService {
         equipmentFaultRepository.save(equipmentFault);
     }
 
+    /**
+     *
+     * @param deviceNo
+     * @param isOnLine
+     * @param isMoving
+     */
     @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
     public void updateStatus(String deviceNo, boolean isOnLine, boolean isMoving) {
         Optional<Equipment> equipment = equipmentRepository.findOneByImei(deviceNo);
@@ -408,6 +414,24 @@ public class DataCollectService {
         Equipment ept = equipment.get();
         ept.setOnline(isOnLine);
         ept.getVehicle().setIsMoving(isMoving);
+        equipmentRepository.save(ept);
+    }
+
+    /**
+     *
+     * @param deviceNo
+     * @param isOnLine
+     */
+    @Transactional(rollbackFor = Exception.class, propagation = Propagation.REQUIRES_NEW)
+    public void updateStatus(String deviceNo, boolean isOnLine) {
+        Optional<Equipment> equipment = equipmentRepository.findOneByImei(deviceNo);
+        if (!equipment.isPresent()) {
+            log.warn("Refused to update status, equipment not maintained yet, imei: {}", deviceNo);
+            return;
+        }
+        log.debug("In UpdateStatus, request for update equipment online status, deviceNo: {},  online: {}", deviceNo,isOnLine);
+        Equipment ept = equipment.get();
+        ept.setOnline(isOnLine);
         equipmentRepository.save(ept);
     }
 

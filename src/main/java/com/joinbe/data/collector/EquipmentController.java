@@ -10,6 +10,7 @@ import com.joinbe.data.collector.netty.protocol.code.EventEnum;
 import com.joinbe.data.collector.service.DataCollectService;
 import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
+import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.*;
 import com.joinbe.domain.enumeration.EventCategory;
 import com.joinbe.domain.enumeration.EventType;
@@ -22,6 +23,7 @@ import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
 import com.joinbe.security.SecurityUtils;
 import com.joinbe.security.UserLoginInfo;
 import com.joinbe.service.EquipmentService;
+import com.joinbe.service.util.RestfulClient;
 import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
@@ -35,6 +37,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.context.request.async.DeferredResult;
 
 import javax.persistence.criteria.JoinType;
@@ -70,11 +73,21 @@ public class EquipmentController {
     @Autowired
     private SystemConfigRepository systemConfigRepository;
 
+    @Autowired
+    private RedissonEquipmentStore redissonEquipmentStore;
+
     @Value("${netty.query-timeout}")
     private Long queryTimeout;
 
+    @Value("${netty.server-url}")
+    private String serverUrl;
+
     @Autowired
     private DataCollectService dataCollectService;
+
+    @Autowired
+    private RestfulClient restfulClient;
+
     /**
      *
      * @param deviceId
@@ -151,6 +164,25 @@ public class EquipmentController {
             deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
             return deferredResult;
         }
+        //Remote call
+        String server = redissonEquipmentStore.getForServer(deviceId);
+        logger.debug("Server info: deviceId: {}, server: {}", deviceId, server);
+        /*if(StringUtils.isNotEmpty(server) && !server.equals(serverUrl)){
+            StringBuffer callUrl = new StringBuffer().append(server).append("/lock");
+            logger.debug("Server remote call for equipment Lock request, device: {}, callUrl:{} ", deviceId, callUrl);
+            DoorResponseDTO doorResponse;
+            try {
+                doorResponse = restfulClient.postForObject(callUrl.toString(),lockDeviceReq, DoorResponseDTO.class);
+                deferredResult.setResult(new ResponseEntity<>(doorResponse, HttpStatus.OK));
+                return deferredResult;
+            } catch (RestClientException e) {
+                String message = "Server remote call failed for equipment Lock request, errorInfo: " + e.getMessage();
+                logger.error(message);
+                deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, message), HttpStatus.OK));
+                return deferredResult;
+            }
+        }*/
+
         EquipmentOperationRecord equipmentOperationRecord = new EquipmentOperationRecord();
         equipmentOperationRecord.setOperationSourceType(OperationSourceType.PLATFORM);
         equipmentOperationRecord.setEventType(EventCategory.LOCK);

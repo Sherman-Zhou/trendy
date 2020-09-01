@@ -19,6 +19,7 @@ import com.joinbe.domain.enumeration.*;
 import com.joinbe.repository.EquipmentRepository;
 import com.joinbe.repository.VehicleTrajectoryDetailsRepository;
 import com.joinbe.service.EquipmentService;
+import com.joinbe.service.util.RestfulClient;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -76,8 +77,14 @@ public class EquipmentExtController {
     @Autowired
     private RedissonEquipmentStore redissonEquipmentStore;
 
+    @Autowired
+    private RestfulClient restfulClient;
+
     @Value("${netty.query-timeout}")
     private Long queryTimeout;
+
+    @Value("${netty.server-url}")
+    private String serverUrl;
 
     @PostMapping("/location/device")
     @ApiOperation("根据设备IMEI获取设备的实时位置")

@@ -9,7 +9,6 @@ import com.joinbe.data.collector.service.dto.*;
 import com.joinbe.data.collector.store.LocalEquipmentStroe;
 import com.joinbe.data.collector.store.RedissonEquipmentStore;
 import com.joinbe.domain.enumeration.*;
-import com.joinbe.data.collector.service.dto.DoorResponseItemDTO;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -128,14 +127,14 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 channelIdAndDeviceIdMap.put(channel.id().asLongText(), deviceNo);
                 deviceIdAndChannelMap.put(deviceNo, channel);
                 redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
-                //更新设备的状态为在线，车辆的行驶状态为未知
-                /*channel.eventLoop().execute(new Runnable() {
+                //更新设备的状态为在线
+                channel.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
                         log.debug("Get device's connection, set status to online, deviceNo: {}", deviceNo);
-                        dataCollectService.updateStatus(deviceNo, true, false);
+                        dataCollectService.updateStatus(deviceNo, true);
                     }
-                });*/
+                });
             }
             //handle event
         }else{
