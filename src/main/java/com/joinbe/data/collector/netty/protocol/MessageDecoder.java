@@ -32,7 +32,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext channelHandlerContext, ByteBuf buffer, List<Object> out) throws Exception {
         ByteBuf frame = buffer.retainedDuplicate();
         String data = convertByteBufToString(frame);
-        log.info("Orig data from equipment: {}", data);
+        log.debug("Orig data from equipment: {}", data);
         if (StrUtil.isEmpty(data)) {
             return;
         }
