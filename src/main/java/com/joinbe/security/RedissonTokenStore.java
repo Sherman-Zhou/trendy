@@ -3,6 +3,7 @@ package com.joinbe.security;
 import io.github.jhipster.config.JHipsterProperties;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RedissonClient;
+import org.redisson.api.map.event.EntryExpiredListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -33,15 +34,18 @@ public class RedissonTokenStore {
     public RedissonTokenStore(RedissonClient redissonClient, JHipsterProperties jHipsterProperties) {
         this.redissonClient = redissonClient;
         this.jHipsterProperties = jHipsterProperties;
-
+        RMapCache<String, UserLoginInfo> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
+        tokenMap.addListener((EntryExpiredListener<String, UserLoginInfo>) event -> log.debug(" the user {} token is expired....", event.getKey(), event.getValue()));
     }
 
     @PostConstruct
     public void init() {
         tokenValidityInSeconds = jHipsterProperties.getSecurity().getAuthentication().getJwt().getTokenValidityInSeconds();
+        log.debug("the expired time for redisson:{}secs", tokenValidityInSeconds);
     }
 
     public void saveLoginInfo(String login, UserLoginInfo loginInfo) {
+        log.debug("start to save use info in redisson: {}", login);
         RMapCache<String, UserLoginInfo> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
         tokenMap.put(login, loginInfo, tokenValidityInSeconds, TimeUnit.SECONDS);
     }
