@@ -73,7 +73,7 @@ public class DataCollectService {
         VehicleStatusEnum currentDeviceStatus = redissonEquipmentStore.getDeviceStatus(msg.getUnitId());
         VehicleFireStatusEnum currentFireStatus = redissonEquipmentStore.getDeviceFireStatus(msg.getUnitId());
 
-        log.debug("DeviceId: {}, previousDeviceStatus: {},  currentDeviceStatus: {}",msg.getUnitId(), previousDeviceStatus.getCode(), currentDeviceStatus.getCode());
+        log.info("DeviceId: {}, previousDeviceStatus: {},  currentDeviceStatus: {}",msg.getUnitId(), previousDeviceStatus.getCode(), currentDeviceStatus.getCode());
         log.info("DeviceId: {}, previousFireStatus: {},  currentFireStatus: {}",msg.getUnitId(), previousFireStatus.getCode(), currentFireStatus.getCode());
 
         //更新车辆状态
@@ -270,11 +270,11 @@ public class DataCollectService {
         //handle iButton
         if(EventIDEnum.TRACK_POSITION_DATA.getEventId().equals(eventId)){
             if(StringUtils.isNotBlank(msg.getIbuttonId())){
-                log.debug("IButton in attached status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
+                log.info("IButton in attached status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
                 redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(), IbuttonStatusEnum.ATTACHED);
                 redissonEquipmentStore.putInRedisForIButtonId(msg.getUnitId(), msg.getIbuttonId());
             }else{
-                log.debug("IButton in removed status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
+                log.info("IButton in removed status, device:{}, iButtonId:{}", msg.getUnitId(), msg.getIbuttonId());
                 redissonEquipmentStore.putInRedisForIButtonStatus(msg.getUnitId(),IbuttonStatusEnum.REMOVED);
             }
         }
@@ -429,7 +429,7 @@ public class DataCollectService {
             log.warn("Refused to update status, equipment not maintained yet, imei: {}", deviceNo);
             return;
         }
-        log.debug("In UpdateStatus, request for update equipment online status, deviceNo: {},  online: {}", deviceNo,isOnLine);
+        log.info("In UpdateStatus, request for update equipment online status, deviceNo: {},  online: {}", deviceNo,isOnLine);
         Equipment ept = equipment.get();
         ept.setOnline(isOnLine);
         equipmentRepository.save(ept);
@@ -450,7 +450,7 @@ public class DataCollectService {
             log.warn("Refused to update blueName, equipment not maintained yet, imei: {}", deviceNo);
             return;
         }
-        log.debug("In updateBleName, request for update bluetooth name , deviceNo: {},  bleName: {},  isMoving: {}", deviceNo,bleName);
+        log.info("In updateBleName, request for update bluetooth name , deviceNo: {},  bleName: {}", deviceNo,bleName);
         Equipment ept = equipment.get();
         ept.setBluetoothName(bleName);
         equipmentRepository.save(ept);

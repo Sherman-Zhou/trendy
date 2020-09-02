@@ -99,7 +99,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    log.debug("ChannelUnregistered, Device is offline, set status to offline, deviceNo: {}", deviceNo);
+                    log.info("ChannelUnregistered, Device is offline, set status to offline, deviceNo: {}", deviceNo);
                     dataCollectService.updateStatus(deviceNo, false, false);
                 }
             }).start();
@@ -116,14 +116,14 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ProtocolMessage msg) {
         Channel channel = ctx.channel();
-        log.debug("收到客户端消息,Ip: {}, Id:{}, 消息：{}", channel.remoteAddress(), channel.id().asLongText(),JSONUtil.toJsonStr(msg));
+        log.debug("Received the client's message, Ip: {}, Id:{}, message：{}", channel.remoteAddress(), channel.id().asLongText(),JSONUtil.toJsonStr(msg));
 
         //Position message
         String deviceNo;
         if(msg instanceof PositionProtocol){
             deviceNo = ((PositionProtocol)msg).getUnitId();
             if(!channelIdAndDeviceIdMap.containsKey(channel.id().asLongText())){
-                log.debug("客户端首次加入，Ip: {}, Id:{}，deviceNo:{}", channel.remoteAddress(), channel.id().asLongText(),deviceNo);
+                log.info("Client is connected，Ip: {}, Id:{}，deviceNo:{}", channel.remoteAddress(), channel.id().asLongText(),deviceNo);
                 channelIdAndDeviceIdMap.put(channel.id().asLongText(), deviceNo);
                 deviceIdAndChannelMap.put(deviceNo, channel);
                 redissonEquipmentStore.putInRedisForServer(deviceNo,serverIp);
@@ -131,7 +131,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                 channel.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
-                        log.debug("Get device's connection, set status to online, deviceNo: {}", deviceNo);
+                        log.info("Get device's connection, set status to online, deviceNo: {}", deviceNo);
                         dataCollectService.updateStatus(deviceNo, true);
                     }
                 });
@@ -141,7 +141,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
             deviceNo = channelIdAndDeviceIdMap.get(channel.id().asLongText());
             log.debug("query result, device:data {}:{}", deviceNo, msg.getData());
             if(StringUtils.isBlank(deviceNo)){
-                log.warn("Device not yet bound channel");
+                log.warn("Device not yet bound channel, channelId: {}", channel.id().asLongText());
                 return;
             }
         }
@@ -271,9 +271,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         InetSocketAddress insocket = (InetSocketAddress) ctx.channel().remoteAddress();
         String clientIp = insocket.getAddress().getHostAddress();
-        log.debug("客户端通道激活：clientIp：{}" ,clientIp);
+        log.info("Client channel is active, clientIp：{}" ,clientIp);
         //send first command.
-        log.debug("发送初始消息：{}", this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
+        log.debug("Send initial message：{}", this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
         ctx.channel().writeAndFlush(this.factory.createInstance(EventEnum.GPOS.getEvent()).initCmd(new HashMap<>()));
         super.channelActive(ctx);
     }
@@ -286,7 +286,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
-        log.debug("客户端开始下线, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
+        log.info("Client channel is inactive, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
         super.channelInactive(ctx);
     }
     /**
@@ -313,11 +313,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
-        log.debug("客户端已经下线, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
+        log.info("Client is offline already, Ip: {}, Id:{} ", channel.remoteAddress(), channel.id().asLongText());
         channelGroup.writeAndFlush("服务器 - " + channel.remoteAddress() + "离开\n");
         // 移出(netty会自动执行，不写也行)
         channelGroup.remove(channel);
-        log.debug("客户端总数：{}", channelGroup.size());
+        log.info("Total number of clients：{}", channelGroup.size());
         super.handlerRemoved(ctx);
     }
     /**
@@ -329,7 +329,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         // 当出现异常就关闭连接
         Channel channel = ctx.channel();
-        log.error("客户端异常:{}，关闭连接, Ip: {}, Id:{}",cause.getMessage(),channel.remoteAddress(), channel.id().asLongText());
+        log.error("Client error :{}，try to restart the connection, Ip: {}, Id:{}",cause.getMessage(),channel.remoteAddress(), channel.id().asLongText());
         ctx.close();
     }
     /**
@@ -378,12 +378,12 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
      * @param deferredResult
      */
     public void sendCommonQueryMessage(String deviceId, String event, EventEnum eventEnum, DeferredResult<ResponseEntity<ResponseDTO>> deferredResult) {
-        for (Map.Entry<String, Channel> entry : deviceIdAndChannelMap.entrySet()) {
+        /*for (Map.Entry<String, Channel> entry : deviceIdAndChannelMap.entrySet()) {
             log.debug("deviceIdAndChannelMap Key: {}; value:{} ", entry.getKey() ,entry.getValue().id().asLongText());
         }
         for (Map.Entry<String, String> entry : channelIdAndDeviceIdMap.entrySet()) {
             log.debug("channelIdAndDeviceIdMap Key: {}; value:{} ", entry.getKey() ,entry.getValue());
-        }
+        }*/
         Channel c = deviceIdAndChannelMap.get(deviceId);
         if (c == null) {
             String strInfo= "Equipment is offline, Please try later, device: " + deviceId;
