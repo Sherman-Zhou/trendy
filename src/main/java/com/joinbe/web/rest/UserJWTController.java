@@ -75,15 +75,15 @@ public class UserJWTController {
                 userOptional = staffService.findOneByLogin(lowercaseLogin);
             }
             if (userOptional.isPresent()) {
-                String currentEncryptedPassword = userOptional.get().getPassword();
-                if (passwordEncoder.matches(loginVM.getPassword(), currentEncryptedPassword)) {
-                    //need register email before login
-                    if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
-                        JWTToken token = new JWTToken();
-                        token.setNeedRegister(true);
-                        return new ResponseEntity<>(token, HttpStatus.OK);
-                    }
+                String currentEncryptedPassword = userOptional.get().getPasswordHash();
+                //if (passwordEncoder.matches(loginVM.getPassword(), currentEncryptedPassword)) {
+                //need register email before login
+                if (StringUtils.isNotEmpty(userOptional.get().getActivationKey())) {
+                    JWTToken token = new JWTToken();
+                    token.setNeedRegister(true);
+                    return new ResponseEntity<>(token, HttpStatus.OK);
                 }
+                //}
             }
         } else {
             userOptional = staffService.getSystemUserWithAuthorities(lowercaseLogin);

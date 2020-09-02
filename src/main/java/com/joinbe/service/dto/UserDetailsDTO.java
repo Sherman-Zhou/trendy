@@ -56,6 +56,8 @@ public class UserDetailsDTO extends UserDTO {
     @ApiModelProperty(value = "激活key", hidden = true)
     private String activationKey;
 
+    private String passwordHash;
+
 
     public UserDetailsDTO() {
         // Empty constructor needed for Jackson.
@@ -73,6 +75,7 @@ public class UserDetailsDTO extends UserDTO {
         this.setLangKey(staff.getLangKey());
         this.setMerchantId(staff.getMerchant().getId());
         this.setActivationKey(staff.getActivationKey());
+        this.setPasswordHash(staff.getPassword());
         this.version = staff.getVersion();
         this.roles = staff.getRoles().stream()
             .map(RoleService::toDto)
