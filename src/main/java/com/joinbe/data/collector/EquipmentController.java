@@ -261,7 +261,7 @@ public class EquipmentController {
         //Do validation
         String bleName = equipment.get().getBluetoothName();
         String deviceId = equipment.get().getImei();
-        if(bleDeviceReq.getBleName().equals(bleName)){
+        /*if(bleDeviceReq.getBleName().equals(bleName)){
             String message = "No changes for current bluetooth name: " + bleDeviceReq.getBleName();
             logger.debug(message);
             deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, message), HttpStatus.OK));
@@ -274,6 +274,13 @@ public class EquipmentController {
                 deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, message), HttpStatus.OK));
                 return deferredResult;
             }
+        }*/
+        Optional<Equipment> equipmentByBluetoothName = equipmentService.findByBluetoothName(bleDeviceReq.getBleName());
+        if(equipmentByBluetoothName.isPresent() && !bleDeviceReq.getImei().equals(equipmentByBluetoothName.get().getImei())){
+            String message = "Bluetooth name already used by other equipment, imei is:" + equipmentByBluetoothName.get().getImei();
+            logger.debug(message);
+            deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, message), HttpStatus.OK));
+            return deferredResult;
         }
 
         HashMap<String, String> params = new HashMap<>(8);
