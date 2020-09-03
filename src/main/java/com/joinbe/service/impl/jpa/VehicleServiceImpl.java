@@ -554,6 +554,9 @@ public class VehicleServiceImpl implements VehicleService {
             }
             if ("1".equals(car.getIsdel())) {
                 vehicle.setStatus(RecordStatus.DELETED);
+                vehicle.setLicensePlateNumber(vehicle.getLicensePlateNumber() + "_D");
+                vehicle.setLicensePlateNumberCn(vehicle.getLicensePlateNumberCn() + "_D");
+                vehicle.setLicensePlateNumberJp(vehicle.getLicensePlateNumberJp() + "_D");
             } else if ("0".equals(car.getIsopen())) {
                 vehicle.setStatus(RecordStatus.INACTIVE);
             } else {
