@@ -190,16 +190,32 @@ public class EquipmentController {
         equipmentOperationRecord.setVehicle(vehicle.get());
 
         HashMap<String, String> params = new HashMap<>(8);
-        if ("open".equalsIgnoreCase(lockDeviceReq.getMode())) {
-            params.put(DoorCmd.MODE, "1");
-            equipmentOperationRecord.setEventDesc(EventType.UNLOCK);
-        } else if ("close".equalsIgnoreCase(lockDeviceReq.getMode())) {
-            params.put(DoorCmd.MODE, "0");
-            equipmentOperationRecord.setEventDesc(EventType.LOCK);
-        } else {
-            deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unknown lock mode."), HttpStatus.OK));
-            return deferredResult;
+        Long signalInd = vehicle.get().getSignalInd();
+        //0-正向讯号，1-反向讯号
+        if(Long.valueOf("1").equals(signalInd)){
+            if ("open".equalsIgnoreCase(lockDeviceReq.getMode())) {
+                params.put(DoorCmd.MODE, "0");
+                equipmentOperationRecord.setEventDesc(EventType.UNLOCK);
+            } else if ("close".equalsIgnoreCase(lockDeviceReq.getMode())) {
+                params.put(DoorCmd.MODE, "1");
+                equipmentOperationRecord.setEventDesc(EventType.LOCK);
+            } else {
+                deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unknown lock mode."), HttpStatus.OK));
+                return deferredResult;
+            }
+        }else{
+            if ("open".equalsIgnoreCase(lockDeviceReq.getMode())) {
+                params.put(DoorCmd.MODE, "1");
+                equipmentOperationRecord.setEventDesc(EventType.UNLOCK);
+            } else if ("close".equalsIgnoreCase(lockDeviceReq.getMode())) {
+                params.put(DoorCmd.MODE, "0");
+                equipmentOperationRecord.setEventDesc(EventType.LOCK);
+            } else {
+                deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unknown lock mode."), HttpStatus.OK));
+                return deferredResult;
+            }
         }
+
         Cmd cmd = factory.createInstance(EventEnum.DOOR.getEvent());
         if (cmd == null) {
             deferredResult.setResult(new ResponseEntity<>(new DoorResponseDTO(1, "Unimplemented command, please check with admin"), HttpStatus.OK));
