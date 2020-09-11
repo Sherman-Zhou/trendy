@@ -12,7 +12,7 @@ public class SetTokenCmd extends AbstractCmdRegister implements Cmd {
 
     @Override
     public String initCmd(HashMap<String, String> params) {
-        StringBuilder cmdBuild = super.initCmdHeader();
+        StringBuffer cmdBuild = super.initCmdHeader();
         cmdBuild.append(StrUtil.C_COMMA)
                 .append(params.get(TOKEN))
                 .append(CMD_END);

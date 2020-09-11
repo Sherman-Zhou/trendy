@@ -12,7 +12,7 @@ public class SetUserEventCmd extends AbstractCmdRegister implements Cmd {
 
     @Override
     public String initCmd(HashMap<String, String> params) {
-        StringBuilder cmdBuild = super.initCmdHeader();
+        StringBuffer cmdBuild = super.initCmdHeader();
         cmdBuild.append(StrUtil.C_COMMA)
                 //100
                 .append(params.get(KEY_USER_ID))

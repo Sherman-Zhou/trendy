@@ -13,7 +13,7 @@ public class LockCmd extends AbstractCmdRegister implements Cmd {
 
     @Override
     public String initCmd(HashMap<String, String> params) {
-        StringBuilder cmdBuild = super.initCmdHeader();
+        StringBuffer cmdBuild = super.initCmdHeader();
         cmdBuild.append(StrUtil.C_COMMA)
                 .append(params.get(KEY_OUTPUT_NUM))
                 .append(StrUtil.C_COMMA)

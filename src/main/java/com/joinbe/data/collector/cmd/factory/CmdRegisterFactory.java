@@ -9,13 +9,13 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class CmdRegisterFactory implements ApplicationListener<ContextRefreshedEvent> {
     protected final Logger log = LoggerFactory.getLogger(CmdRegisterFactory.class);
-    private static Map<String, Cmd> REGISTER_NAME_MAP = new HashMap<>();
+    private static Map<String, Cmd> REGISTER_NAME_MAP = new ConcurrentHashMap<>();
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {

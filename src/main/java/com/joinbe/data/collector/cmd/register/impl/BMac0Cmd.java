@@ -13,7 +13,7 @@ public class BMac0Cmd extends AbstractCmdRegister implements Cmd {
 
     @Override
     public String initCmd(HashMap<String, String> params) {
-        StringBuilder cmdBuild = super.initCmdHeader();
+        StringBuffer cmdBuild = super.initCmdHeader();
         cmdBuild.append(StrUtil.C_COMMA)
                 .append(0)
                 .append(StrUtil.C_COMMA)

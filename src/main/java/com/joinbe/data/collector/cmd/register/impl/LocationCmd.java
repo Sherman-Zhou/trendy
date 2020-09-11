@@ -13,7 +13,7 @@ public class LocationCmd extends AbstractCmdRegister implements Cmd {
 
     @Override
     public String initCmd(HashMap<String, String> params) {
-        StringBuilder cmdBuild = super.initCmdHeader();
+        StringBuffer cmdBuild = super.initCmdHeader();
         cmdBuild.append(StrUtil.C_COMMA)
                 .append(Constants.C_QUESTION_MARK)
                 .append(CMD_END);

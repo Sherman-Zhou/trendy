@@ -22,8 +22,8 @@ public abstract class AbstractCmdRegister {
      */
     abstract String getEvent();
 
-    protected StringBuilder initCmdHeader() {
-        StringBuilder cmdBuild = new StringBuilder();
+    protected StringBuffer initCmdHeader() {
+        StringBuffer cmdBuild = new StringBuffer();
         cmdBuild.append(CMD_HEAD)
                 .append(StrUtil.C_COMMA)
                 .append(getEvent())
