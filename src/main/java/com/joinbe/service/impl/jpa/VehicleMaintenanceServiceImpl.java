@@ -53,7 +53,11 @@ public class VehicleMaintenanceServiceImpl implements VehicleMaintenanceService 
         Vehicle vehicle = vehicleRepository.getOne(vehicleMaintenanceDTO.getVehicleId());
         vehicleMaintenance.setVehicle(vehicle);
         vehicleMaintenance = vehicleMaintenanceRepository.save(vehicleMaintenance);
-        return VehicleMaintenanceService.toDto(vehicleMaintenance);
+        VehicleMaintenanceDTO dto = VehicleMaintenanceService.toDto(vehicleMaintenance);
+        if (vehicle.getEquipment() != null) {
+            dto.setImei(vehicle.getEquipment().getImei());
+        }
+        return dto;
     }
 
     /**

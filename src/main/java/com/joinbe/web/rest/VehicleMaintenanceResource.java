@@ -1,15 +1,20 @@
 package com.joinbe.web.rest;
 
+import com.joinbe.data.collector.EquipmentController;
+import com.joinbe.data.collector.service.dto.DeviceInitMileageReq;
 import com.joinbe.service.VehicleMaintenanceService;
 import com.joinbe.service.dto.VehicleMaintenanceDTO;
+import com.joinbe.service.util.RestfulClient;
 import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.ResponseUtil;
 import com.joinbe.web.rest.vm.VehicleMaintenanceVM;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -30,9 +35,15 @@ public class VehicleMaintenanceResource {
     private final Logger log = LoggerFactory.getLogger(VehicleMaintenanceResource.class);
     private final VehicleMaintenanceService vehicleMaintenanceService;
 
+    private final RestfulClient restfulClient;
 
-    public VehicleMaintenanceResource(VehicleMaintenanceService vehicleMaintenanceService) {
+    private final EquipmentController equipmentController;
+
+
+    public VehicleMaintenanceResource(VehicleMaintenanceService vehicleMaintenanceService, RestfulClient restfulClient, EquipmentController equipmentController) {
         this.vehicleMaintenanceService = vehicleMaintenanceService;
+        this.restfulClient = restfulClient;
+        this.equipmentController = equipmentController;
     }
 
     /**
@@ -50,6 +61,12 @@ public class VehicleMaintenanceResource {
             throw new BadRequestAlertException("A new vehicleMaintenance cannot already have an ID", ENTITY_NAME, "idexists");
         }
         VehicleMaintenanceDTO result = vehicleMaintenanceService.save(vehicleMaintenanceDTO);
+        if (StringUtils.isNotEmpty(result.getImei())) {
+            DeviceInitMileageReq req = new DeviceInitMileageReq();
+            req.setImei(result.getImei());
+            req.setInitMileage(result.getMileage());
+            equipmentController.setMileageOffset(req, new BeanPropertyBindingResult(null, "DUMMY"));
+        }
         return ResponseEntity.created(new URI("/api/vehicle-maintenances/" + result.getId()))
             .body(result);
     }
@@ -70,8 +87,13 @@ public class VehicleMaintenanceResource {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
         VehicleMaintenanceDTO result = vehicleMaintenanceService.save(vehicleMaintenanceDTO);
-        return ResponseEntity.ok()
-            .body(result);
+        if (StringUtils.isNotEmpty(result.getImei())) {
+            DeviceInitMileageReq req = new DeviceInitMileageReq();
+            req.setImei(result.getImei());
+            req.setInitMileage(result.getMileage());
+            equipmentController.setMileageOffset(req, new BeanPropertyBindingResult(null, "DUMMY"));
+        }
+        return ResponseEntity.ok().body(result);
     }
 
 //    /**

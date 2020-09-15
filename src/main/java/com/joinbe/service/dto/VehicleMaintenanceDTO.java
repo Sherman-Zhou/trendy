@@ -16,6 +16,8 @@ public class VehicleMaintenanceDTO implements Serializable {
 
     private Long id;
 
+    private String imei;
+
     /**
      * 当前油量(L)
      */
@@ -126,6 +128,14 @@ public class VehicleMaintenanceDTO implements Serializable {
 
     public void setVehicleId(Long vehicleId) {
         this.vehicleId = vehicleId;
+    }
+
+    public String getImei() {
+        return imei;
+    }
+
+    public void setImei(String imei) {
+        this.imei = imei;
     }
 
     @Override
