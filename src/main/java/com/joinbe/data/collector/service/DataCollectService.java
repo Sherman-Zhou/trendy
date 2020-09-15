@@ -117,6 +117,7 @@ public class DataCollectService {
         vehicleTrajectoryDetails.setLatitude(BigDecimal.valueOf(msg.getLatitude()));
         vehicleTrajectoryDetails.setActualSpeed(BigDecimal.valueOf(msg.getSpeed()));
         vehicleTrajectoryDetails.setMileage(BigDecimal.valueOf(msg.getMileage()));
+        vehicleTrajectoryDetails.setVoltageInput2(msg.getAnalogInput2()!=null ? BigDecimal.valueOf(msg.getAnalogInput2()):null);
 
         /**
          * 产生新轨迹： 当前为开火 && 上次为非开火

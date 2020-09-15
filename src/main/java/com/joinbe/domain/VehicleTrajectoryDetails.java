@@ -82,6 +82,9 @@ public class VehicleTrajectoryDetails implements Serializable {
     @Column(name = "mileage", precision = 21, scale = 2)
     private BigDecimal mileage;
 
+    @Column(name = "voltage_input2", precision = 21, scale = 2)
+    private BigDecimal voltageInput2;
+
     // jhipster-needle-entity-add-field - JHipster will add fields here, do not remove
     public Long getId() {
         return id;
@@ -231,6 +234,14 @@ public class VehicleTrajectoryDetails implements Serializable {
 
     public void setMileage(BigDecimal mileage) {
         this.mileage = mileage;
+    }
+
+    public BigDecimal getVoltageInput2() {
+        return voltageInput2;
+    }
+
+    public void setVoltageInput2(BigDecimal voltageInput2) {
+        this.voltageInput2 = voltageInput2;
     }
 
     @Override
