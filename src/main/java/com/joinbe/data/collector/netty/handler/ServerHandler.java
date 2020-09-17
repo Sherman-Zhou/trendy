@@ -206,6 +206,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                             deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(0, "success", mileageResponseItemDTO), HttpStatus.OK));
                         }else if (deferredResult != null && "$ERR".equals(smilProtocol.getOk())){
                             deferredResult.setResult(new ResponseEntity<>(new MileageResponseDTO(1, "Get ERR response from device, device: " + deviceNo, mileageResponseItemDTO), HttpStatus.OK));
+                        }else if(deferredResult == null){
+                            CommonProtocol commonProtocol = new CommonProtocol(smilProtocol.getData());
+                            commonProtocol.setImei(deviceNo);
+                            DeferredResult<ResponseEntity<ResponseDTO>> commonDeferredResult = LocalEquipmentStroe.get(deviceNo,EventEnum.C_CMD);
+                            commonDeferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(0, "Device's response message", commonProtocol), HttpStatus.OK));
                         }
                     }else if(msg instanceof BMacProtocol){
                         BMacProtocol bMacProtocol = (BMacProtocol)msg;
