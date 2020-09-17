@@ -75,4 +75,7 @@ public class VehicleTrajectoryDetailsDTO implements Serializable {
 
     private Long vehicleTrajectoryId;
 
+    @ApiModelProperty("電圧")
+    private BigDecimal voltageInput2;
+
 }
