@@ -189,6 +189,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<ProtocolMessage> 
                         }else if (deferredResult != null && "$ERR".equals(bleNameProtocol.getOk())){
                             dataCollectService.insertEventLog(deviceNo, EventCategory.BLUETOOTH_NAME, EventType.SETBLENAME,OperationResult.FAILURE);
                             deferredResult.setResult(new ResponseEntity<>(new BleResponseDTO(1, "Get ERR response from device, device: " + deviceNo, bleResponseItemDTO), HttpStatus.OK));
+                        }else if(deferredResult == null){
+                            CommonProtocol commonProtocol = new CommonProtocol(bleNameProtocol.getData());
+                            commonProtocol.setImei(deviceNo);
+                            DeferredResult<ResponseEntity<ResponseDTO>> commonDeferredResult = LocalEquipmentStroe.get(deviceNo,EventEnum.C_CMD);
+                            commonDeferredResult.setResult(new ResponseEntity<>(new CommonResponseDTO(0, "Device's response message", commonProtocol), HttpStatus.OK));
                         }
                     }else if(msg instanceof SMILProtocol){
                         SMILProtocol smilProtocol = (SMILProtocol)msg;
