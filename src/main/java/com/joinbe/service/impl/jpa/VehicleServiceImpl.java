@@ -427,6 +427,7 @@ public class VehicleServiceImpl implements VehicleService {
                 city.setMerchant(userMerchant);
                 city.setId(Constants.CITY_ID_PREFIX + trendyCity.getId());
                 citiesInDb.put(city.getId(), city);
+
                 newCities.add(city);
             }
             city.setLat(trendyCity.getLat());
@@ -463,7 +464,9 @@ public class VehicleServiceImpl implements VehicleService {
                 root.getChildren().add(city);
             }
         }
+
         cityRepository.save(root);
+        cityRepository.flush();
 
         //start to save Shop...
         Collection<TrendyResponse.Shop> shops = allShops.values();
@@ -499,6 +502,7 @@ public class VehicleServiceImpl implements VehicleService {
             // shop.setArea(citiesInDb.get(Constants.CITY_ID_PREFIX + trendyShop.getArea()));
             shop.setStatus(RecordStatus.ACTIVE);
             shopRepository.save(shop);
+            shopRepository.flush();
         }
         //add new cities and shops to merchant's admin
         List<Staff> admins = staffRepository.findMerchantAdmin(AuthoritiesConstants.ROLE_MERCHANT_ADMIN, userLoginInfo.getMerchantId());
@@ -514,8 +518,9 @@ public class VehicleServiceImpl implements VehicleService {
             Optional<Vehicle> vehicleOptional = vehicleRepository.findById(carId);
             Vehicle vehicle;
             if (vehicleOptional.isPresent()) {
-                log.debug("existing car");
+
                 vehicle = vehicleOptional.get();
+                log.debug("existing car{}", vehicle.getId());
             } else {
                 log.debug("new car...");
                 vehicle = new Vehicle();
