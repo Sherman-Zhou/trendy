@@ -3,6 +3,7 @@ package com.joinbe.service.impl;
 import com.joinbe.domain.Staff;
 import com.joinbe.domain.SystemUser;
 import com.joinbe.service.MailService;
+import com.sun.mail.util.MailSSLSocketFactory;
 import io.github.jhipster.config.JHipsterProperties;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -10,12 +11,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 
+import javax.annotation.PostConstruct;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import java.nio.charset.StandardCharsets;
@@ -39,9 +42,12 @@ public class MailServiceImpl implements MailService {
 
     private final JavaMailSender javaMailSender;
 
+    private JavaMailSenderImpl trustAllMailSender;
+
     private final MessageSource messageSource;
 
     private final SpringTemplateEngine templateEngine;
+
 
     public MailServiceImpl(JHipsterProperties jHipsterProperties, JavaMailSender javaMailSender,
                            MessageSource messageSource, SpringTemplateEngine templateEngine) {
@@ -52,12 +58,29 @@ public class MailServiceImpl implements MailService {
         this.templateEngine = templateEngine;
     }
 
+
+    @PostConstruct
+    public void init() {
+        try {
+            MailSSLSocketFactory socketFactory = new MailSSLSocketFactory();
+            socketFactory.setTrustAllHosts(true);
+            if (this.javaMailSender instanceof JavaMailSenderImpl) {
+                JavaMailSenderImpl sender = (JavaMailSenderImpl) this.javaMailSender;
+                sender.getJavaMailProperties().put("mail.smtp.ssl.socketFactory", socketFactory);
+            }
+            //javax.net.ssl.SSLSocketFactory
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
-   // @Async
+    // @Async
     public void sendEmail(String to, String subject, String content, boolean isMultipart, boolean isHtml) {
         log.debug("Send email[multipart '{}' and html '{}'] to '{}' with subject '{}' and content={}",
             isMultipart, isHtml, to, subject, content);
-        if(StringUtils.isEmpty(to)){
+        if (StringUtils.isEmpty(to)) {
             log.warn("the mail to is blank: {}", to);
             return;
         }

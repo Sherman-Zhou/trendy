@@ -18,7 +18,6 @@ logging:
     ROOT: INFO
     io.github.jhipster: INFO
     com.joinbe: INFO
-
 management:
   metrics:
     export:
@@ -33,11 +32,11 @@ spring:
       enabled: false
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:mysql://localhost:3306/trendy?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=Asia/Tokyo&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/trendy-merchant?useUnicode=true&characterEncoding=utf8&useSSL=false&useLegacyDatetimeCode=false&serverTimezone=Asia/Tokyo&createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true
     username: root
     # Jasypt加密 可用JasyptUtil加解密工具类生成加密结果 格式为ENC(加密结果) 以下解密结果为123456
     # password: ENC(uOtmALFgsfxgYzEg1uLXl3O/tg6X1Dy25I3SdAeqqETOyZbDwmaW0/EZEusIh6hK)
-    password:
+    password: ENC(DuB5MLvLjFOq+YyEVgrf0fLYr1YyEaO68DmgDWw/SW1goBg84nO4LH6ENNzlquYv)
     hikari:
       poolName: Hikari
       auto-commit: false
@@ -51,10 +50,25 @@ spring:
     show-sql: false
 
   mail:
-    host: localhost
-    port: 25
-    username:
-    password:
+    host: smtp.qq.com
+    username: 511070261@qq.com
+    password: cirmcyntedzhbigd
+    #    host: mail.tre-use.jp
+    #    port: 25
+    port: 465
+    #    username: info@tre-use.jp
+    #    password: T5tsj9$5
+    default-encoding: utf-8
+    properties:
+      mail.smtp.ssl.enable: true
+      mail.imap.ssl.socketFactory.fallback: false
+      mail.smtp.ssl.socketFactory.class: javax.net.ssl.SSLSocketFactory
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+
+  messages:
+    cache-duration: PT1S # 1 second, see the ISO 8601 standard
   thymeleaf:
     cache: true
 
@@ -101,6 +115,14 @@ jhipster:
       cluster: false
       # server: redis://localhost:6379,redis://localhost:16379,redis://localhost:26379
       # cluster: true
+  # CORS is only enabled by default with the "dev" profile, so BrowserSync can access the API
+  cors:
+    allowed-origins: '*'
+    allowed-methods: '*'
+    allowed-headers: '*'
+    exposed-headers: 'Authorization,Link,X-Total-Count'
+    allow-credentials: true
+    max-age: 1800
   security:
     authentication:
       jwt:
@@ -114,7 +136,9 @@ jhipster:
         token-validity-in-seconds: 86400
         token-validity-in-seconds-for-remember-me: 2592000
   mail: # specific JHipster mail property, for standard properties see MailProperties
-    base-url: http://my-server-url-to-change # Modify according to your server's URL
+    base-url: http://123.57.12.177
+    from: 511070261@qq.com
+  #    from: Trendy 24<info@tre-use.jp>
   metrics:
     logs: # Reports metrics in the logs
       enabled: false
@@ -143,14 +167,20 @@ jasypt:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
-# application:
+application:
+  trendy:
+    url: https://app.trendycarshare.jp
+    vehicle-path: /api/car/carall
+    # at 1am every day
+    housekeeping-job-cron: 0 0 1 * * ?
+    trajectory-backup-folder: /trendy/rpt
+#    housekeeping-job-cron: 0 0/5 * * * ?
 netty:
   port: 17601
   boss-thread-count: 2
   worker-thread-count: 8
   so-keepalive: true
   so-backlog: 100
-  server-url: http://123.57.12.177:8080
+  server-url: http://47.245.58.236:8080
   idle-timeout-second: 70
   query-timeout: 30000
