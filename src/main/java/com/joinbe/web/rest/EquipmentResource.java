@@ -143,6 +143,9 @@ public class EquipmentResource {
             ExcelUtil.readExcel(file.getInputStream(), EquipmentData.class, equipmentDataListener);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+            if (e.getCause() != null && e.getCause() instanceof BadRequestAlertException) {
+                throw (BadRequestAlertException) e.getCause();
+            }
             throw new RuntimeException(e);
         }
         equipmentService.upload(equipmentDataListener.getResponse(), equipmentDataListener.getList());

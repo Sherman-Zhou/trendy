@@ -19,6 +19,7 @@ import com.joinbe.service.dto.EquipmentDTO;
 import com.joinbe.service.dto.UploadResponse;
 import com.joinbe.service.dto.VehicleDetailsDTO;
 import com.joinbe.service.util.SpringContextUtils;
+import com.joinbe.web.rest.errors.BadRequestAlertException;
 import com.joinbe.web.rest.vm.EquipmentVehicleBindingVM;
 import com.joinbe.web.rest.vm.PageData;
 import com.joinbe.web.rest.vm.ResponseUtil;
@@ -202,6 +203,9 @@ public class BindingResource {
             ExcelUtil.readExcel(file.getInputStream(), BindingData.class, bindingDataListener);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
+            if (e.getCause() != null && e.getCause() instanceof BadRequestAlertException) {
+                throw (BadRequestAlertException) e.getCause();
+            }
             throw new RuntimeException(e);
         }
         vehicleService.binding(bindingDataListener.getResponse(), bindingDataListener.getList());
