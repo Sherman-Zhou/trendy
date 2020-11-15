@@ -150,7 +150,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     private boolean isPermissionInRole(List<Long> permIdsInRole, Long permissionId) {
-        log.debug("permIdsInRole: {}: permissionId={}", permIdsInRole, permissionId);
+        //log.debug("permIdsInRole: {}: permissionId={}", permIdsInRole, permissionId);
         return permIdsInRole.contains(permissionId);
     }
 

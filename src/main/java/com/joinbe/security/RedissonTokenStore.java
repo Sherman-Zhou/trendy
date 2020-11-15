@@ -73,7 +73,7 @@ public class RedissonTokenStore {
     public boolean isTokenExisted(String login) {
         RMapCache<String, UserLoginInfo> tokenMap = redissonClient.getMapCache(TOKEN_KEY);
         UserLoginInfo token = tokenMap.get(login);
-        log.debug("Token in redis for user {}:{}", login, token);
+       // log.debug("Token in redis for user {}:{}", login, token);
         return token != null;
     }
 

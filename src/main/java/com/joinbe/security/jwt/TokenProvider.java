@@ -104,7 +104,7 @@ public class TokenProvider {
     public boolean validateToken(String authToken) {
         try {
             Jwts.parser().setSigningKey(key).parseClaimsJws(authToken);
-            log.debug("the token {} is valid", authToken);
+            //log.debug("the token {} is valid", authToken);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.info("Invalid JWT token:{}.", authToken);
