@@ -83,9 +83,10 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
             .with(PATH_KEY, request.getNativeRequest(HttpServletRequest.class).getRequestURI());
 
         if (problem instanceof ConstraintViolationProblem) {
+            String errorMsg = messageSource.getMessage(ErrorConstants.ERR_VALIDATION, null, null, LocaleContextHolder.getLocale());
             builder
                 .with(VIOLATIONS_KEY, ((ConstraintViolationProblem) problem).getViolations())
-                .with(MESSAGE_KEY, ErrorConstants.ERR_VALIDATION);
+                .with(MESSAGE_KEY, errorMsg);
         } else {
             builder
                 .withCause(((DefaultProblem) problem).getCause())
@@ -93,7 +94,8 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
                 .withInstance(problem.getInstance());
             problem.getParameters().forEach(builder::with);
             if (!problem.getParameters().containsKey(MESSAGE_KEY) && problem.getStatus() != null) {
-                builder.with(MESSAGE_KEY, "error.http." + problem.getStatus().getStatusCode());
+                String errorMsg = messageSource.getMessage("error.http." + problem.getStatus().getStatusCode(), null, null, LocaleContextHolder.getLocale());
+                builder.with(MESSAGE_KEY, errorMsg);
             }
         }
         return new ResponseEntity<>(builder.build(), entity.getHeaders(), entity.getStatusCode());
@@ -105,12 +107,12 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
         List<FieldErrorVM> fieldErrors = result.getFieldErrors().stream()
             .map(f -> new FieldErrorVM(f.getObjectName().replaceFirst("DTO$", ""), f.getField(), f.getCode()))
             .collect(Collectors.toList());
-
+        String errorMsg = messageSource.getMessage(ErrorConstants.ERR_VALIDATION, null, null, LocaleContextHolder.getLocale());
         Problem problem = Problem.builder()
             .withType(ErrorConstants.CONSTRAINT_VIOLATION_TYPE)
             .withTitle("Method argument not valid")
             .withStatus(defaultConstraintViolationStatus())
-            .with(MESSAGE_KEY, ErrorConstants.ERR_VALIDATION)
+            .with(MESSAGE_KEY, errorMsg)
             .with(FIELD_ERRORS_KEY, fieldErrors)
             .build();
         return create(ex, problem, request);
@@ -151,9 +153,10 @@ public class ExceptionTranslator implements ProblemHandling, SecurityAdviceTrait
 
     @ExceptionHandler
     public ResponseEntity<Problem> handleConcurrencyFailure(ConcurrencyFailureException ex, NativeWebRequest request) {
+        String errorMsg = messageSource.getMessage(ErrorConstants.ERR_CONCURRENCY_FAILURE, null, null, LocaleContextHolder.getLocale());
         Problem problem = Problem.builder()
             .withStatus(Status.CONFLICT)
-            .with(MESSAGE_KEY, ErrorConstants.ERR_CONCURRENCY_FAILURE)
+            .with(MESSAGE_KEY, errorMsg)
             .build();
         return create(ex, problem, request);
     }
